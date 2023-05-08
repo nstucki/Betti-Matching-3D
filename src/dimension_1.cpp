@@ -15,6 +15,7 @@ void Dimension1::compute_pairs(vector<Cube>& ctr, bool image) {
 	BoundaryEnumerator faces(cgc);
 	Cube pivot;
 	uint32_t j;
+	bool clearing = false;
 	for(uint32_t i = 0; i < ctr_size; i++) {
 		CubeQue working_boundary;
 		j = i;
@@ -43,12 +44,13 @@ void Dimension1::compute_pairs(vector<Cube>& ctr, bool image) {
 					break;
 				}
 			} else if (!image) { 
+				clearing = true;
 				ctr[i].index = NONE;
 				break; 
 			}
 		}
 	}
-	if (!image) {
+	if (clearing) {
 		auto new_end = std::remove_if(ctr.begin(), ctr.end(),
 								[](const Cube& c){ return c.index == NONE; });
 		ctr.erase(new_end, ctr.end());
