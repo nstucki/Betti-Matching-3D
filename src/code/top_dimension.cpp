@@ -13,6 +13,7 @@ void TopDimension::enum_edges(vector<Cube>& ctr){
 			for(uint32_t z = 0; z < cgc->shape[2]; z++){
 				for (uint8_t type = 0; type < 3; type++){
 					double birth = cgc->getBirth(x,y,z,type,2);
+					// add threshold
 					if (birth != numeric_limits<double>::infinity()){
 						ctr.push_back(Cube(birth,x,y,z,type,2));
 					}
@@ -88,6 +89,7 @@ void TopDimension::compute_pairs(vector<Cube>& ctr){
 			c->index = NONE;
 		}
 	}
+	// new list instead of deletions
 	auto new_end = std::remove_if(ctr.begin(), ctr.end(),
 								[](const Cube& c){ return c.index == NONE; });
 	ctr.erase(new_end, ctr.end());

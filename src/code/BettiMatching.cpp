@@ -333,6 +333,7 @@ int main(int argc, char** argv){
     assert (shape_0 == shape_1);
     vector<double> image_comp;
     transform(image_0.begin(), image_0.end(), image_1.begin(), back_inserter(image_comp), [](double a, double b){return min(a,b);});
+    // keine pointer nutzen
     CubicalGridComplex* cgc_0 = new CubicalGridComplex(move(image_0), shape_0);
     CubicalGridComplex* cgc_1 = new CubicalGridComplex(move(image_1), shape_1);
     CubicalGridComplex* cgc_comp = new CubicalGridComplex(move(image_comp), shape_0);

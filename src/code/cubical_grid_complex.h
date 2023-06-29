@@ -12,10 +12,12 @@ public:
 	uint32_t n_x;
 	uint32_t n_y;
 	uint32_t n_z;
+	//testen ob sinnvoll
 	uint32_t n_yz;
 	uint32_t n_xyz;
 	uint32_t m_yz;
 	uint32_t m_xyz;
+	// vector
 	double*** grid;
 
 	CubicalGridComplex(const vector<double>& image, const vector<uint32_t> shape);

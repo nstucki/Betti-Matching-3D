@@ -1,21 +1,23 @@
 #include "cubical_grid_complex.h"
 #include <iostream>
 
-CubicalGridComplex::CubicalGridComplex(const vector<double>& image, const vector<uint32_t> _shape){
+CubicalGridComplex::CubicalGridComplex(const vector<double>& image, const vector<uint32_t> _shape) {
 	dim = 0;
-	shape = _shape;
-	for (uint8_t i : shape){
-		if(shape[i] != 1){
+	for (uint32_t s : _shape) {
+		if (s != 1) {
+			shape.push_back(s);
 			dim += 1;
-		}
+		}	
 	}
 	n_x = shape[0]-1;
 	n_y = shape[1]-1;
-	n_z = shape[2]-1;
-	n_yz = n_y*n_z;
-	n_xyz = n_x*n_yz;
-	m_yz = shape[1]*shape[2];
-	m_xyz = shape[0]*m_yz;
+	if (dim == 3) {
+		n_z = shape[2]-1;
+		n_yz = n_y*n_z;
+		n_xyz = n_x*n_yz;
+		m_yz = shape[1]*shape[2];
+		m_xyz = shape[0]*m_yz;
+	}
 	gridFromVector(image);
 }
 
@@ -31,7 +33,6 @@ CubicalGridComplex::~CubicalGridComplex(){
 
 double*** CubicalGridComplex::allocate_memory() {
 	double*** a = new double**[shape[0]+2];
- 
     for (int i = 0; i < shape[0]+2; i++) {
         a[i] = new double*[shape[1]+2];
         for (int j = 0; j < shape[1]+2; j++) {
