@@ -65,11 +65,11 @@ Match::Match(const Pair &_pair0, const Pair &_pair1) : pair0(_pair0), pair1(_pai
 
 
 void Match::print() const {
-    cout << " matched "; pair0.print(); cout << " with "; pair1.print(); cout << endl;
+    cout << "matched "; pair0.print(); cout << " with "; pair1.print(); cout << endl;
 }
 
 
-CubicalGridComplex::CubicalGridComplex(const vector<float>& _image, const vector<uint64_t>& _shape) : 
+CubicalGridComplex::CubicalGridComplex(vector<float> _image, const vector<uint64_t>& _shape) : 
 	image(_image), shape(_shape), dim(_shape.size()) {}
 
 uint64_t CubicalGridComplex::getIndex(const vector<uint64_t>& coordinates) const {
@@ -83,6 +83,9 @@ uint64_t CubicalGridComplex::getIndex(const vector<uint64_t>& coordinates) const
 	return idx;
 }
 
+float CubicalGridComplex::getValue(const vector<uint64_t>& coordinates_image) const { return image[getIndex(coordinates_image)]; }
+
+
 uint64_t CubicalGridComplex::getCubeIndex(const Cube& c) const {
 	uint64_t idx = c.coordinates[dim-1];
 	uint64_t factor = 2*shape[dim-1]-1;
@@ -94,7 +97,7 @@ uint64_t CubicalGridComplex::getCubeIndex(const Cube& c) const {
 }
 
 
-uint64_t CubicalGridComplex::getCubeIndex(const vector<uint64_t> coordinates) const {
+uint64_t CubicalGridComplex::getCubeIndex(const vector<uint64_t>& coordinates) const {
 	uint64_t idx = coordinates[dim-1];
 	uint64_t factor = 2*shape[dim-1]-1;
 	for (uint64_t i = dim-1; i-- > 0;) {
@@ -104,8 +107,6 @@ uint64_t CubicalGridComplex::getCubeIndex(const vector<uint64_t> coordinates) co
 	return idx;
 }
 
-
-float CubicalGridComplex::getValue(const vector<uint64_t>& coordinates_image) const { return image[getIndex(coordinates_image)]; }
 
 float CubicalGridComplex::getBirth(const vector<uint64_t>& coordinates_cube) const {
 	//std::vector<int> multiplies(data.size());?

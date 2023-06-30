@@ -1,7 +1,7 @@
 #include "template_functions.h"
-#include "enumerators.h"
 
 #include "top_dimension.h"
+#include "inter_dimensions.h"
 
 #include "npy.hpp"
 
@@ -128,6 +128,7 @@ void read_image(string const &filename, file_format const &format, vector<float>
 
 int main(int argc, char** argv) {
     Config config;
+    
     for (int i = 1; i < argc; ++i) {
 		const string arg(argv[i]);
 		if (arg == "--help" || arg == "-h") {
@@ -160,11 +161,11 @@ int main(int argc, char** argv) {
 		}
 	}
     if (config.filename_0.empty()) { print_usage_and_exit(-1); } 
-    if(config.filename_0.find(".txt")!= string::npos) {
+    if (config.filename_0.find(".txt") != string::npos) {
 		config.format_0 = PERSEUS;
-	} else if(config.filename_0.find(".npy")!= string::npos) {
+	} else if (config.filename_0.find(".npy")!= string::npos) {
 		config.format_0 = NUMPY;
-	} else if(config.filename_0.find(".complex")!= string::npos) {
+	} else if (config.filename_0.find(".complex")!= string::npos) {
 		config.format_0 = DIPHA;
 	} else {
 		cerr << "unknown input file format! (the filename extension should be .txt/.npy/.complex): " << config.filename_0 << endl;
@@ -175,12 +176,12 @@ int main(int argc, char** argv) {
 		cerr << "couldn't open file " << config.filename_0 << endl;
 		exit(-1);
 	}
-    if (config.filename_1.empty()) {print_usage_and_exit(-1);}
+    if (config.filename_1.empty()) { print_usage_and_exit(-1); }
     if(config.filename_1.find(".txt")!= string::npos) {
 		config.format_1 = PERSEUS;
-	} else if(config.filename_1.find(".npy")!= string::npos) {
+	} else if (config.filename_1.find(".npy")!= string::npos) {
 		config.format_1 = NUMPY;
-	} else if(config.filename_1.find(".complex")!= string::npos) {
+	} else if (config.filename_1.find(".complex")!= string::npos) {
 		config.format_1 = DIPHA;
 	} else {
 		cerr << "unknown input file format! (the filename extension should be .txt/.npy/.complex): " << config.filename_1 << endl;
@@ -192,64 +193,64 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
-    if (config.verbose) {cout << "reading images ... ";}
+    if (config.verbose) { cout << "reading images ... "; }
     auto start = high_resolution_clock::now();
-
     vector<float> image0;
     vector<float> image1;
     vector<uint64_t> shape0;
     vector<uint64_t> shape1;
     read_image(config.filename_0, config.format_0, image0, shape0);
     read_image(config.filename_1, config.format_1, image1, shape1);
-
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
     auto duration_total = duration;
-    if (config.verbose) {cout << "took " << duration.count() << " ms" << endl;}
+    if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
     
     assert (shape0 == shape1);
+    uint64_t dim = shape0.size();
+
     vector<float> imageComp;
     transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](float a, float b){return min(a,b);});
-
-    CubicalGridComplex cgc0 = CubicalGridComplex(move(image0), shape0);
-    CubicalGridComplex cgc1 = CubicalGridComplex(move(image1), shape1);
-    CubicalGridComplex cgcComp = CubicalGridComplex(move(imageComp), shape0);
     
+    CubicalGridComplex cgc0(move(image0), shape0);
+    CubicalGridComplex cgc1(move(image1), shape1);
+    CubicalGridComplex cgcComp(move(imageComp), shape0);
+
     vector<Cube> ctrComp;
 	vector<Cube> ctr0;
 	vector<Cube> ctr1;
 
-    if (config.verbose) {cout << "comoputing top dimension ... ";}
-    start = high_resolution_clock::now();
+    if (dim > 0) {
+        if (config.verbose) { cout << "comoputing top dimension ... "; }
+        start = high_resolution_clock::now(); 
+        TopDimension topDim(cgc0, cgc1, cgcComp, config);
+        topDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
+        stop = high_resolution_clock::now();
+        duration = duration_cast<milliseconds>(stop - start);
+        duration_total += duration;
+        if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
+
+        cout << "matches in topdim" << endl;
+        for (auto& m : topDim.matches) {
+            m.print(); cout << endl;
+        }
+    }
+
+    if (dim > 1) {
+        if (config.verbose) { cout << "comoputing top dimension ... "; }
+        start = high_resolution_clock::now();
+        InterDimensions interDim(cgc0, cgc1, cgcComp, config);
+        interDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
+        stop = high_resolution_clock::now();
+        duration = duration_cast<milliseconds>(stop - start);
+        duration_total += duration;
+        if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
+
+        cout << "matches in interdims" << endl;
+        for (auto& m : interDim.matches[1]) {
+            m.print();
+        }
     
-    TopDimension topDim = TopDimension(cgc0, cgc1, cgcComp, config);
-    topDim.computePairsComp(ctrComp);
-    topDim.computePairsImage(0, ctr0);
-    topDim.computePairsImage(1, ctr0);
-    topDim.computeMatching();
-    stop = high_resolution_clock::now();
-    duration = duration_cast<milliseconds>(stop - start);
-    duration_total += duration;
-    
-    if (config.verbose) { cout << "took " << duration.count() << " ms" << endl;}
-
-    cout << "barcode 0" << endl;
-    for (auto& pair : topDim.pairsComp) {
-        pair.print(); cout << endl;
-    }
-
-    cout << "barcode 1" << endl;
-    for (auto& pair : topDim.pairsComp) {
-        pair.print(); cout << endl;
-    }
-
-    cout << "comparison barcode" << endl;
-    for (auto& pair : topDim.pairsComp) {
-        pair.print(); cout << endl;
-    }
-
-    for (auto&m : topDim.matches) {
-        m.print();
     }
 }
     

@@ -91,7 +91,7 @@ void TopDimension::computePairsComp(vector<Cube>& ctr) {
 void TopDimension::computePairsImage(uint8_t k, vector<Cube>& ctr) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
-	unordered_map<uint64_t,Pair&>& matchMap = (k==0) ? matchMap0 : matchMap1;
+	unordered_map<uint64_t,Pair>& matchMap = (k==0) ? matchMap0 : matchMap1;
 	
 	enumerateDualEdges(cgc, ctr);
 	UnionFindDual uf = UnionFindDual(cgc);
@@ -150,6 +150,7 @@ void TopDimension::computePairsImage(uint8_t k, vector<Cube>& ctr) {
 	ctr.erase(new_end, ctr.end());
 }
 
+
 void TopDimension::computeMatching() {
 	for (auto& pair : pairsComp) {
 		auto find0 = matchMap0.find(cgcComp.getCubeIndex(pair.death));
@@ -158,4 +159,12 @@ void TopDimension::computeMatching() {
 			matches.push_back(Match((find0 -> second), (find1 -> second)));
 		}
 	}
+}
+
+
+void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
+	computePairsComp(ctrComp);
+    computePairsImage(0, ctr0);
+    computePairsImage(1, ctr1);
+    computeMatching();
 }

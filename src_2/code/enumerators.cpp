@@ -1,5 +1,7 @@
 #include "enumerators.h"
 
+#include <iostream>
+
 
 DualEdgeEnumerator::DualEdgeEnumerator(const CubicalGridComplex& _cgc) : cgc(_cgc) {
     vector<uint64_t> coordinates(cgc.shape.size(), 1);
@@ -53,11 +55,15 @@ bool DualEdgeEnumerator::hasNextCube() {
 Cube DualEdgeEnumerator::getCube() const { return cube; }
 
 
+
 BoundaryEnumerator::BoundaryEnumerator(const CubicalGridComplex& _cgc) : cgc(_cgc) {}
 
-void BoundaryEnumerator::setBoundaryEnumerator(const Cube& _cube, uint64_t dim ) {
+
+void BoundaryEnumerator::setBoundaryEnumerator(const Cube& _cube, uint64_t _dim) {
 	cube = _cube;
-    nonDegen.reserve(cgc.dim);
+    dim = _dim;
+    nonDegen.clear();
+    nonDegen.reserve(dim);
     uint64_t counter = 0;
     for (uint64_t i = 0; i < cgc.dim; i++) {
         if (cube.coordinates[i]%2 != 0) {
@@ -71,13 +77,13 @@ void BoundaryEnumerator::setBoundaryEnumerator(const Cube& _cube, uint64_t dim )
 }
 
 bool BoundaryEnumerator::hasNextFace() {
-	if (position == -1 && shift == 1) { return false; } 
+	if ( position == -1 ) { return false; } 
     else {
         vector<uint64_t> coordinates = cube.coordinates;
-        coordinates[position] += shift;
+        coordinates[nonDegen[position]] += shift;
         float birth = cgc.getBirth(coordinates);
-        face = Cube(birth, coordinates);
-        if (position == cgc.dim-1 && shift == -1) {
+        nextFace = Cube(birth, coordinates);
+        if (position == dim-1 && shift == -1) {
             shift = 1;
         } else if (shift == -1) {
             position++;
@@ -88,4 +94,5 @@ bool BoundaryEnumerator::hasNextFace() {
     }
 }
 
-Cube BoundaryEnumerator::getFace() const { return face; }
+
+Cube BoundaryEnumerator::getNextFace() const { return nextFace; }

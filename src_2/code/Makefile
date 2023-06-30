@@ -1,8 +1,11 @@
-BettiMatching: BettiMatching.o top_dimension.o enumerators.o data_structures.o 
-	g++ --std=c++17 BettiMatching.o top_dimension.o enumerators.o data_structures.o -o BettiMatching
+BettiMatching: BettiMatching.o inter_dimensions.o top_dimension.o enumerators.o data_structures.o 
+	g++ --std=c++17 BettiMatching.o inter_dimensions.o top_dimension.o enumerators.o data_structures.o -o BettiMatching
 
-BettiMatching.o: BettiMatching.cpp top_dimension.h config.h
+BettiMatching.o: BettiMatching.cpp inter_dimensions.h top_dimension.h config.h
 	g++ --std=c++17 -c BettiMatching.cpp
+
+inter_dimensions.o: inter_dimensions.cpp inter_dimensions.h enumerators.h
+	g++ --std=c++17 -c inter_dimensions.cpp
 
 top_dimension.o: top_dimension.cpp top_dimension.h enumerators.h
 	g++ --std=c++17 -c top_dimension.cpp
