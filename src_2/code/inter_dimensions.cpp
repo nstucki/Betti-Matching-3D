@@ -59,19 +59,22 @@ void InterDimensions::addCache(uint64_t i, CubeQue& working_boundary, unordered_
 
 void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 	uint64_t num_reduction_steps = 0;
-	auto ctrSize = ctr.size();
-	unordered_map<uint64_t, uint64_t> pivot_column_index;
-	pivot_column_index.reserve(ctrSize);
-	unordered_map<uint64_t, CubeQue > cache;
-	cache.reserve(ctrSize);
-	queue<uint64_t> cached_column_idx;
-	BoundaryEnumerator faces = BoundaryEnumerator(cgcComp);
+	uint64_t num_recurse;
+	uint64_t ctrSize = ctr.size();
 	uint64_t j;
+	BoundaryEnumerator faces = BoundaryEnumerator(cgcComp);
+	queue<uint64_t> cached_column_idx;
 
+	pivot_column_index.clear();
+	cache.clear();
+
+	pivot_column_index.reserve(ctrSize);
+	cache.reserve(ctrSize);
+	
 	for(uint64_t i = 0; i < ctrSize; i++) {
 		CubeQue working_boundary;
 		j = i;
-		int num_recurse = 0;
+		num_recurse = 0;
 
 		while (true) {
 			bool cacheHit = false;
@@ -129,22 +132,25 @@ void InterDimensions::computePairs(uint8_t k, vector<Cube>& ctr) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	vector<vector<Pair>>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<uint64_t,Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
-	matchMap.clear();
 
 	uint64_t num_reduction_steps = 0;
-	auto ctrSize = ctr.size();
-	unordered_map<uint64_t, uint64_t> pivot_column_index;
-	pivot_column_index.reserve(ctrSize);
-	unordered_map<uint64_t, CubeQue > cache;
-	cache.reserve(ctrSize);
-	queue<uint64_t> cached_column_idx;
-	BoundaryEnumerator faces = BoundaryEnumerator(cgc);
+	uint64_t num_recurse;
+	uint64_t ctrSize = ctr.size();
 	uint64_t j;
+	BoundaryEnumerator faces = BoundaryEnumerator(cgc);
+	queue<uint64_t> cached_column_idx;
 
+	pivot_column_index.clear();
+	cache.clear();
+	matchMap.clear();
+
+	pivot_column_index.reserve(ctrSize);
+	cache.reserve(ctrSize);
+	
 	for(uint64_t i = 0; i < ctrSize; i++) {
 		CubeQue working_boundary;
 		j = i;
-		int num_recurse = 0;
+		num_recurse = 0;
 
 		while (true) {
 			bool cacheHit = false;
@@ -201,22 +207,26 @@ void InterDimensions::computePairs(uint8_t k, vector<Cube>& ctr) {
 void InterDimensions::computePairsImage(uint8_t k, vector<Cube>& ctr) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	unordered_map<uint64_t,Cube>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
+
+	uint64_t num_reduction_steps = 0;
+	uint64_t num_recurse;
+	uint64_t ctrSize = ctr.size();
+	uint64_t j;
+	BoundaryEnumerator faces = BoundaryEnumerator(cgc);
+	queue<uint64_t> cached_column_idx;
+
+	pivot_column_index.clear();
+	cache.clear();
+	matchMapIm.clear();
+
+	pivot_column_index.reserve(ctrSize);
+	cache.reserve(ctrSize);
 	matchMapIm.reserve(pairsComp[computeDim].size());
 	
-	uint64_t num_reduction_steps = 0;
-	auto ctrSize = ctr.size();
-	unordered_map<uint64_t, uint64_t> pivot_column_index;
-	pivot_column_index.reserve(ctrSize);
-	unordered_map<uint64_t, CubeQue > cache;
-	cache.reserve(ctrSize);
-	queue<uint64_t> cached_column_idx;
-	BoundaryEnumerator faces = BoundaryEnumerator(cgc);
-	uint64_t j;
-
-	for(uint64_t i = 0; i < ctrSize; i++) {
+	for (uint64_t i = 0; i < ctrSize; i++) {
 		CubeQue working_boundary;
 		j = i;
-		int num_recurse = 0;
+		num_recurse = 0;
 
 		while (true) {
 			bool cacheHit = false;
@@ -290,10 +300,14 @@ void InterDimensions::computeMatching() {
 
 
 void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
-	computePairsComp(ctrComp);
-	computePairs(0, ctr0);
-	computePairs(1, ctr1);
-	computePairsImage(0, ctrComp);
-	computePairsImage(1, ctrComp);
-	computeMatching();
+	while (computeDim > 0) {
+		computePairsComp(ctrComp);
+		computePairs(0, ctr0);
+		computePairs(1, ctr1);
+		computePairsImage(0, ctrComp);
+		computePairsImage(1, ctrComp);
+		computeMatching();
+		--computeDim;
+	}
+	
 }

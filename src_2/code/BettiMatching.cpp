@@ -220,7 +220,7 @@ int main(int argc, char** argv) {
 	vector<Cube> ctr0;
 	vector<Cube> ctr1;
 
-    if (dim > 0) {
+    if (dim > 1) {
         if (config.verbose) { cout << "comoputing top dimension ... "; }
         start = high_resolution_clock::now(); 
         TopDimension topDim(cgc0, cgc1, cgcComp, config);
@@ -236,7 +236,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    if (dim > 1) {
+    if (dim > 2) {
         if (config.verbose) { cout << "comoputing top dimension ... "; }
         start = high_resolution_clock::now();
         InterDimensions interDim(cgc0, cgc1, cgcComp, config);

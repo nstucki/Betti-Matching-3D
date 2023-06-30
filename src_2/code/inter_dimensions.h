@@ -14,6 +14,8 @@ private:
 	const CubicalGridComplex& cgcComp;
 	const Config& config;
 	uint64_t computeDim;
+	unordered_map<uint64_t, uint64_t> pivot_column_index;
+	unordered_map<uint64_t, CubeQue > cache;
 	unordered_map<uint64_t,Pair> matchMap0;
 	unordered_map<uint64_t,Pair> matchMap1;
 	unordered_map<uint64_t,bool> matchMapComp;
