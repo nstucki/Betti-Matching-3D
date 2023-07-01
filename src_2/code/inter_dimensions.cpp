@@ -2,6 +2,9 @@
 #include "enumerators.h"
 
 #include <iostream>
+#include <chrono>
+
+using namespace std::chrono;
 
 
 
@@ -280,6 +283,9 @@ void InterDimensions::computePairsImage(uint8_t k, vector<Cube>& ctr) {
 }
 
 
+void InterDimensions::assembleNewColumns(vector<Cube>& ctr) {}
+
+
 void InterDimensions::computeMatching() {
 	Cube birth0;
 	Cube birth1;
@@ -300,13 +306,30 @@ void InterDimensions::computeMatching() {
 
 
 void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
+	vector<Cube> ctrIm;
+
 	while (computeDim > 0) {
+		if (config.verbose) { cout << "comoputing dimension " << computeDim << " ... "; }
+        auto start = high_resolution_clock::now();
+		
 		computePairsComp(ctrComp);
+		if (computeDim > 1) { assembleNewColumns(ctrComp); }
+		ctrIm = ctrComp;
+		
 		computePairs(0, ctr0);
+		if (computeDim > 1) { assembleNewColumns(ctr0); }
+		
 		computePairs(1, ctr1);
+		if (computeDim > 1) { assembleNewColumns(ctr1); }
+		
 		computePairsImage(0, ctrComp);
 		computePairsImage(1, ctrComp);
+		
 		computeMatching();
+		
+		auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>(stop - start);
+        if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
 		--computeDim;
 	}
 	

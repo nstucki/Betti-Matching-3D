@@ -14,8 +14,10 @@ TopDimension::TopDimension(const CubicalGridComplex& _cgc0, const CubicalGridCom
 
 
 void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
+	DualEdgeEnumerator enumerator = DualEdgeEnumerator(cgc);
 	vector<uint64_t> shape = cgc.shape;
 	uint64_t product = 1;
+	
 	for (auto& s : cgc.shape) {
 		product *= s-1;
 	}
@@ -26,22 +28,22 @@ void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube
 
 	edges.clear();
 	edges.reserve(numEdges);
-	DualEdgeEnumerator enumerator = DualEdgeEnumerator(cgc);
 	edges.push_back(enumerator.getCube());
+
 	while (enumerator.hasNextCube()) {
 		if (enumerator.getCube().birth <= config.threshold) {
 			edges.push_back(enumerator.getCube());
 		}
 	}
+
 	sort(edges.begin(), edges.end(), CubeComparator());
 }
 
 
-void TopDimension::computePairsComp(vector<Cube>& ctr) {
-	enumerateDualEdges(cgcComp, ctr);
+void TopDimension::computePairsComp(vector<Cube>& edges) {
 	UnionFindDual uf = UnionFindDual(cgcComp);
-	uint64_t degenAxis;
 	vector<uint64_t> boundaryCoordinates;
+	uint64_t degenAxis;
 	uint64_t boundaryIdx0;
 	uint64_t boundaryIdx1;
 	uint64_t birthIdx0;
@@ -49,7 +51,9 @@ void TopDimension::computePairsComp(vector<Cube>& ctr) {
 	uint64_t birthIdx;
 	float birth;
 
-	for (auto edge = ctr.rbegin(), last = ctr.rend(); edge != last; ++edge) {
+	enumerateDualEdges(cgcComp, edges);
+
+	for (auto edge = edges.rbegin(), last = edges.rend(); edge != last; ++edge) {
 		boundaryCoordinates = edge->coordinates;
 		for (uint64_t i = 0; i < cgcComp.dim; i++) {
 			if (boundaryCoordinates[i]%2 == 0) {
@@ -71,9 +75,9 @@ void TopDimension::computePairsComp(vector<Cube>& ctr) {
 			boundaryCoordinates[degenAxis] += 2;
 			boundaryIdx1 = uf.getIndex(boundaryCoordinates);
 		}
+		
 		birthIdx0 = uf.find(boundaryIdx0);
 		birthIdx1 = uf.find(boundaryIdx1);
-
 		if (birthIdx0 != birthIdx1) {
 			birthIdx = uf.link(birthIdx0, birthIdx1);
 			birth = uf.getBirth(birthIdx);
@@ -83,21 +87,20 @@ void TopDimension::computePairsComp(vector<Cube>& ctr) {
 			edge->coordinates[0] = NONE;
 		}
 	}
-	auto new_end = remove_if(ctr.begin(), ctr.end(), [](const Cube& edge){ return edge.coordinates[0] == NONE; });
-	ctr.erase(new_end, ctr.end());
+	auto new_end = remove_if(edges.begin(), edges.end(), [](const Cube& edge){ return edge.coordinates[0] == NONE; });
+	edges.erase(new_end, edges.end());
 }
 
 
-void TopDimension::computePairsImage(uint8_t k, vector<Cube>& ctr) {
+void TopDimension::computePairsImage(uint8_t k, vector<Cube>& edges) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<uint64_t,Pair>& matchMap = (k==0) ? matchMap0 : matchMap1;
 	
-	enumerateDualEdges(cgc, ctr);
 	UnionFindDual uf = UnionFindDual(cgc);
 	UnionFindDual ufComp = UnionFindDual(cgcComp);
-	uint64_t degenAxis;
 	vector<uint64_t> boundaryCoordinates;
+	uint64_t degenAxis;
 	uint64_t boundaryIdx0;
 	uint64_t boundaryIdx1;
 	uint64_t birthIdx0;
@@ -106,7 +109,9 @@ void TopDimension::computePairsImage(uint8_t k, vector<Cube>& ctr) {
 	uint64_t birthIdxComp;
 	float birth;
 
-	for (auto edge = ctr.rbegin(), last = ctr.rend(); edge != last; ++edge) {
+	enumerateDualEdges(cgc, edges);
+
+	for (auto edge = edges.rbegin(), last = edges.rend(); edge != last; ++edge) {
 		boundaryCoordinates = edge->coordinates;
 		for (uint64_t i = 0; i < cgc.dim; i++) {
 			if (boundaryCoordinates[i]%2 == 0) {
@@ -128,9 +133,9 @@ void TopDimension::computePairsImage(uint8_t k, vector<Cube>& ctr) {
 			boundaryCoordinates[degenAxis] += 2;
 			boundaryIdx1 = uf.getIndex(boundaryCoordinates);
 		}
+
 		birthIdx0 = uf.find(boundaryIdx0);
 		birthIdx1 = uf.find(boundaryIdx1);
-
 		if (birthIdx0 != birthIdx1) {
 			birthIdx = uf.link(birthIdx0, birthIdx1);
 			birth = uf.getBirth(birthIdx);
@@ -146,8 +151,8 @@ void TopDimension::computePairsImage(uint8_t k, vector<Cube>& ctr) {
 			edge->coordinates[0] = NONE;
 		}
 	}
-	auto new_end = remove_if(ctr.begin(), ctr.end(), [](const Cube& edge){ return edge.coordinates[0] == NONE; });
-	ctr.erase(new_end, ctr.end());
+	auto new_end = remove_if(edges.begin(), edges.end(), [](const Cube& edge){ return edge.coordinates[0] == NONE; });
+	edges.erase(new_end, edges.end());
 }
 
 

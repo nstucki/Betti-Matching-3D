@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
     read_image(config.filename_1, config.format_1, image1, shape1);
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
-    auto duration_total = duration;
+    auto durationTotal = duration;
     if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
     
     assert (shape0 == shape1);
@@ -221,13 +221,13 @@ int main(int argc, char** argv) {
 	vector<Cube> ctr1;
 
     if (dim > 1) {
-        if (config.verbose) { cout << "comoputing top dimension ... "; }
+        if (config.verbose) { cout << "comoputing dimension " << dim-1 << " ... "; }
         start = high_resolution_clock::now(); 
         TopDimension topDim(cgc0, cgc1, cgcComp, config);
         topDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
         stop = high_resolution_clock::now();
         duration = duration_cast<milliseconds>(stop - start);
-        duration_total += duration;
+        durationTotal += duration;
         if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
 
         cout << "matches in topdim" << endl;
@@ -237,14 +237,11 @@ int main(int argc, char** argv) {
     }
 
     if (dim > 2) {
-        if (config.verbose) { cout << "comoputing top dimension ... "; }
         start = high_resolution_clock::now();
         InterDimensions interDim(cgc0, cgc1, cgcComp, config);
         interDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
         stop = high_resolution_clock::now();
-        duration = duration_cast<milliseconds>(stop - start);
-        duration_total += duration;
-        if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
+        durationTotal += duration;
 
         cout << "matches in interdims" << endl;
         for (auto& m : interDim.matches[1]) {

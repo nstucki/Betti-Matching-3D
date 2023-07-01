@@ -28,6 +28,7 @@ private:
 	void computePairsComp(vector<Cube>& ctr);
 	void computePairs(uint8_t k, vector<Cube>& ctr);
 	void computePairsImage(uint8_t k, vector<Cube>& ctr);
+	void assembleNewColumns(vector<Cube>& ctr);
 	void computeMatching();
 
 public:
