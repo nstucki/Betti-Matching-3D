@@ -18,6 +18,221 @@ InterDimensions::InterDimensions(const CubicalGridComplex& _cgc0, const CubicalG
 }
 
 
+void InterDimensions::computePairsComp(const vector<Cube>& ctr) {
+	uint64_t ctrSize = ctr.size();
+
+	pivot_column_index.clear();
+	pivot_column_index.reserve(ctrSize);
+	
+	cache.clear();
+	cache.reserve(min(config.cacheSize, ctrSize));
+
+	matchMapComp.clear();
+
+	BoundaryEnumerator faces = BoundaryEnumerator(cgcComp);
+	queue<uint64_t> cached_column_idx;
+	uint64_t num_recurse;
+	uint64_t j;
+	for(uint64_t i = 0; i < ctrSize; i++) {
+		CubeQue working_boundary;
+		j = i;
+		num_recurse = 0;
+
+		while (true) {
+			bool cacheHit = false;
+			if (i != j) {
+                auto findCb = cache.find(j);
+                if (findCb != cache.end()) {
+                    cacheHit = true;
+                    auto cachedBoundary = findCb -> second;
+                    while (!cachedBoundary.empty()) {
+                        working_boundary.push(cachedBoundary.top());
+                        cachedBoundary.pop();
+                    }
+                }
+			}
+			if (!cacheHit) {
+				faces.setBoundaryEnumerator(ctr[j], computeDim+1);
+				while (faces.hasNextFace()) {
+					working_boundary.push(faces.getNextFace());
+				}
+			}
+
+			Cube pivot = getPivot(working_boundary);
+			if (pivot.coordinates[0] != NONE) {
+				auto pair = pivot_column_index.find(cgcComp.getCubeIndex(pivot));
+				if (pair != pivot_column_index.end()) {
+					j = pair->second;
+					num_recurse++;
+					continue;
+				} else {
+					if (num_recurse >= config.minRecursionToCache) {
+                        addCache(i, working_boundary);
+						cached_column_idx.push(i);
+						if (cached_column_idx.size() > config.cacheSize) {
+							cache.erase(cached_column_idx.front());
+							cached_column_idx.pop();
+						}
+                    }
+					pivot_column_index[cgcComp.getCubeIndex(pivot)] = i;
+					if (pivot.birth != ctr[i].birth) {
+						pairsComp[computeDim].push_back(Pair(pivot, ctr[i]));
+						matchMapComp.emplace(cgcComp.getCubeIndex(ctr[i]), true);
+					}
+					break;
+				}
+			} else { break; }
+		}
+	}
+}
+
+
+void InterDimensions::computePairs(uint8_t k, const vector<Cube>& ctr) {
+	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
+	vector<vector<Pair>>& pairs = (k == 0) ? pairs0 : pairs1;
+	unordered_map<uint64_t,Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
+
+	uint64_t ctrSize = ctr.size();
+	
+	pivot_column_index.clear();
+	pivot_column_index.reserve(ctrSize);
+
+	cache.clear();
+	cache.reserve(min(config.cacheSize, ctrSize));
+
+	matchMap.clear();
+
+	BoundaryEnumerator faces = BoundaryEnumerator(cgc);
+	queue<uint64_t> cached_column_idx;
+	uint64_t num_recurse;
+	uint64_t j;	
+	for(uint64_t i = 0; i < ctrSize; i++) {
+		CubeQue working_boundary;
+		j = i;
+		num_recurse = 0;
+
+		while (true) {
+			bool cacheHit = false;
+			if (i != j) {
+                auto findCb = cache.find(j);
+                if (findCb != cache.end()) {
+                    cacheHit = true;
+                    auto cachedBoundary = findCb -> second;
+                    while (!cachedBoundary.empty()) {
+                        working_boundary.push(cachedBoundary.top());
+                        cachedBoundary.pop();
+                    }
+                }
+			}
+			if (!cacheHit) {
+				faces.setBoundaryEnumerator(ctr[j], computeDim+1);
+				while (faces.hasNextFace()) {
+					working_boundary.push(faces.getNextFace());
+				}
+			}
+
+			Cube pivot = getPivot(working_boundary);
+			if (pivot.coordinates[0] != NONE) {
+				auto pair = pivot_column_index.find(cgc.getCubeIndex(pivot));
+				if (pair != pivot_column_index.end()) {
+					j = pair->second;
+					num_recurse++;
+					continue;
+				} else {
+					if (num_recurse >= config.minRecursionToCache) {
+                        addCache(i, working_boundary);
+						cached_column_idx.push(i);
+						if (cached_column_idx.size() > config.cacheSize) {
+							cache.erase(cached_column_idx.front());
+							cached_column_idx.pop();
+						}
+                    }
+					pivot_column_index[cgc.getCubeIndex(pivot)] = i;
+					if (pivot.birth != ctr[i].birth) {
+						pairs[computeDim].push_back(Pair(pivot, ctr[i]));
+						matchMap.emplace(cgc.getCubeIndex(pivot), pairs[computeDim].back());
+					}
+					break;
+				}
+			} else { break; }
+		}
+	}
+}
+
+
+void InterDimensions::computePairsImage(uint8_t k, const vector<Cube>& ctr) {
+	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
+	unordered_map<uint64_t,Cube>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
+
+	uint64_t ctrSize = ctr.size();
+
+	pivot_column_index.clear();
+	pivot_column_index.reserve(ctrSize);
+
+	cache.clear();
+	cache.reserve(min(config.cacheSize, ctrSize));
+
+	matchMapIm.clear();
+	matchMapIm.reserve(pairsComp[computeDim].size());
+
+	BoundaryEnumerator faces = BoundaryEnumerator(cgc);
+	queue<uint64_t> cached_column_idx;
+	uint64_t num_recurse;
+	uint64_t j;
+	for (uint64_t i = 0; i < ctrSize; i++) {
+		CubeQue working_boundary;
+		j = i;
+		num_recurse = 0;
+
+		while (true) {
+			bool cacheHit = false;
+			if (i != j) {
+                auto findCb = cache.find(j);
+                if (findCb != cache.end()) {
+                    cacheHit = true;
+                    auto cachedBoundary = findCb -> second;
+                    while (!cachedBoundary.empty()) {
+                        working_boundary.push(cachedBoundary.top());
+                        cachedBoundary.pop();
+                    }
+                }
+			}
+			if (!cacheHit) {
+				faces.setBoundaryEnumerator(ctr[j], computeDim+1);
+				while (faces.hasNextFace()) {
+					working_boundary.push(faces.getNextFace());
+				}
+			}
+
+			Cube pivot = getPivot(working_boundary);
+			if (pivot.coordinates[0] != NONE) {
+				auto pair = pivot_column_index.find(cgc.getCubeIndex(pivot));
+				if (pair != pivot_column_index.end()) {
+					j = pair->second;
+					num_recurse++;
+					continue;
+				} else {
+					if (num_recurse >= config.minRecursionToCache) {
+                        addCache(i, working_boundary);
+						cached_column_idx.push(i);
+						if (cached_column_idx.size() > config.cacheSize) {
+							cache.erase(cached_column_idx.front());
+							cached_column_idx.pop();
+						}
+                    }
+					pivot_column_index[cgc.getCubeIndex(pivot)] = i;
+
+					if (matchMapComp[cgcComp.getCubeIndex(ctr[i])]) {
+						matchMapIm.emplace(cgcComp.getCubeIndex(ctr[i]), pivot);
+					}
+					break;
+				}
+			} else { break; }
+		}
+	}
+}
+
+
 Cube InterDimensions::popPivot(CubeQue& column) const {
     if (column.empty()) {
         return Cube();
@@ -62,235 +277,12 @@ void InterDimensions::addCache(uint64_t i, CubeQue& working_boundary) {
 }
 
 
-void InterDimensions::computePairsComp(const vector<Cube>& ctr) {
-	uint64_t num_reduction_steps = 0;
-	uint64_t num_recurse;
-	uint64_t ctrSize = ctr.size();
-	uint64_t j;
-	BoundaryEnumerator faces = BoundaryEnumerator(cgcComp);
-	queue<uint64_t> cached_column_idx;
-
-	pivot_column_index.clear();
-	cache.clear();
-	matchMapComp.clear();
-
-	pivot_column_index.reserve(ctrSize);
-	cache.reserve(ctrSize);
-	
-	for(uint64_t i = 0; i < ctrSize; i++) {
-		CubeQue working_boundary;
-		j = i;
-		num_recurse = 0;
-
-		while (true) {
-			bool cacheHit = false;
-			if (i != j) {
-                auto findCb = cache.find(j);
-                if (findCb != cache.end()) {
-                    cacheHit = true;
-                    auto cachedBoundary = findCb -> second;
-                    while (!cachedBoundary.empty()) {
-                        working_boundary.push(cachedBoundary.top());
-                        cachedBoundary.pop();
-                    }
-                }
-			}
-			if (!cacheHit) {
-				faces.setBoundaryEnumerator(ctr[j], computeDim+1);
-				while (faces.hasNextFace()) {
-					working_boundary.push(faces.getNextFace());
-				}
-			}
-
-			Cube pivot = getPivot(working_boundary);
-			if (pivot.coordinates[0] != NONE) {
-				auto pair = pivot_column_index.find(cgcComp.getCubeIndex(pivot));
-				if (pair != pivot_column_index.end()) {
-					j = pair->second;
-					num_recurse++;
-					num_reduction_steps++;
-					continue;
-				} else {
-					if (num_recurse >= config.min_recursion_to_cache) {
-                        addCache(i, working_boundary);
-						cached_column_idx.push(i);
-						if (cached_column_idx.size() > config.cache_size) {
-							cache.erase(cached_column_idx.front());
-							cached_column_idx.pop();
-						}
-                    }
-					pivot_column_index[cgcComp.getCubeIndex(pivot)] = i;
-					if (pivot.birth != ctr[i].birth) {
-						pairsComp[computeDim].push_back(Pair(pivot, ctr[i]));
-						matchMapComp.emplace(cgcComp.getCubeIndex(ctr[i]), true);
-					}
-					break;
-				}
-			} else { break; }
-		}
-	}
-	
-	if (config.verbose) { cout << " with " << num_reduction_steps << " reduction steps ... "; }
-}
-
-
-void InterDimensions::computePairs(uint8_t k, const vector<Cube>& ctr) {
-	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
-	vector<vector<Pair>>& pairs = (k == 0) ? pairs0 : pairs1;
-	unordered_map<uint64_t,Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
-
-	uint64_t num_reduction_steps = 0;
-	uint64_t num_recurse;
-	uint64_t ctrSize = ctr.size();
-	uint64_t j;
-	BoundaryEnumerator faces = BoundaryEnumerator(cgc);
-	queue<uint64_t> cached_column_idx;
-
-	pivot_column_index.clear();
-	cache.clear();
-	matchMap.clear();
-
-	pivot_column_index.reserve(ctrSize);
-	cache.reserve(ctrSize);
-	
-	for(uint64_t i = 0; i < ctrSize; i++) {
-		CubeQue working_boundary;
-		j = i;
-		num_recurse = 0;
-
-		while (true) {
-			bool cacheHit = false;
-			if (i != j) {
-                auto findCb = cache.find(j);
-                if (findCb != cache.end()) {
-                    cacheHit = true;
-                    auto cachedBoundary = findCb -> second;
-                    while (!cachedBoundary.empty()) {
-                        working_boundary.push(cachedBoundary.top());
-                        cachedBoundary.pop();
-                    }
-                }
-			}
-			if (!cacheHit) {
-				faces.setBoundaryEnumerator(ctr[j], computeDim+1);
-				while (faces.hasNextFace()) {
-					working_boundary.push(faces.getNextFace());
-				}
-			}
-
-			Cube pivot = getPivot(working_boundary);
-			if (pivot.coordinates[0] != NONE) {
-				auto pair = pivot_column_index.find(cgc.getCubeIndex(pivot));
-				if (pair != pivot_column_index.end()) {
-					j = pair->second;
-					num_recurse++;
-					num_reduction_steps++;
-					continue;
-				} else {
-					if (num_recurse >= config.min_recursion_to_cache) {
-                        addCache(i, working_boundary);
-						cached_column_idx.push(i);
-						if (cached_column_idx.size() > config.cache_size) {
-							cache.erase(cached_column_idx.front());
-							cached_column_idx.pop();
-						}
-                    }
-					pivot_column_index[cgc.getCubeIndex(pivot)] = i;
-					if (pivot.birth != ctr[i].birth) {
-						pairs[computeDim].push_back(Pair(pivot, ctr[i]));
-						matchMap.emplace(cgc.getCubeIndex(pivot), pairs[computeDim].back());
-					}
-					break;
-				}
-			} else { break; }
-		}
-	}
-
-	if (config.verbose) { cout << " with " << num_reduction_steps << " reduction steps ... "; }
-}
-
-
-void InterDimensions::computePairsImage(uint8_t k, const vector<Cube>& ctr) {
-	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
-	unordered_map<uint64_t,Cube>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
-
-	uint64_t num_reduction_steps = 0;
-	uint64_t num_recurse;
-	uint64_t ctrSize = ctr.size();
-	uint64_t j;
-	BoundaryEnumerator faces = BoundaryEnumerator(cgc);
-	queue<uint64_t> cached_column_idx;
-
-	pivot_column_index.clear();
-	cache.clear();
-	matchMapIm.clear();
-
-	pivot_column_index.reserve(ctrSize);
-	cache.reserve(ctrSize);
-	matchMapIm.reserve(pairsComp[computeDim].size());
-	
-	for (uint64_t i = 0; i < ctrSize; i++) {
-		CubeQue working_boundary;
-		j = i;
-		num_recurse = 0;
-
-		while (true) {
-			bool cacheHit = false;
-			if (i != j) {
-                auto findCb = cache.find(j);
-                if (findCb != cache.end()) {
-                    cacheHit = true;
-                    auto cachedBoundary = findCb -> second;
-                    while (!cachedBoundary.empty()) {
-                        working_boundary.push(cachedBoundary.top());
-                        cachedBoundary.pop();
-                    }
-                }
-			}
-			if (!cacheHit) {
-				faces.setBoundaryEnumerator(ctr[j], computeDim+1);
-				while (faces.hasNextFace()) {
-					working_boundary.push(faces.getNextFace());
-				}
-			}
-
-			Cube pivot = getPivot(working_boundary);
-			if (pivot.coordinates[0] != NONE) {
-				auto pair = pivot_column_index.find(cgc.getCubeIndex(pivot));
-				if (pair != pivot_column_index.end()) {
-					j = pair->second;
-					num_recurse++;
-					num_reduction_steps++;
-					continue;
-				} else {
-					if (num_recurse >= config.min_recursion_to_cache) {
-                        addCache(i, working_boundary);
-						cached_column_idx.push(i);
-						if (cached_column_idx.size() > config.cache_size) {
-							cache.erase(cached_column_idx.front());
-							cached_column_idx.pop();
-						}
-                    }
-					pivot_column_index[cgc.getCubeIndex(pivot)] = i;
-
-					if (matchMapComp[cgcComp.getCubeIndex(ctr[i])]) {
-						matchMapIm.emplace(cgcComp.getCubeIndex(ctr[i]), pivot);
-					}
-					break;
-				}
-			} else { break; }
-		}
-	}
-	
-	if (config.verbose) { cout << " with " << num_reduction_steps << " reduction steps ... "; }
-}
-
-
-void InterDimensions::assembleNewColumns(const CubicalGridComplex& cgc, vector<Cube>& ctr) const {
-	ctr.clear();
-	//ctr.reserve();
+void InterDimensions::assembleColumnsToReduce(const CubicalGridComplex& cgc, vector<Cube>& ctr) const {
 	CubeEnumerator cubeEnum(cgc, computeDim-1);
 
+	ctr.clear();
+	ctr.reserve(cubeEnum.getNumberOfCubes());
+	
 	Cube cube = cubeEnum.getNextCube();
 	if (cube.birth <= config.threshold) {
 		auto find = pivot_column_index.find(cgc.getCubeIndex(cube));
@@ -307,12 +299,14 @@ void InterDimensions::assembleNewColumns(const CubicalGridComplex& cgc, vector<C
 			}
 		}
 	}
+	sort(ctr.begin(), ctr.end(), CubeComparator());
 }
 
 
 void InterDimensions::computeMatching() {
 	Cube birth0;
 	Cube birth1;
+
 	for (auto& pair : pairsComp[computeDim]) {
 		auto findIm0 = matchMapIm0.find(cgcComp.getCubeIndex(pair.death));
 		auto findIm1 = matchMapIm1.find(cgcComp.getCubeIndex(pair.death));
@@ -338,13 +332,13 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
 		
 		computePairsComp(ctrComp);
 		ctrIm = ctrComp; 
-		if (computeDim > 1) { assembleNewColumns(cgcComp, ctrComp); }
+		if (computeDim > 1) { assembleColumnsToReduce(cgcComp, ctrComp); }
 		
 		computePairs(0, ctr0);
-		if (computeDim > 1) { assembleNewColumns(cgc0, ctr0); }
+		if (computeDim > 1) { assembleColumnsToReduce(cgc0, ctr0); }
 		
 		computePairs(1, ctr1);
-		if (computeDim > 1) { assembleNewColumns(cgc1, ctr1); }
+		if (computeDim > 1) { assembleColumnsToReduce(cgc1, ctr1); }
 		
 		computePairsImage(0, ctrIm); computePairsImage(1, ctrIm);
 		
@@ -353,6 +347,7 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
 		auto stop = high_resolution_clock::now();
         auto duration = duration_cast<milliseconds>(stop - start);
         if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
+
 		--computeDim;
 	}
 	

@@ -1,20 +1,7 @@
 #pragma once
 
 #include "data_structures.h"
-
-
-
-class DualEdgeEnumerator{
-    private:
-    const CubicalGridComplex& cgc;
-    Cube nextCube;
-    uint64_t degenAxis;
-
-    public:
-    DualEdgeEnumerator(const CubicalGridComplex& cgc);
-    bool hasNextCube();
-    Cube getNextCube() const;
-};
+#include "utils.h"
 
 
 
@@ -37,6 +24,7 @@ class CubeEnumerator{
     CubeEnumerator(const CubicalGridComplex& cgc, const uint64_t dim);
     bool hasNextCube();
     Cube getNextCube() const;
+    uint64_t getNumberOfCubes() const;
 };
 
 
@@ -56,4 +44,18 @@ public:
 	void setBoundaryEnumerator(const Cube& cube, uint64_t dim);
 	bool hasNextFace();
     Cube getNextFace() const;
+};
+
+
+
+class DualEdgeEnumerator{
+    private:
+    const CubicalGridComplex& cgc;
+    Cube nextCube;
+    uint64_t degenAxis;
+
+    public:
+    DualEdgeEnumerator(const CubicalGridComplex& cgc);
+    bool hasNextCube();
+    Cube getNextCube() const;
 };

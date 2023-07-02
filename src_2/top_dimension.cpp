@@ -1,5 +1,3 @@
-#include "template_functions.h"
-
 #include "top_dimension.h"
 #include "enumerators.h"
 
@@ -14,25 +12,19 @@ TopDimension::TopDimension(const CubicalGridComplex& _cgc0, const CubicalGridCom
 
 
 void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
-	DualEdgeEnumerator enumerator = DualEdgeEnumerator(cgc);
-	vector<uint64_t> shape = cgc.shape;
-	uint64_t product = 1;
+	CubeEnumerator cubeEnum(cgc, cgc.dim-1);
 	
-	for (auto& s : cgc.shape) {
-		product *= s-1;
-	}
-	uint64_t numEdges = 0;
-	for (auto& s : cgc.shape) {
-		numEdges += s * (product/(s-1));
-	}
-
 	edges.clear();
-	edges.reserve(numEdges);
-	edges.push_back(enumerator.getNextCube());
-
-	while (enumerator.hasNextCube()) {
-		if (enumerator.getNextCube().birth <= config.threshold) {
-			edges.push_back(enumerator.getNextCube());
+	edges.reserve(cubeEnum.getNumberOfCubes());
+	
+	Cube cube = cubeEnum.getNextCube();
+	if (cube.birth <= config.threshold) {
+		edges.push_back(cube);
+	}
+	while (cubeEnum.hasNextCube()) {
+		cube = cubeEnum.getNextCube();
+		if (cube.birth <= config.threshold) {
+			edges.push_back(cube);
 		}
 	}
 	sort(edges.begin(), edges.end(), CubeComparator());
@@ -49,9 +41,7 @@ void TopDimension::computePairsComp(vector<Cube>& edges) {
 	uint64_t birthIdx1;
 	uint64_t birthIdx;
 	float birth;
-
-	enumerateDualEdges(cgcComp, edges);
-
+	
 	for (auto edge = edges.rbegin(), last = edges.rend(); edge != last; ++edge) {
 		boundaryCoordinates = edge->coordinates;
 		for (uint64_t i = 0; i < cgcComp.dim; i++) {
@@ -107,8 +97,6 @@ void TopDimension::computePairsImage(uint8_t k, vector<Cube>& edges) {
 	uint64_t birthIdx;
 	uint64_t birthIdxComp;
 	float birth;
-
-	enumerateDualEdges(cgc, edges);
 
 	for (auto edge = edges.rbegin(), last = edges.rend(); edge != last; ++edge) {
 		boundaryCoordinates = edge->coordinates;
@@ -167,8 +155,14 @@ void TopDimension::computeMatching() {
 
 
 void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
+	enumerateDualEdges(cgcComp, ctrComp);
 	computePairsComp(ctrComp);
+	
+	enumerateDualEdges(cgc0, ctr0);
     computePairsImage(0, ctr0);
+
+	enumerateDualEdges(cgc1, ctr1);
     computePairsImage(1, ctr1);
+
     computeMatching();
 }

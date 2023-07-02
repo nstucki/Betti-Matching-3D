@@ -20,12 +20,6 @@ Cube::Cube(const Cube &cube) {
     birth = cube.birth;
     coordinates = cube.coordinates;
 }
- 
-
-void Cube::copyCube(const Cube &cube) {
-    birth = cube.birth;
-    coordinates = cube.coordinates;
-}
 
 
 bool Cube::operator==(const Cube& rhs) const { return (birth == rhs.birth && coordinates == rhs.coordinates); }

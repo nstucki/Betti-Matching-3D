@@ -1,14 +1,12 @@
 #include "template_functions.h"
 #include "enumerators.h"
 
+#include "utils.h"
 #include "top_dimension.h"
 #include "inter_dimensions.h"
 
-#include "npy.hpp"
-
 #include <iostream>
 #include <fstream>
-#include <cfloat>
 #include <chrono>
 
 using namespace std;
@@ -37,96 +35,6 @@ void print_usage_and_exit(int exit_code) {
 }
 
 
-void read_image(string const &filename, file_format const &format, vector<float> &image, vector<uint64_t> &shape) {
-    switch(format){
-        case DIPHA: {
-            ifstream fin(filename, ios::in | ios::binary );
-            int64_t d;
-            fin.read((char *) &d, sizeof(int64_t));
-            assert(d == 8067171840);
-            fin.read((char *) &d, sizeof(int64_t));
-            assert(d == 1);
-            fin.read((char *) &d, sizeof(int64_t));
-            fin.read((char *) &d, sizeof(int64_t));
-            uint8_t dim = d;
-            assert(dim < 4);
-            uint64_t n;
-            fin.read((char *) &d, sizeof(int64_t));
-            shape.push_back(d);
-            n = d;
-            if (dim>1) {
-                fin.read((char *) &d, sizeof(int64_t));
-                shape.push_back(d);
-                n *= d;
-            }
-            if (dim>2) {
-                fin.read((char *)&d, sizeof(int64_t));
-                shape.push_back(d);
-                n *= d;
-            }
-            double value;
-            image.reserve(n);
-            while (!fin.eof()){
-                fin.read((char *)&value, sizeof(double));
-                image.push_back(value);
-            }
-            fin.close();
-            return;
-        }
-        case PERSEUS: {
-            ifstream reading_file; 
-            reading_file.open(filename.c_str(), ios::in); 
-            string reading_line_buffer; 
-            getline(reading_file, reading_line_buffer); 
-            uint8_t dim = atoi(reading_line_buffer.c_str());
-            assert(dim < 4);
-            uint64_t n;
-            getline(reading_file, reading_line_buffer);
-            shape.push_back(atoi(reading_line_buffer.c_str()));
-            n = shape[0];
-            if (dim>1) {
-                getline(reading_file, reading_line_buffer); 
-                shape.push_back(atoi(reading_line_buffer.c_str()));
-                n *= shape[1];
-            }
-            if (dim>2) {
-                getline(reading_file, reading_line_buffer);
-                shape.push_back(atoi(reading_line_buffer.c_str()));
-                n *= shape[2];
-            }
-            image.reserve(n);
-            double value;
-            while(!reading_file.eof()){
-                getline(reading_file, reading_line_buffer);
-                value = atof(reading_line_buffer.c_str());
-                if (value != -1) {
-                    image.push_back(value);
-                }else{
-                    image.push_back(DBL_MAX);
-                }
-            }
-            reading_file.close();
-            return;
-		}
-        case NUMPY: {
-            vector<unsigned long> _shape;
-            try{
-                npy::LoadArrayFromNumpy(filename.c_str(), _shape, image);
-            } catch (...) {
-                cerr << "The data type of an numpy array should be numpy.float64." << endl;
-                exit(-2);
-            }
-            uint8_t dim = shape.size();
-            assert (dim < 4);
-            for (uint32_t i : _shape) {
-                shape.push_back(i);
-            }
-            return;
-        }
-    }
-}
-
-
 int main(int argc, char** argv) {
     Config config;
     
@@ -148,9 +56,9 @@ int main(int argc, char** argv) {
         } else if (arg == "--unmatched_1" || arg == "-u1") {
 			config.unmatched_1_filename = string(argv[++i]);
 		} else if (arg == "--min_recursion_to_cache" || arg == "-mc") {
-            config.min_recursion_to_cache = stoi(argv[++i]);
+            config.minRecursionToCache = stoi(argv[++i]);
 		} else if (arg == "--cache_size" || arg == "-c") {
-            config.cache_size = stoi(argv[++i]);
+            config.cacheSize = stoi(argv[++i]);
 		} else if (arg == "--print" || arg == "-p") {
 			config.print = true;
 		} else {
@@ -196,39 +104,46 @@ int main(int argc, char** argv) {
 
     if (config.verbose) { cout << "reading images ... "; }
     auto start = high_resolution_clock::now();
-    vector<float> image0;
-    vector<float> image1;
+
+    vector<double> readImage0;
+    vector<double> readImage1;
     vector<uint64_t> shape0;
     vector<uint64_t> shape1;
-    read_image(config.filename_0, config.format_0, image0, shape0);
-    read_image(config.filename_1, config.format_1, image1, shape1);
+    readImage(config.filename_0, config.format_0, readImage0, shape0);
+    readImage(config.filename_1, config.format_1, readImage1, shape1);
+    vector<float> image0(readImage0.begin(), readImage0.end());
+    vector<float> image1(readImage1.begin(), readImage1.end());
+
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
     auto durationTotal = duration;
     if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
     
+
     assert (shape0 == shape1);
-    for (uint64_t s : shape0) {
-        assert (s > 1);
-    }
     uint64_t dim = shape0.size();
+    cout << dim << endl;
     
     vector<float> imageComp;
     transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](float a, float b){return min(a,b);});
-    
+
     CubicalGridComplex cgc0(move(image0), shape0);
     CubicalGridComplex cgc1(move(image1), shape1);
     CubicalGridComplex cgcComp(move(imageComp), shape0);
 
-    vector<Cube> ctrComp;
+    printContainer(cgc0.shape);
+
 	vector<Cube> ctr0;
 	vector<Cube> ctr1;
+    vector<Cube> ctrComp;
 
     if (dim > 1) {
-        if (config.verbose) { cout << "comoputing dimension " << dim-1 << " ... "; }
-        start = high_resolution_clock::now(); 
+        if (config.verbose) { cout << "computing dimension " << dim-1 << " ... "; }
+        start = high_resolution_clock::now();
+
         TopDimension topDim(cgc0, cgc1, cgcComp, config);
         topDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
+        
         stop = high_resolution_clock::now();
         duration = duration_cast<milliseconds>(stop - start);
         durationTotal += duration;
@@ -250,33 +165,6 @@ int main(int argc, char** argv) {
         cout << "matches in interdims" << endl;
         for (auto& m : interDim.matches[1]) {
             m.print();
-        }
-    }
-
-    vector<Cube> edges;
-    DualEdgeEnumerator edgeEnum(cgc0);
-    edges.push_back(edgeEnum.getNextCube());
-    uint64_t counterEdge = 1;
-    while (edgeEnum.hasNextCube()) {
-        edges.push_back(edgeEnum.getNextCube());
-        counterEdge++;
-    }
-    cout << counterEdge << endl;
-
-    vector<Cube> cubes;
-    CubeEnumerator cubeEnum(cgc0, 2);
-    cubes.push_back(cubeEnum.getNextCube());
-    uint64_t counterCube = 1;
-    while (cubeEnum.hasNextCube()) {
-        cubes.push_back(cubeEnum.getNextCube());
-        counterCube++;
-    }
-    cout << counterCube << endl;
-
-    for (uint64_t i = 0; i < counterEdge; i++) {
-        edges[i].print(); cout << " "; cubes[i].print(); cout << endl;
-        if (edges[i] != cubes[i]) {
-            cout << "error" << endl;
         }
     }
 }

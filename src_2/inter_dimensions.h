@@ -2,10 +2,13 @@
 
 #include "data_structures.h"
 #include "config.h"
+
 #include <queue>
 #include <unordered_map>
 
 typedef priority_queue<Cube, vector<Cube>, CubeComparator> CubeQue;
+
+
 
 class InterDimensions{
 private:
@@ -28,7 +31,7 @@ private:
 	void computePairsComp(const vector<Cube>& ctr);
 	void computePairs(uint8_t k, const vector<Cube>& ctr);
 	void computePairsImage(uint8_t k, const vector<Cube>& ctr);
-	void assembleNewColumns(const CubicalGridComplex& cgc, vector<Cube>& ctr) const;
+	void assembleColumnsToReduce(const CubicalGridComplex& cgc, vector<Cube>& ctr) const;
 	void computeMatching();
 
 public:
