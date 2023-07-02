@@ -74,20 +74,6 @@ void CubeEnumerator::IncreaseByTwo(const uint64_t& axis) {
 
 Cube CubeEnumerator::getNextCube() const { return nextCube; }
 
-uint64_t CubeEnumerator::getNumberOfCubes() const {
-    vector<vector<bool>> subsets = getSubsets(cgc.dim, dim);
-    uint64_t numCubes = 0;
-    uint64_t numCubesForSubset;
-    for (auto& subset : subsets) {
-        numCubesForSubset = 1;
-        for (uint64_t i = 0; i < cgc.dim; i++) {
-            numCubesForSubset *= (cgc.shape[i] - subset[i]);
-        }
-        numCubes += numCubesForSubset;
-    }
-    return numCubes;
-}
-
 
 BoundaryEnumerator::BoundaryEnumerator(const CubicalGridComplex& _cgc) : cgc(_cgc) {}
 

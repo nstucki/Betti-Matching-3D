@@ -18,7 +18,7 @@ class TopDimension {
 
 	void enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const;
 	void computePairsComp(vector<Cube>& ctr);
-	void computePairsImage(uint8_t k, vector<Cube>& ctr);
+	void computePairsImage(vector<Cube>& ctr, uint8_t k);
 	void computeMatching();
 
 	public:

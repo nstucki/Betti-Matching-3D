@@ -122,7 +122,6 @@ int main(int argc, char** argv) {
 
     assert (shape0 == shape1);
     uint64_t dim = shape0.size();
-    cout << dim << endl;
     
     vector<float> imageComp;
     transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](float a, float b){return min(a,b);});
@@ -131,10 +130,12 @@ int main(int argc, char** argv) {
     CubicalGridComplex cgc1(move(image1), shape1);
     CubicalGridComplex cgcComp(move(imageComp), shape0);
 
-    printContainer(cgc0.shape);
+    cout << "Input 0:" << endl << endl; cgc0.printImage(); cout << endl;
+    cout << "Input 1" << endl << endl; cgc1.printImage(); cout << endl;
+    cout << "Comparison" << endl << endl; cgcComp.printImage(); cout << endl;
 
-	vector<Cube> ctr0;
-	vector<Cube> ctr1;
+ 	vector<Cube> ctr0;
+ 	vector<Cube> ctr1;
     vector<Cube> ctrComp;
 
     if (dim > 1) {
@@ -149,23 +150,37 @@ int main(int argc, char** argv) {
         durationTotal += duration;
         if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
 
+        cout << "pairs in Input 0:" << endl;
+        for (auto& pair : topDim.pairs0) {
+            pair.print(); cout << endl;
+        }
+        cout << "pairs in Input 1:" << endl;
+        for (auto& pair : topDim.pairs1) {
+            pair.print(); cout << endl;
+        }
+        cout << "pairs in Comparison:" << endl;
+        for (auto& pair : topDim.pairsComp) {
+            pair.print(); cout << endl;
+        }
         cout << "matches in topdim" << endl;
         for (auto& m : topDim.matches) {
             m.print(); cout << endl;
         }
     }
 
-    if (dim > 2) {
-        start = high_resolution_clock::now();
-        InterDimensions interDim(cgc0, cgc1, cgcComp, config);
-        interDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
-        stop = high_resolution_clock::now();
-        durationTotal += duration;
+//     if (dim > 2) {
+//         start = high_resolution_clock::now();
+//         InterDimensions interDim(cgc0, cgc1, cgcComp, config);
+//         interDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
+//         stop = high_resolution_clock::now();
+//         durationTotal += duration;
 
-        cout << "matches in interdims" << endl;
-        for (auto& m : interDim.matches[1]) {
-            m.print();
-        }
-    }
+//         if (config.print) {
+//             cout << "matches in dim 1" << endl;
+//             for (auto& m : interDim.matches[1]) {
+//                 m.print();
+//         }
+//         }
+//     }
 }
     

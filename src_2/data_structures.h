@@ -58,8 +58,9 @@ class CubicalGridComplex {
 	const vector<uint64_t> shape;
 	const uint64_t dim;
 	
-	CubicalGridComplex(vector<float> _image, const vector<uint64_t>& _shape);
-	uint64_t getCubeIndex(const Cube& c) const;
+	CubicalGridComplex(const vector<float> _image, const vector<uint64_t>& _shape);
+	uint64_t getNumberOfCubes(const uint64_t dim) const;
+	uint64_t getCubeIndex(const Cube& cube) const;
 	uint64_t getCubeIndex(const vector<uint64_t>& coordinates) const;
 	float getBirth (const vector<uint64_t>& coordinates) const;
 	void printImage() const;
@@ -75,26 +76,27 @@ class UnionFind{
 
 	public:
 	UnionFind(const CubicalGridComplex& cgc);
-	float getBirth(uint64_t x) const;
-	vector<uint64_t> getCoordinates(uint64_t x) const;
 	uint64_t find(uint64_t x);
-	uint64_t link(uint64_t x, uint64_t y);
+	uint64_t link(const uint64_t& x, const uint64_t& y);
+	float getBirth(const uint64_t& idx) const;
+	vector<uint64_t> getCoordinates(uint64_t idx) const;
 };
 
 
 class UnionFindDual {
 	private:
+	const CubicalGridComplex& cgc;
 	vector<uint64_t> parent;
 	vector<float> birthtime;
-	const CubicalGridComplex& cgc;
 
 	public:
 	uint64_t n;
 	
 	UnionFindDual(const CubicalGridComplex& cgc);
-	float getBirth(uint64_t x) const;
-	vector<uint64_t> getCoordinates(uint64_t x) const;
-	uint64_t getIndex(vector<uint64_t> coordinates) const;
 	uint64_t find(uint64_t x);
-	uint64_t link(uint64_t x, uint64_t y);
+	uint64_t link(const uint64_t& x, const uint64_t& y);
+	float getBirth(const uint64_t& idx) const;
+	vector<uint64_t> getCoordinates(uint64_t idx) const;
+	uint64_t getIndex(const vector<uint64_t>& coordinates) const;
+	
 };

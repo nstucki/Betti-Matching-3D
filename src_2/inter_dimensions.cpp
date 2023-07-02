@@ -278,11 +278,10 @@ void InterDimensions::addCache(uint64_t i, CubeQue& working_boundary) {
 
 
 void InterDimensions::assembleColumnsToReduce(const CubicalGridComplex& cgc, vector<Cube>& ctr) const {
-	CubeEnumerator cubeEnum(cgc, computeDim-1);
-
 	ctr.clear();
-	ctr.reserve(cubeEnum.getNumberOfCubes());
+	ctr.reserve(cgc.getNumberOfCubes(computeDim-1));
 	
+	CubeEnumerator cubeEnum(cgc, computeDim-1);
 	Cube cube = cubeEnum.getNextCube();
 	if (cube.birth <= config.threshold) {
 		auto find = pivot_column_index.find(cgc.getCubeIndex(cube));

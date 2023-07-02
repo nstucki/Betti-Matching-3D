@@ -4,7 +4,6 @@
 #include "utils.h"
 
 
-
 class CubeEnumerator{
     private:
     const CubicalGridComplex& cgc;
@@ -24,9 +23,7 @@ class CubeEnumerator{
     CubeEnumerator(const CubicalGridComplex& cgc, const uint64_t dim);
     bool hasNextCube();
     Cube getNextCube() const;
-    uint64_t getNumberOfCubes() const;
 };
-
 
 
 class BoundaryEnumerator {
@@ -45,7 +42,6 @@ public:
 	bool hasNextFace();
     Cube getNextFace() const;
 };
-
 
 
 class DualEdgeEnumerator{

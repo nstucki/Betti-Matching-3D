@@ -1,3 +1,5 @@
+#include "template_functions.h"
+
 #include "top_dimension.h"
 #include "enumerators.h"
 
@@ -6,17 +8,14 @@
 using namespace std;
 
 
-
 TopDimension::TopDimension(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, const CubicalGridComplex& _cgcComp, 
 							const Config& _config) : cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config) {}
 
-
 void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
-	CubeEnumerator cubeEnum(cgc, cgc.dim-1);
-	
 	edges.clear();
-	edges.reserve(cubeEnum.getNumberOfCubes());
-	
+	edges.reserve(cgc.getNumberOfCubes(cgc.dim-1));
+
+	CubeEnumerator cubeEnum(cgc, cgc.dim-1);
 	Cube cube = cubeEnum.getNextCube();
 	if (cube.birth <= config.threshold) {
 		edges.push_back(cube);
@@ -29,7 +28,6 @@ void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube
 	}
 	sort(edges.begin(), edges.end(), CubeComparator());
 }
-
 
 void TopDimension::computePairsComp(vector<Cube>& edges) {
 	UnionFindDual uf = UnionFindDual(cgcComp);
@@ -64,7 +62,7 @@ void TopDimension::computePairsComp(vector<Cube>& edges) {
 			boundaryCoordinates[degenAxis] += 2;
 			boundaryIdx1 = uf.getIndex(boundaryCoordinates);
 		}
-		
+
 		birthIdx0 = uf.find(boundaryIdx0);
 		birthIdx1 = uf.find(boundaryIdx1);
 		if (birthIdx0 != birthIdx1) {
@@ -80,8 +78,7 @@ void TopDimension::computePairsComp(vector<Cube>& edges) {
 	edges.erase(new_end, edges.end());
 }
 
-
-void TopDimension::computePairsImage(uint8_t k, vector<Cube>& edges) {
+void TopDimension::computePairsImage(vector<Cube>& edges, uint8_t k) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<uint64_t,Pair>& matchMap = (k==0) ? matchMap0 : matchMap1;
@@ -142,7 +139,6 @@ void TopDimension::computePairsImage(uint8_t k, vector<Cube>& edges) {
 	edges.erase(new_end, edges.end());
 }
 
-
 void TopDimension::computeMatching() {
 	for (auto& pair : pairsComp) {
 		auto find0 = matchMap0.find(cgcComp.getCubeIndex(pair.death));
@@ -153,16 +149,15 @@ void TopDimension::computeMatching() {
 	}
 }
 
-
 void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
 	enumerateDualEdges(cgcComp, ctrComp);
 	computePairsComp(ctrComp);
 	
 	enumerateDualEdges(cgc0, ctr0);
-    computePairsImage(0, ctr0);
+    computePairsImage(ctr0, 0);
 
 	enumerateDualEdges(cgc1, ctr1);
-    computePairsImage(1, ctr1);
+    computePairsImage(ctr1, 1);
 
     computeMatching();
 }
