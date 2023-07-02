@@ -37,6 +37,7 @@ Cube InterDimensions::popPivot(CubeQue& column) const {
     }
 }
 
+
 Cube InterDimensions::getPivot(CubeQue& column) const {
 	Cube result = popPivot(column);
 	if (result.coordinates[0] != NONE) {
@@ -45,7 +46,8 @@ Cube InterDimensions::getPivot(CubeQue& column) const {
 	return result;
 }
 
-void InterDimensions::addCache(uint64_t i, CubeQue& working_boundary, unordered_map<uint64_t, CubeQue>& cache) const {
+
+void InterDimensions::addCache(uint64_t i, CubeQue& working_boundary) {
 	CubeQue clean_wb;
 	while (!working_boundary.empty()) {
 		auto c = working_boundary.top();
@@ -60,7 +62,7 @@ void InterDimensions::addCache(uint64_t i, CubeQue& working_boundary, unordered_
 }
 
 
-void InterDimensions::computePairsComp(vector<Cube>& ctr) {
+void InterDimensions::computePairsComp(const vector<Cube>& ctr) {
 	uint64_t num_reduction_steps = 0;
 	uint64_t num_recurse;
 	uint64_t ctrSize = ctr.size();
@@ -110,7 +112,7 @@ void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 					continue;
 				} else {
 					if (num_recurse >= config.min_recursion_to_cache) {
-                        addCache(i, working_boundary, cache);
+                        addCache(i, working_boundary);
 						cached_column_idx.push(i);
 						if (cached_column_idx.size() > config.cache_size) {
 							cache.erase(cached_column_idx.front());
@@ -132,7 +134,7 @@ void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 }
 
 
-void InterDimensions::computePairs(uint8_t k, vector<Cube>& ctr) {
+void InterDimensions::computePairs(uint8_t k, const vector<Cube>& ctr) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	vector<vector<Pair>>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<uint64_t,Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
@@ -186,7 +188,7 @@ void InterDimensions::computePairs(uint8_t k, vector<Cube>& ctr) {
 					continue;
 				} else {
 					if (num_recurse >= config.min_recursion_to_cache) {
-                        addCache(i, working_boundary, cache);
+                        addCache(i, working_boundary);
 						cached_column_idx.push(i);
 						if (cached_column_idx.size() > config.cache_size) {
 							cache.erase(cached_column_idx.front());
@@ -208,7 +210,7 @@ void InterDimensions::computePairs(uint8_t k, vector<Cube>& ctr) {
 }
 
 
-void InterDimensions::computePairsImage(uint8_t k, vector<Cube>& ctr) {
+void InterDimensions::computePairsImage(uint8_t k, const vector<Cube>& ctr) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	unordered_map<uint64_t,Cube>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
 
@@ -262,7 +264,7 @@ void InterDimensions::computePairsImage(uint8_t k, vector<Cube>& ctr) {
 					continue;
 				} else {
 					if (num_recurse >= config.min_recursion_to_cache) {
-                        addCache(i, working_boundary, cache);
+                        addCache(i, working_boundary);
 						cached_column_idx.push(i);
 						if (cached_column_idx.size() > config.cache_size) {
 							cache.erase(cached_column_idx.front());
@@ -284,7 +286,7 @@ void InterDimensions::computePairsImage(uint8_t k, vector<Cube>& ctr) {
 }
 
 
-void InterDimensions::assembleNewColumns(const CubicalGridComplex& cgc, vector<Cube>& ctr) {
+void InterDimensions::assembleNewColumns(const CubicalGridComplex& cgc, vector<Cube>& ctr) const {
 	ctr.clear();
 	//ctr.reserve();
 	CubeEnumerator cubeEnum(cgc, computeDim-1);
@@ -335,8 +337,8 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
         auto start = high_resolution_clock::now();
 		
 		computePairsComp(ctrComp);
+		ctrIm = ctrComp; 
 		if (computeDim > 1) { assembleNewColumns(cgcComp, ctrComp); }
-		ctrIm = ctrComp;
 		
 		computePairs(0, ctr0);
 		if (computeDim > 1) { assembleNewColumns(cgc0, ctr0); }
@@ -344,8 +346,7 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
 		computePairs(1, ctr1);
 		if (computeDim > 1) { assembleNewColumns(cgc1, ctr1); }
 		
-		computePairsImage(0, ctrComp);
-		computePairsImage(1, ctrComp);
+		computePairsImage(0, ctrIm); computePairsImage(1, ctrIm);
 		
 		computeMatching();
 		
