@@ -28,14 +28,13 @@ void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube
 
 	edges.clear();
 	edges.reserve(numEdges);
-	edges.push_back(enumerator.getCube());
+	edges.push_back(enumerator.getNextCube());
 
 	while (enumerator.hasNextCube()) {
-		if (enumerator.getCube().birth <= config.threshold) {
-			edges.push_back(enumerator.getCube());
+		if (enumerator.getNextCube().birth <= config.threshold) {
+			edges.push_back(enumerator.getNextCube());
 		}
 	}
-
 	sort(edges.begin(), edges.end(), CubeComparator());
 }
 

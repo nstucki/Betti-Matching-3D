@@ -17,6 +17,7 @@ class Cube {
     Cube(const Cube& cube);
     void copyCube(const Cube& cube);
     bool operator==(const Cube& rhs) const;
+	bool operator!=(const Cube& rhs) const;
     void print() const;
 };
 

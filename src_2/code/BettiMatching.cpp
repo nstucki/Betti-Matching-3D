@@ -1,4 +1,5 @@
 #include "template_functions.h"
+#include "enumerators.h"
 
 #include "top_dimension.h"
 #include "inter_dimensions.h"
@@ -207,8 +208,11 @@ int main(int argc, char** argv) {
     if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
     
     assert (shape0 == shape1);
+    for (uint64_t s : shape0) {
+        assert (s > 1);
+    }
     uint64_t dim = shape0.size();
-
+    
     vector<float> imageComp;
     transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](float a, float b){return min(a,b);});
     
@@ -247,7 +251,33 @@ int main(int argc, char** argv) {
         for (auto& m : interDim.matches[1]) {
             m.print();
         }
-    
+    }
+
+    vector<Cube> edges;
+    DualEdgeEnumerator edgeEnum(cgc0);
+    edges.push_back(edgeEnum.getNextCube());
+    uint64_t counterEdge = 1;
+    while (edgeEnum.hasNextCube()) {
+        edges.push_back(edgeEnum.getNextCube());
+        counterEdge++;
+    }
+    cout << counterEdge << endl;
+
+    vector<Cube> cubes;
+    CubeEnumerator cubeEnum(cgc0, 2);
+    cubes.push_back(cubeEnum.getNextCube());
+    uint64_t counterCube = 1;
+    while (cubeEnum.hasNextCube()) {
+        cubes.push_back(cubeEnum.getNextCube());
+        counterCube++;
+    }
+    cout << counterCube << endl;
+
+    for (uint64_t i = 0; i < counterEdge; i++) {
+        edges[i].print(); cout << " "; cubes[i].print(); cout << endl;
+        if (edges[i] != cubes[i]) {
+            cout << "error" << endl;
+        }
     }
 }
     

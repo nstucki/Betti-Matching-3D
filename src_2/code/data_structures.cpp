@@ -6,22 +6,32 @@
 using namespace std;
 
 
+
 Cube::Cube() {
 	birth = 0; 
 	coordinates.push_back(NONE);
 }
 
+
 Cube::Cube(float _birth, vector<uint64_t>_coordinates) : birth(_birth), coordinates(_coordinates) {}
+
 
 Cube::Cube(const Cube &cube) {
     birth = cube.birth;
     coordinates = cube.coordinates;
 }
  
+
 void Cube::copyCube(const Cube &cube) {
     birth = cube.birth;
     coordinates = cube.coordinates;
 }
+
+
+bool Cube::operator==(const Cube& rhs) const { return (birth == rhs.birth && coordinates == rhs.coordinates); }
+
+bool Cube::operator!=(const Cube& rhs) const { return (birth != rhs.birth || coordinates != rhs.coordinates); }
+
 
 void Cube::print() const {
     cout << "(" << birth << ";";
@@ -34,9 +44,7 @@ void Cube::print() const {
     cout << ")";
 }
 
-bool Cube::operator==(const Cube& rhs) const {
-    return (birth == rhs.birth && coordinates == rhs.coordinates);
-}
+
 
 bool CubeComparator::operator()(const Cube& cube1, const Cube& cube2) const {
     if (cube1.birth == cube2.birth) {
@@ -50,15 +58,14 @@ bool CubeComparator::operator()(const Cube& cube1, const Cube& cube2) const {
 }
 
 
+
 Pair::Pair(const Cube& _birth, const Cube& _death) : birth(_birth), death(_death) {}
 
-bool Pair::operator==(const Pair& rhs) const {
-    return (birth == rhs.birth && death == rhs.death);
-}
 
-void Pair::print() const {
-    cout << "("; birth.print(); cout << " , "; death.print(); cout << ")";
-}
+bool Pair::operator==(const Pair& rhs) const { return (birth == rhs.birth && death == rhs.death); }
+
+void Pair::print() const { cout << "("; birth.print(); cout << " , "; death.print(); cout << ")"; }
+
 
 
 Match::Match(const Pair &_pair0, const Pair &_pair1) : pair0(_pair0), pair1(_pair1) {}
@@ -69,8 +76,10 @@ void Match::print() const {
 }
 
 
+
 CubicalGridComplex::CubicalGridComplex(vector<float> _image, const vector<uint64_t>& _shape) : 
 	image(_image), shape(_shape), dim(_shape.size()) {}
+
 
 uint64_t CubicalGridComplex::getIndex(const vector<uint64_t>& coordinates) const {
 	//std::vector<int> multiplies(data.size());?
@@ -82,6 +91,7 @@ uint64_t CubicalGridComplex::getIndex(const vector<uint64_t>& coordinates) const
 	}
 	return idx;
 }
+
 
 float CubicalGridComplex::getValue(const vector<uint64_t>& coordinates_image) const { return image[getIndex(coordinates_image)]; }
 
@@ -136,6 +146,7 @@ float CubicalGridComplex::getBirth(const vector<uint64_t>& coordinates_cube) con
 	return birth;
 }
 
+
 void CubicalGridComplex::printImage() const {
     float birth;
     for (uint64_t i = 0; i < shape[0]; i++) {
@@ -153,6 +164,7 @@ void CubicalGridComplex::printImage() const {
         cout << '\n';
     }
 }
+
 
 void CubicalGridComplex::printCubes() const {
     float birth;
@@ -173,9 +185,12 @@ void CubicalGridComplex::printCubes() const {
 }
 
 
+
 UnionFind::UnionFind(const CubicalGridComplex& _cgc) : cgc(_cgc) {}
 
+
 float UnionFind::getBirth(uint64_t x) const { return birthtime[x]; }
+
 
 uint64_t UnionFind::find(uint64_t x) {
 	uint32_t y = x, z = parent[y];
@@ -191,6 +206,7 @@ uint64_t UnionFind::find(uint64_t x) {
 	}
 	return z;
 }
+
 
 uint64_t UnionFind::link(uint64_t x, uint64_t y){
 	if (birthtime[x] > birthtime[y]){
@@ -211,6 +227,7 @@ uint64_t UnionFind::link(uint64_t x, uint64_t y){
 }
 
 
+
 UnionFindDual::UnionFindDual(const CubicalGridComplex &_cgc) : cgc(_cgc) {
 	n = 1;
 	for (auto& s : cgc.shape) { n *= (s-1); }
@@ -226,7 +243,9 @@ UnionFindDual::UnionFindDual(const CubicalGridComplex &_cgc) : cgc(_cgc) {
 	birthtime[n] = numeric_limits<float>::infinity();
 }
 
+
 float UnionFindDual::getBirth(uint64_t x) const { return birthtime[x]; }
+
 
 vector<uint64_t> UnionFindDual::getCoordinates(uint64_t x) const {
 	vector<uint64_t> coordinates(cgc.dim, 0);
@@ -240,6 +259,7 @@ vector<uint64_t> UnionFindDual::getCoordinates(uint64_t x) const {
 	return coordinates;
 }
 
+
 uint64_t UnionFindDual::getIndex(vector<uint64_t> coordinates) const {
 	uint64_t x = 0;
 	uint64_t factor = 1;
@@ -249,6 +269,7 @@ uint64_t UnionFindDual::getIndex(vector<uint64_t> coordinates) const {
 	}
 	return x;
 }
+
 
 uint64_t UnionFindDual::find(uint64_t x) {
 	uint32_t y = x, z = parent[y];
@@ -264,6 +285,7 @@ uint64_t UnionFindDual::find(uint64_t x) {
 	}
 	return z;
 }
+
 
 uint64_t UnionFindDual::link(uint64_t x, uint64_t y){
 	if (birthtime[x] < birthtime[y]){

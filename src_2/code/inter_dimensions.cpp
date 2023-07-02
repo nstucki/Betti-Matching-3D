@@ -70,6 +70,7 @@ void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 
 	pivot_column_index.clear();
 	cache.clear();
+	matchMapComp.clear();
 
 	pivot_column_index.reserve(ctrSize);
 	cache.reserve(ctrSize);
@@ -283,7 +284,28 @@ void InterDimensions::computePairsImage(uint8_t k, vector<Cube>& ctr) {
 }
 
 
-void InterDimensions::assembleNewColumns(vector<Cube>& ctr) {}
+void InterDimensions::assembleNewColumns(const CubicalGridComplex& cgc, vector<Cube>& ctr) {
+	ctr.clear();
+	//ctr.reserve();
+	CubeEnumerator cubeEnum(cgc, computeDim-1);
+
+	Cube cube = cubeEnum.getNextCube();
+	if (cube.birth <= config.threshold) {
+		auto find = pivot_column_index.find(cgc.getCubeIndex(cube));
+		if (find != pivot_column_index.end()) {
+			ctr.push_back(cube);
+		}
+	}
+	while (cubeEnum.hasNextCube()) {
+		cube = cubeEnum.getNextCube();
+		if (cube.birth <= config.threshold) {
+			auto find = pivot_column_index.find(cgc.getCubeIndex(cube));
+			if (find != pivot_column_index.end()) {
+				ctr.push_back(cube);
+			}
+		}
+	}
+}
 
 
 void InterDimensions::computeMatching() {
@@ -313,14 +335,14 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
         auto start = high_resolution_clock::now();
 		
 		computePairsComp(ctrComp);
-		if (computeDim > 1) { assembleNewColumns(ctrComp); }
+		if (computeDim > 1) { assembleNewColumns(cgcComp, ctrComp); }
 		ctrIm = ctrComp;
 		
 		computePairs(0, ctr0);
-		if (computeDim > 1) { assembleNewColumns(ctr0); }
+		if (computeDim > 1) { assembleNewColumns(cgc0, ctr0); }
 		
 		computePairs(1, ctr1);
-		if (computeDim > 1) { assembleNewColumns(ctr1); }
+		if (computeDim > 1) { assembleNewColumns(cgc1, ctr1); }
 		
 		computePairsImage(0, ctrComp);
 		computePairsImage(1, ctrComp);
