@@ -32,6 +32,7 @@ class Pair {
 	const Cube death;
 
     Pair(const Cube& birth, const Cube& death);
+	Pair(const Pair& pair);
 	bool operator==(const Pair& rhs) const;
 	void print() const;
 };

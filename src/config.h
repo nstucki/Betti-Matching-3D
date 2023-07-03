@@ -16,7 +16,7 @@ struct Config {
 	file_format format_0;
 	file_format format_1;
 	int min_recursion_to_cache = 0;
-	uint64_t cache_size = 1 << 63;
+	uint64_t cache_size = 1 << 31;
 	bool print = false;
 	bool verbose = false;
 };

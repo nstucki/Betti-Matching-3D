@@ -49,6 +49,8 @@ bool CubeComparator::operator()(const Cube& cube1, const Cube& cube2) const {
 
 Pair::Pair(const Cube& _birth, const Cube& _death) : birth(_birth), death(_death) {}
 
+Pair::Pair(const Pair& pair) : birth(pair.birth), death(pair.death) {}
+
 bool Pair::operator==(const Pair& rhs) const { return (birth == rhs.birth && death == rhs.death); }
 
 void Pair::print() const { cout << "("; birth.print(); cout << ","; death.print(); cout << ")"; }

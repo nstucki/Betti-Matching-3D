@@ -130,10 +130,18 @@ int main(int argc, char** argv) {
     CubicalGridComplex cgc1(move(image1), shape1);
     CubicalGridComplex cgcComp(move(imageComp), shape0);
 
-    cout << "Input 0:" << endl << endl; cgc0.printImage(); cout << endl;
+    if (config.print) {
+        cout << "Input 0:" << endl << endl; cgc0.printImage(); cout << endl;
     cout << "Input 1" << endl << endl; cgc1.printImage(); cout << endl;
     cout << "Comparison" << endl << endl; cgcComp.printImage(); cout << endl;
-    cgcComp.printCubes();
+    }
+
+    vector<vector<Pair>> pairs0(dim);
+	vector<vector<Pair>> pairs1(dim);
+	vector<vector<Pair>> pairsComp(dim);
+	vector<vector<Match>> matches(dim);
+	unordered_map<uint64_t, bool> isMatched0;
+	unordered_map<uint64_t, bool> isMatched1;
 
  	vector<Cube> ctr0;
  	vector<Cube> ctr1;
@@ -143,7 +151,8 @@ int main(int argc, char** argv) {
         if (config.verbose) { cout << "computing dimension " << dim-1 << " ... "; }
         start = high_resolution_clock::now();
 
-        TopDimension topDim(cgc0, cgc1, cgcComp, config);
+        TopDimension topDim(cgc0, cgc1, cgcComp, pairs0[dim-1], pairs1[dim-1], pairsComp[dim-1], matches[dim-1],
+                            isMatched0, isMatched1, config);       
         topDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
         
         stop = high_resolution_clock::now();
@@ -151,37 +160,48 @@ int main(int argc, char** argv) {
         durationTotal += duration;
         if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
 
-        cout << "pairs in Input 0:" << endl;
-        for (auto& pair : topDim.pairs0) {
-            pair.print(); cout << endl;
-        }
-        cout << "pairs in Input 1:" << endl;
-        for (auto& pair : topDim.pairs1) {
-            pair.print(); cout << endl;
-        }
-        cout << "pairs in Comparison:" << endl;
-        for (auto& pair : topDim.pairsComp) {
-            pair.print(); cout << endl;
-        }
-        cout << "matches in topdim" << endl;
-        for (auto& m : topDim.matches) {
-            m.print(); cout << endl;
+        if (config.print) {
+            cout << "pairs in Input 0:" << endl;
+            for (auto& pair : pairs0[dim-1]) {
+                pair.print(); cout << endl;
+            }
+            cout << endl;
+            cout << "pairs in Input 1:" << endl;
+            for (auto& pair : pairs1[dim-1]) {
+                pair.print(); cout << endl;
+            }
+            cout << endl;
+            cout << "pairs in Comparison:" << endl;
+            for (auto& pair : pairsComp[dim-1]) {
+                pair.print(); cout << endl;
+            }
+            cout << endl;
+            cout << "matches in topdim" << endl;
+            for (auto& m : matches[dim-1]) {
+                m.print(); cout << endl;
+            }
+            cout << endl;
         }
     }
 
-//     if (dim > 2) {
-//         start = high_resolution_clock::now();
-//         InterDimensions interDim(cgc0, cgc1, cgcComp, config);
-//         interDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
-//         stop = high_resolution_clock::now();
-//         durationTotal += duration;
+    cout << ctrComp.size() << endl;
 
-//         if (config.print) {
-//             cout << "matches in dim 1" << endl;
-//             for (auto& m : interDim.matches[1]) {
-//                 m.print();
-//         }
-//         }
-//     }
+    if (dim > 2) {
+        start = high_resolution_clock::now();
+        
+        InterDimensions interDim(cgc0, cgc1, cgcComp, config);
+        interDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
+
+        stop = high_resolution_clock::now();
+        durationTotal += duration;
+
+        if (config.print) {
+            cout << "matches in dim 1" << endl;
+            for (auto& m : interDim.matches[1]) {
+                m.print();
+        }
+        }
+        
+    }
 }
     

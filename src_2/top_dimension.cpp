@@ -9,7 +9,10 @@ using namespace std;
 
 
 TopDimension::TopDimension(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, const CubicalGridComplex& _cgcComp, 
-							const Config& _config) : cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config) {}
+					vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, vector<Match>& _matches,
+					unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1, const Config& _config) : 
+					cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), pairs0(_pairs0), pairs1(_pairs1), pairsComp(_pairsComp), 
+					matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1), config(_config) {}
 
 void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
 	edges.clear();
@@ -138,7 +141,11 @@ void TopDimension::computeMatching() {
 		auto find0 = matchMap0.find(cgcComp.getCubeIndex(pair.death));
 		auto find1 = matchMap1.find(cgcComp.getCubeIndex(pair.death));
 		if (find0 != matchMap0.end() && find1 != matchMap1.end()) {
-			matches.push_back(Match((find0 -> second), (find1 -> second)));
+			Pair pair0 = (find0->second);
+			Pair pair1 = (find1->second);
+			matches.push_back(Match(pair0, pair1));
+			isMatched0.emplace(cgc0.getCubeIndex(pair0.birth), true);
+			isMatched1.emplace(cgc1.getCubeIndex(pair1.birth), true);
 		}
 	}
 }
