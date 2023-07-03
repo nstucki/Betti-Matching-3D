@@ -348,7 +348,6 @@ int main(int argc, char** argv){
     start = high_resolution_clock::now();
     TopDimension* TD_comp = new TopDimension(cgc_comp, pairs_comp[2]);
     TD_comp->compute_pairs(ctr);
-    cout << ctr.size() << endl;
     delete TD_comp;
     stop = high_resolution_clock::now();
     duration = duration_cast<milliseconds>(stop - start);

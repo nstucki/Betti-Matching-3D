@@ -1,5 +1,4 @@
 #include "template_functions.h"
-#include "enumerators.h"
 
 #include "utils.h"
 #include "top_dimension.h"
@@ -187,7 +186,7 @@ int main(int argc, char** argv) {
     if (dim > 2) {
         start = high_resolution_clock::now();
         
-        InterDimensions interDim(cgc0, cgc1, cgcComp, config, pairs0, pairs1, pairsComp, matches);
+        InterDimensions interDim(cgc0, cgc1, cgcComp, config, pairs0, pairs1, pairsComp, matches, isMatched0, isMatched1);
         interDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
 
         stop = high_resolution_clock::now();
@@ -215,7 +214,6 @@ int main(int argc, char** argv) {
             }
             cout << endl;
         }
-        
     }
 }
     

@@ -9,28 +9,25 @@ using namespace std::chrono;
 
 InterDimensions::InterDimensions(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, const CubicalGridComplex& _cgcComp, 
 							const Config& _config, vector<vector<Pair>>& _pairs0, vector<vector<Pair>>& _pairs1, 
-							vector<vector<Pair>>& _pairsComp, vector<vector<Match>>& _matches) : 
+							vector<vector<Pair>>& _pairsComp, vector<vector<Match>>& _matches, 
+							unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1) : 
 							cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), pairs0(_pairs0), pairs1(_pairs1),
-							pairsComp(_pairsComp), matches(_matches) {
+							pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1) {
 	computeDim = cgc0.dim-2;
-	pairs0 = vector<vector<Pair>>(computeDim+1);
-	pairs1 = vector<vector<Pair>>(computeDim+1);
-	pairsComp = vector<vector<Pair>>(computeDim+1);
-	matches = vector<vector<Match>>(computeDim+1);
 }
 
-void InterDimensions::computePairsComp(const vector<Cube>& ctr) {
+void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 	uint64_t ctrSize = ctr.size();
 	pivot_column_index.clear();
 	pivot_column_index.reserve(ctrSize);	
 	cache.clear();
 	cache.reserve(min(config.cacheSize, ctrSize));
 	matchMapComp.clear();
-
 	BoundaryEnumerator faces = BoundaryEnumerator(cgcComp);
 	queue<uint64_t> cached_column_idx;
 	uint64_t num_recurse;
 	uint64_t j;
+	bool shouldClear = false;
 	for(uint64_t i = 0; i < ctrSize; i++) {
 		CubeQue working_boundary;
 		j = i;
@@ -77,9 +74,19 @@ void InterDimensions::computePairsComp(const vector<Cube>& ctr) {
 					}
 					break;
 				}
-			} else { break; }
+			} else {
+				ctr[i].coordinates[0] = NONE;
+				shouldClear = true;
+				break;
+			}
 		}
 	}
+	// create new vector instead?
+	if (shouldClear) {
+		auto new_end = remove_if(ctr.begin(), ctr.end(), [](const Cube& edge){ return edge.coordinates[0] == NONE; });
+		ctr.erase(new_end, ctr.end());
+	}
+	
 }
 
 void InterDimensions::computePairs(const vector<Cube>& ctr, uint8_t k) {
@@ -259,8 +266,7 @@ void InterDimensions::addCache(uint64_t i, CubeQue& working_boundary) {
 
 void InterDimensions::assembleColumnsToReduce(const CubicalGridComplex& cgc, vector<Cube>& ctr) const {
 	ctr.clear();
-	ctr.reserve(cgc.getNumberOfCubes(computeDim-1));
-	
+	ctr.reserve(cgc.getNumberOfCubes(computeDim-1));	
 	CubeEnumerator cubeEnum(cgc, computeDim-1);
 	Cube cube = cubeEnum.getNextCube();
 	if (cube.birth <= config.threshold) {
@@ -284,7 +290,8 @@ void InterDimensions::assembleColumnsToReduce(const CubicalGridComplex& cgc, vec
 void InterDimensions::computeMatching() {
 	Cube birth0;
 	Cube birth1;
-
+	Pair pair0;
+	Pair pair1;
 	for (auto& pair : pairsComp[computeDim]) {
 		auto findIm0 = matchMapIm0.find(cgcComp.getCubeIndex(pair.death));
 		auto findIm1 = matchMapIm1.find(cgcComp.getCubeIndex(pair.death));
@@ -294,7 +301,11 @@ void InterDimensions::computeMatching() {
 			auto find0 = matchMap0.find(cgc0.getCubeIndex(birth0));
 			auto find1 = matchMap1.find(cgc1.getCubeIndex(birth1));
 			if (find0 != matchMap0.end() && find1 != matchMap1.end()) {
-				matches[computeDim].push_back(Match(find0->second, find1->second));
+				pair0 = find0->second;
+				pair1 = find1->second;
+				matches[computeDim].push_back(Match(pair0, pair1));
+				isMatched0.emplace(cgc0.getCubeIndex(pair0.birth), true);
+				isMatched1.emplace(cgc1.getCubeIndex(pair1.birth), true);
 			}
 		}
 	}
@@ -308,8 +319,10 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
         auto start = high_resolution_clock::now();
 		
 		computePairsComp(ctrComp);
-		ctrIm = ctrComp; 
-		if (computeDim > 1) { assembleColumnsToReduce(cgcComp, ctrComp); }
+		if (computeDim > 1) { 
+			ctrIm = ctrComp;
+			assembleColumnsToReduce(cgcComp, ctrComp);
+		}
 		
 		computePairs(ctr0, 0);
 		if (computeDim > 1) { assembleColumnsToReduce(cgc0, ctr0); }
@@ -317,7 +330,8 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
 		computePairs(ctr1, 1);
 		if (computeDim > 1) { assembleColumnsToReduce(cgc1, ctr1); }
 		
-		computePairsImage(ctrIm, 0); computePairsImage(ctrIm, 1);
+		if (computeDim > 1) { computePairsImage(ctrIm, 0); computePairsImage(ctrIm, 1); }
+		else { computePairsImage(ctrComp, 0); computePairsImage(ctrComp, 1); }
 		
 		computeMatching();
 		

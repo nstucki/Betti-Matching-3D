@@ -1,5 +1,3 @@
-#include "template_functions.h"
-
 #include "top_dimension.h"
 #include "enumerators.h"
 
@@ -137,12 +135,14 @@ void TopDimension::computePairsImage(vector<Cube>& edges, uint8_t k) {
 }
 
 void TopDimension::computeMatching() {
+	Pair pair0;
+	Pair pair1;
 	for (auto& pair : pairsComp) {
 		auto find0 = matchMap0.find(cgcComp.getCubeIndex(pair.death));
 		auto find1 = matchMap1.find(cgcComp.getCubeIndex(pair.death));
 		if (find0 != matchMap0.end() && find1 != matchMap1.end()) {
-			Pair pair0 = (find0->second);
-			Pair pair1 = (find1->second);
+			pair0 = (find0->second);
+			pair1 = (find1->second);
 			matches.push_back(Match(pair0, pair1));
 			isMatched0.emplace(cgc0.getCubeIndex(pair0.birth), true);
 			isMatched1.emplace(cgc1.getCubeIndex(pair1.birth), true);
