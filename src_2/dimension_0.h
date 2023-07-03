@@ -1,30 +1,33 @@
 #pragma once
 
-#include "cubical_grid_complex.h"
-#include "write_pair.h"
+#include "data_structures.h"
+#include "config.h"
 
-class Dimension0{
+#include <unordered_map>
+
+
+class Dimension0 {
 	private:
-	CubicalGridComplex* cgc;
-	vector<WritePair>* pairs;
+	const CubicalGridComplex& cgc0;
+	const CubicalGridComplex& cgc1;
+	const CubicalGridComplex& cgcComp;
+	const Config& config;
+	vector<Pair>& pairs0;
+	vector<Pair>& pairs1;
+	vector<Pair>& pairsComp;
+	vector<Match>& matches;
+	unordered_map<uint64_t, bool>& isMatched0;
+	unordered_map<uint64_t, bool>& isMatched1;
+	unordered_map<uint64_t, Pair> matchMap0;
+	unordered_map<uint64_t, Pair> matchMap1;
+
+	void enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const;
+	void computePairs(vector<Cube>& ctr, uint8_t k);
+	void computeImagePairsAndMatch(vector<Cube>& ctr);
 
 	public:
-	Dimension0(CubicalGridComplex* _cgc, vector<WritePair>& _pairs);
-	void enum_edges(vector<Cube>& ctr);
-	void compute_pairs(vector<Cube>& ctr);
-};
-
-class Dimension0Image{
-	private:
-	CubicalGridComplex* cgc_0;
-	CubicalGridComplex* cgc_1;
-	CubicalGridComplex* cgc_comp;
-	vector<WritePair>* pairs_im_0;
-	vector<WritePair>* pairs_im_1;
-	vector<WritePair>* pairs_comp;
-	
-	public:
-	Dimension0Image(CubicalGridComplex* _cgc_0, CubicalGridComplex* _cgc_1, CubicalGridComplex* _cgc_comp, vector<WritePair>& pairs_im_0, vector<WritePair>& pairs_im_1, vector<WritePair>& pairs_comp);
-	void enum_edges(vector<Cube>& ctr);
-	void compute_pairs(vector<Cube>& ctr);
+	Dimension0(const CubicalGridComplex& cgc0, const CubicalGridComplex& cgc1, const CubicalGridComplex& cgcComp, 
+					const Config& config, vector<Pair>& pairs0, vector<Pair>& pairs1, vector<Pair>& pairsComp,
+					vector<Match>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1);
+	void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp);
 };

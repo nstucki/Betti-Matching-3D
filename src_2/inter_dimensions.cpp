@@ -156,7 +156,7 @@ void InterDimensions::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	}
 }
 
-void InterDimensions::computePairsImage(const vector<Cube>& ctr, uint8_t k) {
+void InterDimensions::computeImagePairs(const vector<Cube>& ctr, uint8_t k) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	unordered_map<uint64_t,Cube>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
 
@@ -330,8 +330,8 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
 		computePairs(ctr1, 1);
 		if (computeDim > 1) { assembleColumnsToReduce(cgc1, ctr1); }
 		
-		if (computeDim > 1) { computePairsImage(ctrIm, 0); computePairsImage(ctrIm, 1); }
-		else { computePairsImage(ctrComp, 0); computePairsImage(ctrComp, 1); }
+		if (computeDim > 1) { computeImagePairs(ctrIm, 0); computeImagePairs(ctrIm, 1); }
+		else { computeImagePairs(ctrComp, 0); computeImagePairs(ctrComp, 1); }
 		
 		computeMatching();
 		

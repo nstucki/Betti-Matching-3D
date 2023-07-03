@@ -9,9 +9,8 @@
 typedef priority_queue<Cube, vector<Cube>, CubeComparator> CubeQue;
 
 
-
 class InterDimensions{
-private:
+	private:
 	const CubicalGridComplex& cgc0;
 	const CubicalGridComplex& cgc1;
 	const CubicalGridComplex& cgcComp;
@@ -36,12 +35,11 @@ private:
 	void addCache(uint64_t i, CubeQue &working_boundary);
 	void computePairsComp(vector<Cube>& ctr);
 	void computePairs(const vector<Cube>& ctr, uint8_t k);
-	void computePairsImage(const vector<Cube>& ctr, uint8_t k);
+	void computeImagePairs(const vector<Cube>& ctr, uint8_t k);
 	void assembleColumnsToReduce(const CubicalGridComplex& cgc, vector<Cube>& ctr) const;
 	void computeMatching();
 
-public:
-
+	public:
 	InterDimensions(const CubicalGridComplex& cgc0, const CubicalGridComplex& cgc1, const CubicalGridComplex& cgcComp, 
 					const Config& config, vector<vector<Pair>>& pairs0, vector<vector<Pair>>& pairs1, vector<vector<Pair>>& pairsComp,
 					vector<vector<Match>>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1);

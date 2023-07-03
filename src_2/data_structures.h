@@ -81,15 +81,16 @@ class UnionFind{
 	uint64_t find(uint64_t x);
 	uint64_t link(const uint64_t& x, const uint64_t& y);
 	float getBirth(const uint64_t& idx) const;
+	uint64_t getIndex(const vector<uint64_t>& coordinates) const;
 	vector<uint64_t> getCoordinates(uint64_t idx) const;
 };
 
 
 class UnionFindDual {
 	private:
-	const CubicalGridComplex& cgc;
 	vector<uint64_t> parent;
 	vector<float> birthtime;
+	const CubicalGridComplex& cgc;
 
 	public:
 	uint64_t star;
@@ -98,7 +99,6 @@ class UnionFindDual {
 	uint64_t find(uint64_t x);
 	uint64_t link(const uint64_t& x, const uint64_t& y);
 	float getBirth(const uint64_t& idx) const;
-	vector<uint64_t> getCoordinates(uint64_t idx) const;
 	uint64_t getIndex(const vector<uint64_t>& coordinates) const;
-	
+	vector<uint64_t> getCoordinates(uint64_t idx) const;
 };

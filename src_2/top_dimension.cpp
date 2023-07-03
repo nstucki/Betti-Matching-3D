@@ -1,10 +1,6 @@
 #include "top_dimension.h"
 #include "enumerators.h"
 
-#include <iostream>
-
-using namespace std;
-
 
 TopDimension::TopDimension(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, const CubicalGridComplex& _cgcComp,
 					const Config& _config, vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp,
@@ -12,34 +8,34 @@ TopDimension::TopDimension(const CubicalGridComplex& _cgc0, const CubicalGridCom
 					cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), pairs0(_pairs0), pairs1(_pairs1), pairsComp(_pairsComp), 
 					matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1), config(_config) {}
 
-void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
-	edges.clear();
-	edges.reserve(cgc.getNumberOfCubes(cgc.dim-1));
+void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& dualEdges) const {
+	dualEdges.clear();
+	dualEdges.reserve(cgc.getNumberOfCubes(cgc.dim-1));
 	CubeEnumerator cubeEnum(cgc, cgc.dim-1);
 	Cube cube = cubeEnum.getNextCube();
 	if (cube.birth <= config.threshold) {
-		edges.push_back(cube);
+		dualEdges.push_back(cube);
 	}
 	while (cubeEnum.hasNextCube()) {
 		cube = cubeEnum.getNextCube();
 		if (cube.birth <= config.threshold) {
-			edges.push_back(cube);
+			dualEdges.push_back(cube);
 		}
 	}
-	sort(edges.begin(), edges.end(), CubeComparator());
+	sort(dualEdges.begin(), dualEdges.end(), CubeComparator());
 }
 
-void TopDimension::computePairsComp(vector<Cube>& edges) {
-	UnionFindDual uf = UnionFindDual(cgcComp);
+void TopDimension::computePairsComp(vector<Cube>& dualEdges) {
+	UnionFindDual uf(cgcComp);
 	vector<uint64_t> boundaryCoordinates;
 	uint64_t degenAxis;
 	uint64_t boundaryIdx0;
 	uint64_t boundaryIdx1;
-	uint64_t birthIdx0;
-	uint64_t birthIdx1;
+	uint64_t parentIdx0;
+	uint64_t parentIdx1;
 	uint64_t birthIdx;
 	float birth;
-	for (auto edge = edges.rbegin(), last = edges.rend(); edge != last; ++edge) {
+	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge) {
 		boundaryCoordinates = edge->coordinates;
 		for (uint64_t i = 0; i < cgcComp.dim; i++) {
 			if (boundaryCoordinates[i]%2 == 0) {
@@ -61,10 +57,10 @@ void TopDimension::computePairsComp(vector<Cube>& edges) {
 			boundaryCoordinates[degenAxis] += 2;
 			boundaryIdx1 = uf.getIndex(boundaryCoordinates);
 		}
-		birthIdx0 = uf.find(boundaryIdx0);
-		birthIdx1 = uf.find(boundaryIdx1);
-		if (birthIdx0 != birthIdx1) {
-			birthIdx = uf.link(birthIdx0, birthIdx1);
+		parentIdx0 = uf.find(boundaryIdx0);
+		parentIdx1 = uf.find(boundaryIdx1);
+		if (parentIdx0 != parentIdx1) {
+			birthIdx = uf.link(parentIdx0, parentIdx1);
 			birth = uf.getBirth(birthIdx);
 			if (edge->birth != birth) {
 				pairsComp.push_back(Pair(*edge, Cube(birth, uf.getCoordinates(birthIdx))));
@@ -72,27 +68,27 @@ void TopDimension::computePairsComp(vector<Cube>& edges) {
 			edge->coordinates[0] = NONE;
 		}
 	}
-	auto new_end = remove_if(edges.begin(), edges.end(), [](const Cube& edge){ return edge.coordinates[0] == NONE; });
-	edges.erase(new_end, edges.end());
+	auto new_end = remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& edge){ return edge.coordinates[0] == NONE; });
+	dualEdges.erase(new_end, dualEdges.end());
 }
 
-void TopDimension::computePairsImage(vector<Cube>& edges, uint8_t k) {
+void TopDimension::computeImagePairs(vector<Cube>& dualEdges, uint8_t k) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<uint64_t,Pair>& matchMap = (k==0) ? matchMap0 : matchMap1;
 	
-	UnionFindDual uf = UnionFindDual(cgc);
-	UnionFindDual ufComp = UnionFindDual(cgcComp);
+	UnionFindDual uf(cgc);
+	UnionFindDual ufComp(cgcComp);
 	vector<uint64_t> boundaryCoordinates;
 	uint64_t degenAxis;
 	uint64_t boundaryIdx0;
 	uint64_t boundaryIdx1;
-	uint64_t birthIdx0;
-	uint64_t birthIdx1;
+	uint64_t parentIdx0;
+	uint64_t parentIdx1;
 	uint64_t birthIdx;
 	uint64_t birthIdxComp;
 	float birth;
-	for (auto edge = edges.rbegin(), last = edges.rend(); edge != last; ++edge) {
+	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge) {
 		boundaryCoordinates = edge->coordinates;
 		for (uint64_t i = 0; i < cgc.dim; i++) {
 			if (boundaryCoordinates[i]%2 == 0) {
@@ -115,14 +111,14 @@ void TopDimension::computePairsImage(vector<Cube>& edges, uint8_t k) {
 			boundaryIdx1 = uf.getIndex(boundaryCoordinates);
 		}
 
-		birthIdx0 = uf.find(boundaryIdx0);
-		birthIdx1 = uf.find(boundaryIdx1);
-		if (birthIdx0 != birthIdx1) {
-			birthIdx = uf.link(birthIdx0, birthIdx1);
+		parentIdx0 = uf.find(boundaryIdx0);
+		parentIdx1 = uf.find(boundaryIdx1);
+		if (parentIdx0 != parentIdx1) {
+			birthIdx = uf.link(parentIdx0, parentIdx1);
 			birth = uf.getBirth(birthIdx);
-			birthIdx0 = ufComp.find(boundaryIdx0);
-			birthIdx1 = ufComp.find(boundaryIdx1);
-			birthIdxComp = ufComp.link(birthIdx0, birthIdx1);
+			parentIdx0 = ufComp.find(boundaryIdx0);
+			parentIdx1 = ufComp.find(boundaryIdx1);
+			birthIdxComp = ufComp.link(parentIdx0, parentIdx1);
 			if (edge->birth != birth) {
 				pairs.push_back(Pair(*edge, Cube(birth, uf.getCoordinates(birthIdx))));
 				matchMap.emplace(cgcComp.getCubeIndex(ufComp.getCoordinates(birthIdxComp)), pairs.back());
@@ -130,8 +126,8 @@ void TopDimension::computePairsImage(vector<Cube>& edges, uint8_t k) {
 			edge->coordinates[0] = NONE;
 		}
 	}
-	auto new_end = remove_if(edges.begin(), edges.end(), [](const Cube& edge){ return edge.coordinates[0] == NONE; });
-	edges.erase(new_end, edges.end());
+	auto new_end = remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& edge){ return edge.coordinates[0] == NONE; });
+	dualEdges.erase(new_end, dualEdges.end());
 }
 
 void TopDimension::computeMatching() {
@@ -155,10 +151,10 @@ void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, 
 	computePairsComp(ctrComp);
 	
 	enumerateDualEdges(cgc0, ctr0);
-    computePairsImage(ctr0, 0);
+    computeImagePairs(ctr0, 0);
 
 	enumerateDualEdges(cgc1, ctr1);
-    computePairsImage(ctr1, 1);
+    computeImagePairs(ctr1, 1);
 
     computeMatching();
 }
