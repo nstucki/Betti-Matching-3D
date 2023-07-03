@@ -14,7 +14,6 @@ TopDimension::TopDimension(const CubicalGridComplex& _cgc0, const CubicalGridCom
 void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
 	edges.clear();
 	edges.reserve(cgc.getNumberOfCubes(cgc.dim-1));
-
 	CubeEnumerator cubeEnum(cgc, cgc.dim-1);
 	Cube cube = cubeEnum.getNextCube();
 	if (cube.birth <= config.threshold) {
@@ -39,7 +38,6 @@ void TopDimension::computePairsComp(vector<Cube>& edges) {
 	uint64_t birthIdx1;
 	uint64_t birthIdx;
 	float birth;
-	
 	for (auto edge = edges.rbegin(), last = edges.rend(); edge != last; ++edge) {
 		boundaryCoordinates = edge->coordinates;
 		for (uint64_t i = 0; i < cgcComp.dim; i++) {
@@ -49,20 +47,19 @@ void TopDimension::computePairsComp(vector<Cube>& edges) {
 			}
 		}
 		if (boundaryCoordinates[degenAxis] == 0) {
-			boundaryIdx0 = uf.n;
+			boundaryIdx0 = uf.star;
 			boundaryCoordinates[degenAxis] += 1;
 			boundaryIdx1 = uf.getIndex(boundaryCoordinates);
-		} else if (boundaryCoordinates[degenAxis] == 2*cgcComp.dim-2) {
+		} else if (boundaryCoordinates[degenAxis] == 2*cgcComp.shape[degenAxis]-2) {
 			boundaryCoordinates[degenAxis] -= 1;
 			boundaryIdx0 = uf.getIndex(boundaryCoordinates);
-			boundaryIdx1 = uf.n;
+			boundaryIdx1 = uf.star;
 		} else {
 			boundaryCoordinates[degenAxis] -= 1;
 			boundaryIdx0 = uf.getIndex(boundaryCoordinates);
 			boundaryCoordinates[degenAxis] += 2;
 			boundaryIdx1 = uf.getIndex(boundaryCoordinates);
 		}
-
 		birthIdx0 = uf.find(boundaryIdx0);
 		birthIdx1 = uf.find(boundaryIdx1);
 		if (birthIdx0 != birthIdx1) {
@@ -94,7 +91,6 @@ void TopDimension::computePairsImage(vector<Cube>& edges, uint8_t k) {
 	uint64_t birthIdx;
 	uint64_t birthIdxComp;
 	float birth;
-
 	for (auto edge = edges.rbegin(), last = edges.rend(); edge != last; ++edge) {
 		boundaryCoordinates = edge->coordinates;
 		for (uint64_t i = 0; i < cgc.dim; i++) {
@@ -104,13 +100,13 @@ void TopDimension::computePairsImage(vector<Cube>& edges, uint8_t k) {
 			}
 		}
 		if (boundaryCoordinates[degenAxis] == 0) {
-			boundaryIdx0 = uf.n;
+			boundaryIdx0 = uf.star;
 			boundaryCoordinates[degenAxis] += 1;
 			boundaryIdx1 = uf.getIndex(boundaryCoordinates);
-		} else if (boundaryCoordinates[degenAxis] == 2*cgc.dim-2) {
+		} else if (boundaryCoordinates[degenAxis] == 2*cgc.shape[degenAxis]-2) {
 			boundaryCoordinates[degenAxis] -= 1;
 			boundaryIdx0 = uf.getIndex(boundaryCoordinates);
-			boundaryIdx1 = uf.n;
+			boundaryIdx1 = uf.star;
 		} else {
 			boundaryCoordinates[degenAxis] -= 1;
 			boundaryIdx0 = uf.getIndex(boundaryCoordinates);
@@ -123,11 +119,9 @@ void TopDimension::computePairsImage(vector<Cube>& edges, uint8_t k) {
 		if (birthIdx0 != birthIdx1) {
 			birthIdx = uf.link(birthIdx0, birthIdx1);
 			birth = uf.getBirth(birthIdx);
-
 			birthIdx0 = ufComp.find(boundaryIdx0);
 			birthIdx1 = ufComp.find(boundaryIdx1);
 			birthIdxComp = ufComp.link(birthIdx0, birthIdx1);
-
 			if (edge->birth != birth) {
 				pairs.push_back(Pair(*edge, Cube(birth, uf.getCoordinates(birthIdx))));
 				matchMap.emplace(cgcComp.getCubeIndex(ufComp.getCoordinates(birthIdxComp)), pairs.back());

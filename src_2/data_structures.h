@@ -90,7 +90,7 @@ class UnionFindDual {
 	vector<float> birthtime;
 
 	public:
-	uint64_t n;
+	uint64_t star;
 	
 	UnionFindDual(const CubicalGridComplex& cgc);
 	uint64_t find(uint64_t x);

@@ -133,6 +133,7 @@ int main(int argc, char** argv) {
     cout << "Input 0:" << endl << endl; cgc0.printImage(); cout << endl;
     cout << "Input 1" << endl << endl; cgc1.printImage(); cout << endl;
     cout << "Comparison" << endl << endl; cgcComp.printImage(); cout << endl;
+    cgcComp.printCubes();
 
  	vector<Cube> ctr0;
  	vector<Cube> ctr1;

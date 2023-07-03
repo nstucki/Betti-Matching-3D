@@ -215,15 +215,15 @@ uint64_t UnionFind::link(const uint64_t& x, const uint64_t& y){
 
 
 UnionFindDual::UnionFindDual(const CubicalGridComplex &_cgc) : cgc(_cgc) {
-	n = cgc.getNumberOfCubes(cgc.dim);
-	parent.resize(n+1);
-	birthtime.resize(n+1);
-	for (uint64_t i = 0; i < n; i++) {
+	star = cgc.getNumberOfCubes(cgc.dim);
+	parent.resize(star+1);
+	birthtime.resize(star+1);
+	for (uint64_t i = 0; i < star; i++) {
 		parent[i] = i;
 		birthtime[i] = cgc.getBirth(getCoordinates(i));
 	}
-	parent[n] = n;
-	birthtime[n] = numeric_limits<float>::infinity();
+	parent[star] = star;
+	birthtime[star] = numeric_limits<float>::infinity();
 }
 
 uint64_t UnionFindDual::find(uint64_t x) {
@@ -264,7 +264,7 @@ float UnionFindDual::getBirth(const uint64_t& idx) const { return birthtime[idx]
 vector<uint64_t> UnionFindDual::getCoordinates(uint64_t idx) const {
 	vector<uint64_t> coordinates(cgc.dim, 0);
 	uint64_t remainder;
-	for (int64_t d = cgc.dim-1; d >= 0; d--) {
+	for (uint64_t d = cgc.dim; d-- > 0;) {
 		remainder = idx%(cgc.shape[d]-1);
 		idx -= remainder;
 		idx /= (cgc.shape[d]-1);
@@ -276,7 +276,7 @@ vector<uint64_t> UnionFindDual::getCoordinates(uint64_t idx) const {
 uint64_t UnionFindDual::getIndex(const vector<uint64_t>& coordinates) const {
 	uint64_t idx = 0;
 	uint64_t factor = 1;
-	for (uint64_t d = cgc.dim-1; d-- > 0;) {
+	for (uint64_t d = cgc.dim; d-- > 0;) {
 		idx += ((coordinates[d]-1)/2 * factor);
 		factor *= (cgc.shape[d]-1);
 	}
