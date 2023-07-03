@@ -132,8 +132,8 @@ int main(int argc, char** argv) {
 
     if (config.print) {
         cout << "Input 0:" << endl << endl; cgc0.printImage(); cout << endl;
-    cout << "Input 1" << endl << endl; cgc1.printImage(); cout << endl;
-    cout << "Comparison" << endl << endl; cgcComp.printImage(); cout << endl;
+        cout << "Input 1" << endl << endl; cgc1.printImage(); cout << endl;
+        cout << "Comparison" << endl << endl; cgcComp.printImage(); cout << endl;
     }
 
     vector<vector<Pair>> pairs0(dim);
@@ -151,8 +151,8 @@ int main(int argc, char** argv) {
         if (config.verbose) { cout << "computing dimension " << dim-1 << " ... "; }
         start = high_resolution_clock::now();
 
-        TopDimension topDim(cgc0, cgc1, cgcComp, pairs0[dim-1], pairs1[dim-1], pairsComp[dim-1], matches[dim-1],
-                            isMatched0, isMatched1, config);       
+        TopDimension topDim(cgc0, cgc1, cgcComp,  config, pairs0[dim-1], pairs1[dim-1], pairsComp[dim-1], matches[dim-1],
+                            isMatched0, isMatched1);       
         topDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
         
         stop = high_resolution_clock::now();
@@ -178,28 +178,42 @@ int main(int argc, char** argv) {
             cout << endl;
             cout << "matches in topdim" << endl;
             for (auto& m : matches[dim-1]) {
-                m.print(); cout << endl;
+                m.print();
             }
             cout << endl;
         }
     }
 
-    cout << ctrComp.size() << endl;
-
     if (dim > 2) {
         start = high_resolution_clock::now();
         
-        InterDimensions interDim(cgc0, cgc1, cgcComp, config);
+        InterDimensions interDim(cgc0, cgc1, cgcComp, config, pairs0, pairs1, pairsComp, matches);
         interDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
 
         stop = high_resolution_clock::now();
         durationTotal += duration;
 
         if (config.print) {
+            cout << "pairs in Input 0:" << endl;
+            for (auto& pair : pairs0[dim-2]) {
+                pair.print(); cout << endl;
+            }
+            cout << endl;
+            cout << "pairs in Input 1:" << endl;
+            for (auto& pair : pairs1[dim-2]) {
+                pair.print(); cout << endl;
+            }
+            cout << endl;
+            cout << "pairs in Comparison:" << endl;
+            for (auto& pair : pairsComp[dim-2]) {
+                pair.print(); cout << endl;
+            }
+            cout << endl;
             cout << "matches in dim 1" << endl;
-            for (auto& m : interDim.matches[1]) {
+            for (auto& m : matches[dim-2]) {
                 m.print();
-        }
+            }
+            cout << endl;
         }
         
     }

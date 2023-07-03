@@ -8,7 +8,10 @@ using namespace std::chrono;
 
 
 InterDimensions::InterDimensions(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, const CubicalGridComplex& _cgcComp, 
-							const Config& _config) : cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config) {
+							const Config& _config, vector<vector<Pair>>& _pairs0, vector<vector<Pair>>& _pairs1, 
+							vector<vector<Pair>>& _pairsComp, vector<vector<Match>>& _matches) : 
+							cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), pairs0(_pairs0), pairs1(_pairs1),
+							pairsComp(_pairsComp), matches(_matches) {
 	computeDim = cgc0.dim-2;
 	pairs0 = vector<vector<Pair>>(computeDim+1);
 	pairs1 = vector<vector<Pair>>(computeDim+1);
@@ -79,7 +82,7 @@ void InterDimensions::computePairsComp(const vector<Cube>& ctr) {
 	}
 }
 
-void InterDimensions::computePairs(uint8_t k, const vector<Cube>& ctr) {
+void InterDimensions::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	vector<vector<Pair>>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<uint64_t,Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
@@ -146,7 +149,7 @@ void InterDimensions::computePairs(uint8_t k, const vector<Cube>& ctr) {
 	}
 }
 
-void InterDimensions::computePairsImage(uint8_t k, const vector<Cube>& ctr) {
+void InterDimensions::computePairsImage(const vector<Cube>& ctr, uint8_t k) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	unordered_map<uint64_t,Cube>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
 
@@ -308,13 +311,13 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
 		ctrIm = ctrComp; 
 		if (computeDim > 1) { assembleColumnsToReduce(cgcComp, ctrComp); }
 		
-		computePairs(0, ctr0);
+		computePairs(ctr0, 0);
 		if (computeDim > 1) { assembleColumnsToReduce(cgc0, ctr0); }
 		
-		computePairs(1, ctr1);
+		computePairs(ctr1, 1);
 		if (computeDim > 1) { assembleColumnsToReduce(cgc1, ctr1); }
 		
-		computePairsImage(0, ctrIm); computePairsImage(1, ctrIm);
+		computePairsImage(ctrIm, 0); computePairsImage(ctrIm, 1);
 		
 		computeMatching();
 		

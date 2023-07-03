@@ -12,13 +12,13 @@ class TopDimension {
 	const CubicalGridComplex& cgc0;
 	const CubicalGridComplex& cgc1;
 	const CubicalGridComplex& cgcComp;
+	const Config& config;
 	vector<Pair>& pairs0;
 	vector<Pair>& pairs1;
 	vector<Pair>& pairsComp;
 	vector<Match>& matches;
 	unordered_map<uint64_t, bool>& isMatched0;
 	unordered_map<uint64_t, bool>& isMatched1;
-	const Config& config;
 	unordered_map<uint64_t, Pair> matchMap0;
 	unordered_map<uint64_t, Pair> matchMap1;
 
@@ -29,8 +29,8 @@ class TopDimension {
 
 	public:
 	TopDimension(const CubicalGridComplex& cgc0, const CubicalGridComplex& cgc1, const CubicalGridComplex& cgcComp, 
-					vector<Pair>& pairs0, vector<Pair>& pairs1, vector<Pair>& pairsComp, vector<Match>& matches,
-					unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1, const Config& config);
+					const Config& config, vector<Pair>& pairs0, vector<Pair>& pairs1, vector<Pair>& pairsComp,
+					vector<Match>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1);
 	void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp);
 	
 };
