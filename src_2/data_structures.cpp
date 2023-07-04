@@ -124,38 +124,66 @@ value_t CubicalGridComplex::getBirth(const vector<index_t>& coordinatesCube) con
 
 void CubicalGridComplex::printImage() const {
     value_t birth;
-    for (index_t i = 0; i < shape[0]; i++) {
-        for (index_t j = 0; j < shape[1]; j++) {
-            for (index_t k = 0; k < shape[2]; k++) {
-                birth = getValue(vector<index_t> {i,j,k});
-                if (birth < 10){
-                    cout << ' ' << birth << ' ';
-                }else{
-                    cout << birth << ' ';
-                }            
-            }
-            cout << '\n';
-        }
-        cout << '\n';
-    }
+	if (dim == 2) {
+		for (index_t i = 0; i < shape[0]; i++) {
+			for (index_t j = 0; j < shape[1]; j++) {
+				birth = getValue(vector<index_t> {i,j});
+				if (birth < 10){
+					cout << ' ' << birth << ' ';
+				}else{
+					cout << birth << ' ';
+				}            
+			}
+			cout << endl;
+		}
+	} else if (dim == 3) {
+		for (index_t i = 0; i < shape[0]; i++) {
+			for (index_t j = 0; j < shape[1]; j++) {
+				for (index_t k = 0; k < shape[2]; k++) {
+					birth = getValue(vector<index_t> {i,j,k});
+					if (birth < 10){
+						cout << ' ' << birth << ' ';
+					}else{
+						cout << birth << ' ';
+					}            
+				}
+				cout << endl;
+			}
+			cout << endl;
+		}
+	}
 }
 
 void CubicalGridComplex::printCubes() const {
     value_t birth;
-    for (index_t i = 0; i < 2*shape[0]-1; i++) {
-        for (index_t j = 0; j < 2*shape[1]-1; j++) {
-            for (index_t k = 0; k < 2*shape[2]-1; k++) {
-                birth = getBirth({i,j,k});
-                if (birth < 10){
-                    cout << ' ' << birth << ' ';
-                }else{
-                    cout << birth << ' ';
-                }            
-            }
-            cout << '\n';
-        }
-        cout << '\n';
-    }
+	if (dim == 2) {
+		for (index_t i = 0; i < 2*shape[0]-1; i++) {
+			for (index_t j = 0; j < 2*shape[1]-1; j++) {
+				birth = getBirth({i,j});
+				if (birth < 10){
+					cout << ' ' << birth << ' ';
+				}else{
+					cout << birth << ' ';
+				}            
+			}
+			cout << endl;
+		}
+	} else if (dim == 3) {
+		for (index_t i = 0; i < 2*shape[0]-1; i++) {
+			for (index_t j = 0; j < 2*shape[1]-1; j++) {
+				for (index_t k = 0; k < 2*shape[2]-1; k++) {
+					birth = getBirth({i,j,k});
+					if (birth < 10){
+						cout << ' ' << birth << ' ';
+					}else{
+						cout << birth << ' ';
+					}            
+				}
+				cout << endl;
+			}
+			cout << endl;
+		}
+	}
 }
 
 index_t CubicalGridComplex::getIndex(const vector<index_t>& pixelCoordinates) const {

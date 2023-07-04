@@ -122,7 +122,7 @@ void printResult(index_t dim, const CubicalGridComplex& cgc0, const CubicalGridC
     const vector<vector<Pair>>& pairs0, const vector<vector<Pair>>& pairs1, const vector<vector<Pair>>& pairsComp, 
     const vector<vector<Match>>& matches, unordered_map<index_t, bool>& isMatched0, unordered_map<index_t, bool>& isMatched1) {
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Input 0:" << endl; cout << endl; cgc0.printImage();
+    cout << "Input 0:" << endl; cout << endl; cgc0.printImage(); cout << endl;
     cout << "pairs:" << endl;
     for (index_t d = 0; d < dim; d++) {
         cout << "in dimension " << d << ":" << endl;
@@ -132,7 +132,7 @@ void printResult(index_t dim, const CubicalGridComplex& cgc0, const CubicalGridC
         cout << endl;
     }
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Input 1" << endl; cout << endl; cgc1.printImage();
+    cout << "Input 1" << endl; cout << endl; cgc1.printImage(); cout << endl;
     cout << "pairs:" << endl;
     for (index_t d = 0; d < dim; d++) {
         cout << "in dimension " << d << ":" << endl;
@@ -142,7 +142,7 @@ void printResult(index_t dim, const CubicalGridComplex& cgc0, const CubicalGridC
         cout << endl;
     }
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Comparison" << endl; cout << endl; cgcComp.printImage();
+    cout << "Comparison" << endl; cout << endl; cgcComp.printImage(); cout << endl;
     cout << "pairs:" << endl;
     for (index_t d = 0; d < dim; d++) {
         cout << "in dimension " << d << ":" << endl;
