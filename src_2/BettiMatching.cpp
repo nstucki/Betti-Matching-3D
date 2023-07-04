@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "top_dimension.h"
 #include "inter_dimensions.h"
+#include "dimension_0.h"
 
 #include <iostream>
 #include <fstream>
@@ -158,29 +159,6 @@ int main(int argc, char** argv) {
         duration = duration_cast<milliseconds>(stop - start);
         durationTotal += duration;
         if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
-
-        if (config.print) {
-            cout << "pairs in Input 0:" << endl;
-            for (auto& pair : pairs0[dim-1]) {
-                pair.print(); cout << endl;
-            }
-            cout << endl;
-            cout << "pairs in Input 1:" << endl;
-            for (auto& pair : pairs1[dim-1]) {
-                pair.print(); cout << endl;
-            }
-            cout << endl;
-            cout << "pairs in Comparison:" << endl;
-            for (auto& pair : pairsComp[dim-1]) {
-                pair.print(); cout << endl;
-            }
-            cout << endl;
-            cout << "matches in topdim" << endl;
-            for (auto& m : matches[dim-1]) {
-                m.print();
-            }
-            cout << endl;
-        }
     }
 
     if (dim > 2) {
@@ -191,29 +169,25 @@ int main(int argc, char** argv) {
 
         stop = high_resolution_clock::now();
         durationTotal += duration;
-
-        if (config.print) {
-            cout << "pairs in Input 0:" << endl;
-            for (auto& pair : pairs0[dim-2]) {
-                pair.print(); cout << endl;
-            }
-            cout << endl;
-            cout << "pairs in Input 1:" << endl;
-            for (auto& pair : pairs1[dim-2]) {
-                pair.print(); cout << endl;
-            }
-            cout << endl;
-            cout << "pairs in Comparison:" << endl;
-            for (auto& pair : pairsComp[dim-2]) {
-                pair.print(); cout << endl;
-            }
-            cout << endl;
-            cout << "matches in dim 1" << endl;
-            for (auto& m : matches[dim-2]) {
-                m.print();
-            }
-            cout << endl;
-        }
     }
+
+    {
+        if (config.verbose) { cout << "computing dimension " << dim-1 << " ... "; }
+        start = high_resolution_clock::now();
+
+        Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0, isMatched1);       
+        dim0.computePairsAndMatch(ctr0, ctr1, ctrComp);
+        
+        stop = high_resolution_clock::now();
+        duration = duration_cast<milliseconds>(stop - start);
+        durationTotal += duration;
+        if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
+    }
+
+    if (config.print) {
+        printResult(dim, cgc0, cgc1, cgcComp, pairs0, pairs1, pairsComp, matches, isMatched0, isMatched1);
+    }
+
+    
 }
     

@@ -117,3 +117,69 @@ void readImage(string const &filename, fileFormat const &format, vector<double> 
         }
     }
 }
+
+void printResult(uint64_t dim, const CubicalGridComplex& cgc0, const CubicalGridComplex& cgc1, const CubicalGridComplex& cgcComp, 
+    const vector<vector<Pair>>& pairs0, const vector<vector<Pair>>& pairs1, const vector<vector<Pair>>& pairsComp, 
+    const vector<vector<Match>>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1) {
+    cout << "---------------------------------------------------------------------------------------------------------------" << endl;
+    cout << "Input 0:" << endl; cout << endl; cgc0.printImage();
+    cout << "pairs:" << endl;
+    for (uint64_t d = 0; d < dim; d++) {
+        cout << "in dimension " << d << ":" << endl;
+        for (auto &pair : pairs0[d]) {
+            pair.print(); cout << endl;
+        }
+        cout << endl;
+    }
+    cout << "---------------------------------------------------------------------------------------------------------------" << endl;
+    cout << "Input 1" << endl; cout << endl; cgc1.printImage();
+    cout << "pairs:" << endl;
+    for (uint64_t d = 0; d < dim; d++) {
+        cout << "in dimension " << d << ":" << endl;
+        for (auto &pair : pairs1[d]) {
+            pair.print(); cout << endl;
+        }
+        cout << endl;
+    }
+    cout << "---------------------------------------------------------------------------------------------------------------" << endl;
+    cout << "Comparison" << endl; cout << endl; cgcComp.printImage();
+    cout << "pairs:" << endl;
+    for (uint64_t d = 0; d < dim; d++) {
+        cout << "in dimension " << d << ":" << endl;
+        for (auto &pair : pairsComp[d]) {
+            pair.print(); cout << endl;
+        }
+        cout << endl;
+    }
+    cout << "---------------------------------------------------------------------------------------------------------------" << endl;
+
+    cout << "Betti Matching:" << endl;
+    cout << "matched:" << endl;
+    for (uint64_t d = 0; d < dim; d++) {
+        cout << "in dimension " << d << ":" << endl;
+        for (auto &match : matches[d]) {
+            match.print();
+        }
+        cout << endl;
+    }
+    cout << "unmatched in Input 0:" << endl;
+    for (uint64_t d = 0; d < dim; d++) {
+        cout << "dim " << d << ":" << endl;
+        for (auto &pair : pairs0[d]) {
+            if (!isMatched0[cgc0.getCubeIndex(pair.birth)]) {
+                pair.print(); cout << endl;
+            }
+        }
+        cout << endl;
+    }
+    cout << "unmatched in Input 2:" << endl;
+    for (uint64_t d = 0; d < dim; d++) {
+        cout << "dim " << d << ":" << endl;
+        for (auto &pair : pairs1[d]) {
+            if (!isMatched1[cgc1.getCubeIndex(pair.birth)]) {
+                pair.print(); cout << endl;
+            }
+        }
+        cout << endl;
+    }
+}
