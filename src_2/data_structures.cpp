@@ -108,17 +108,15 @@ value_t CubicalGridComplex::getBirth(const vector<index_t>& coordinatesCube) con
 	index_t idx = getIndex(divideContainerElementwise(coordinatesCube, 2));
 	value_t birth = image[idx];
 	vector<index_t> indices{idx};
-	vector<index_t> newIndices;
 	index_t newIdx;
-	for (index_t i = dim; i-- > 0;) {
-		if (coordinatesCube[i]%2 == 1) {
-			for (auto& idx : indices) {
-				newIdx = idx+pixelCoordFactor[i];
-				birth = max(birth, image[newIdx]);
-				newIndices.push_back(newIdx);
+	for (index_t axis = dim; axis-- > 0;) {
+		if (coordinatesCube[axis]%2 == 1) {
+			vector<index_t>::size_type size = indices.size();
+			for (std::vector<index_t>::size_type i = 0; i < size; ++i) {
+				newIdx = indices[i]+pixelCoordFactor[axis];
+	 			birth = max(birth, image[newIdx]);
+	 			indices.push_back(newIdx);
 			}
-			indices.insert(indices.end(), newIndices.begin(), newIndices.end());
-			newIndices.clear();
 		}
 	}
 	return birth;
