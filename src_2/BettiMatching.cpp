@@ -1,3 +1,5 @@
+#include "template_functions.h"
+
 #include "utils.h"
 #include "top_dimension.h"
 #include "inter_dimensions.h"
@@ -120,10 +122,8 @@ int main(int argc, char** argv) {
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
-    auto durationTotal = duration;
     if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
     
-
     assert (shape0 == shape1);
     index_t dim = shape0.size();
     
@@ -146,46 +146,32 @@ int main(int argc, char** argv) {
     vector<Cube> ctrComp;
 
     if (dim > 1) {
-        if (config.verbose) { cout << "computing dimension " << dim-1 << " ... "; }
-        start = high_resolution_clock::now();
-
         TopDimension topDim(cgc0, cgc1, cgcComp,  config, pairs0[dim-1], pairs1[dim-1], pairsComp[dim-1], matches[dim-1],
                             isMatched0, isMatched1);       
         topDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
-        
-        stop = high_resolution_clock::now();
-        duration = duration_cast<milliseconds>(stop - start);
-        durationTotal += duration;
-        if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
     }
 
     if (dim > 2) {
-        start = high_resolution_clock::now();
-        
         InterDimensions interDim(cgc0, cgc1, cgcComp, config, pairs0, pairs1, pairsComp, matches, isMatched0, isMatched1);
         interDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
-
-        stop = high_resolution_clock::now();
-        durationTotal += duration;
     }
 
     {
-        if (config.verbose) { cout << "computing dimension " << dim-1 << " ... "; }
-        start = high_resolution_clock::now();
-
         Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0, isMatched1);       
         dim0.computePairsAndMatch(ctr0, ctr1, ctrComp);
-        
-        stop = high_resolution_clock::now();
-        duration = duration_cast<milliseconds>(stop - start);
-        durationTotal += duration;
-        if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
     }
 
     if (config.print) {
         printResult(dim, cgc0, cgc1, cgcComp, pairs0, pairs1, pairsComp, matches, isMatched0, isMatched1);
     }
 
-    
+    start = high_resolution_clock::now();
+    for (int i = 0; i < 100000; i++) {
+        cgc0.getBirth({51,51,51});
+    }
+
+    stop = high_resolution_clock::now();
+    duration = duration_cast<milliseconds>(stop - start);
+    cout << duration.count() << endl;
 }
     

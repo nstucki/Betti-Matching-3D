@@ -1,6 +1,12 @@
 #include "top_dimension.h"
 #include "union_find.h"
 
+#include <chrono>
+#include <iostream>
+
+using namespace std;
+using namespace std::chrono;
+
 TopDimension::TopDimension(CubicalGridComplex* _cgc, vector<WritePair>& _pairs){
 	cgc = _cgc;
 	pairs = &_pairs;
@@ -25,7 +31,12 @@ void TopDimension::enum_edges(vector<Cube>& ctr){
 }
 
 void TopDimension::compute_pairs(vector<Cube>& ctr){
+	auto start = high_resolution_clock::now();
 	UnionFindDual uf = UnionFindDual(cgc);
+	auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+	cout << "time to initialize union find:" << endl;
+	cout << duration.count() << " ms" << endl;
 	enum_edges(ctr);
 	uint32_t uind;
 	uint32_t vind;

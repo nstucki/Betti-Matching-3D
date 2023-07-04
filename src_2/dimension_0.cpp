@@ -1,6 +1,12 @@
 #include "dimension_0.h"
 #include "enumerators.h"
 
+#include <iostream>
+#include <chrono>
+
+using namespace std;
+using namespace std::chrono;
+
 Dimension0::Dimension0(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, const CubicalGridComplex& _cgcComp,
 						const Config& _config, vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp,
 						vector<Match>& _matches, unordered_map<index_t, bool>& _isMatched0, unordered_map<index_t, bool>& _isMatched1) : 
@@ -123,6 +129,9 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 }
 
 void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
+	if (config.verbose) { cout << "computing dimension 0 ... "; }
+    auto start = high_resolution_clock::now();
+
 	enumerateEdges(cgc0, ctr0);
 	computePairs(ctr0, 0);
 	
@@ -131,4 +140,8 @@ void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 
 	enumerateEdges(cgcComp, ctrComp);
     computeImagePairsAndMatch(ctrComp);
+
+	auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+    if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
 }

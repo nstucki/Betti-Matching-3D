@@ -1,3 +1,6 @@
+#include <chrono>
+using namespace std::chrono;
+
 #include "data_structures.h"
 #include "utils.h"
 #include "template_functions.h"
@@ -65,20 +68,11 @@ void Match::print() const {
 
 
 CubicalGridComplex::CubicalGridComplex(vector<value_t> _image, const vector<index_t>& _shape) : 
-	image(_image), shape(_shape), dim(_shape.size()) {}
-
-index_t CubicalGridComplex::getIndex(const vector<index_t>& coordinates) const {
-	//std::vector<int> multiplies(data.size());?
-	index_t idx = coordinates[dim-1];
-	index_t factor = shape[dim-1];
-	for (index_t i = dim-1; i-- >0;) {
-		idx += coordinates[i]*factor;
-		factor *= shape[i];
-	}
-	return idx;
+image(_image), shape(_shape), dim(_shape.size()) {
+	pixelCoordFactor = multiplyFromRightExclusively(_shape);
+	vector<index_t> cubeGridShape = addToContainerElementwise(multiplyContainerElementwise(_shape, 2), -1);
+	cubeCoordFactor = multiplyFromRightExclusively(cubeGridShape);
 }
-
-value_t CubicalGridComplex::getValue(const vector<index_t>& coordinates_image) const { return image[getIndex(coordinates_image)]; }
 
 index_t CubicalGridComplex::getNumberOfCubes(index_t _dim) const {
     vector<vector<bool>> degenCoords = getSubsets(dim, _dim);
@@ -95,49 +89,37 @@ index_t CubicalGridComplex::getNumberOfCubes(index_t _dim) const {
 }
 
 index_t CubicalGridComplex::getCubeIndex(const Cube& cube) const {
-	index_t idx = cube.coordinates[dim-1];
-	index_t factor = 2*shape[dim-1]-1;
-	for (index_t i = dim-1; i-- > 0;) {
-		idx += cube.coordinates[i]*factor;
-		factor *= 2*shape[i]-1;
+	index_t idx = 0;
+	for (index_t i = dim; i-- > 0;) {
+		idx += cube.coordinates[i]*cubeCoordFactor[i];
 	}
 	return idx;
 }
 
 index_t CubicalGridComplex::getCubeIndex(const vector<index_t>& coordinates) const {
-	index_t idx = coordinates[dim-1];
-	index_t factor = 2*shape[dim-1]-1;
-	for (index_t i = dim-1; i-- > 0;) {
-		idx += coordinates[i]*factor;
-		factor *= 2*shape[i]-1;
+	index_t idx = 0;
+	for (index_t i = dim; i-- > 0;) {
+		idx += coordinates[i]*cubeCoordFactor[i];
 	}
 	return idx;
 }
 
-value_t CubicalGridComplex::getBirth(const vector<index_t>& coordinates_cube) const {
-	//std::vector<int> multiplies(data.size());?
-	vector<index_t> coordinates = DivideContainerElementwise(coordinates_cube, 2);
-	index_t idx = getIndex(coordinates);
+value_t CubicalGridComplex::getBirth(const vector<index_t>& coordinatesCube) const {
+	index_t idx = getIndex(divideContainerElementwise(coordinatesCube, 2));
 	value_t birth = image[idx];
 	vector<index_t> indices{idx};
 	vector<index_t> newIndices;
-	index_t previousAxis = dim-1;
-	index_t factor = 1;
+	index_t newIdx;
 	for (index_t i = dim; i-- > 0;) {
-		if (coordinates_cube[i]%2 == 1) {
-			for (index_t j = previousAxis+1; j-- > i+1;) {
-				factor *= shape[j];
-			}
-			previousAxis = i;
-			for (auto idx : indices) {
-				newIndices.push_back(idx+factor);
+		if (coordinatesCube[i]%2 == 1) {
+			for (auto& idx : indices) {
+				newIdx = idx+pixelCoordFactor[i];
+				birth = max(birth, image[newIdx]);
+				newIndices.push_back(newIdx);
 			}
 			indices.insert(indices.end(), newIndices.begin(), newIndices.end());
 			newIndices.clear();
 		}
-	}
-	for (auto& idx : indices) {
-		birth = max(birth, image[idx]);
 	}
 	return birth;
 }
@@ -165,7 +147,7 @@ void CubicalGridComplex::printCubes() const {
     for (index_t i = 0; i < 2*shape[0]-1; i++) {
         for (index_t j = 0; j < 2*shape[1]-1; j++) {
             for (index_t k = 0; k < 2*shape[2]-1; k++) {
-                birth = getBirth(vector<index_t> {i,j,k});
+                birth = getBirth({i,j,k});
                 if (birth < 10){
                     cout << ' ' << birth << ' ';
                 }else{
@@ -177,6 +159,16 @@ void CubicalGridComplex::printCubes() const {
         cout << '\n';
     }
 }
+
+index_t CubicalGridComplex::getIndex(const vector<index_t>& pixelCoordinates) const {
+	index_t idx = 0;
+	for (index_t i = dim; i-- >0;) {
+		idx += pixelCoordinates[i]*pixelCoordFactor[i];
+	}
+	return idx;
+}
+
+value_t CubicalGridComplex::getValue(const vector<index_t>& pixelCoordinates) const { return image[getIndex(pixelCoordinates)]; }
 
 
 UnionFind::UnionFind(const CubicalGridComplex& _cgc) : cgc(_cgc) {

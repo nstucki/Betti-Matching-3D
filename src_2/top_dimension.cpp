@@ -1,6 +1,11 @@
 #include "top_dimension.h"
 #include "enumerators.h"
 
+#include <iostream>
+#include <chrono>
+
+using namespace std;
+using namespace std::chrono;
 
 TopDimension::TopDimension(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, const CubicalGridComplex& _cgcComp,
 					const Config& _config, vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp,
@@ -26,7 +31,12 @@ void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube
 }
 
 void TopDimension::computePairsComp(vector<Cube>& dualEdges) {
+	auto start = high_resolution_clock::now();
 	UnionFindDual uf(cgcComp);
+	auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+	cout << "time to initialize union find:" << endl;
+	cout << duration.count() << endl;
 	vector<index_t> boundaryCoordinates;
 	index_t degenAxis;
 	index_t boundaryIdx0;
@@ -147,6 +157,9 @@ void TopDimension::computeMatching() {
 }
 
 void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
+	if (config.verbose) { cout << "computing top dimension ... "; }
+    auto start = high_resolution_clock::now();
+
 	enumerateDualEdges(cgcComp, ctrComp);
 	computePairsComp(ctrComp);
 	
@@ -157,4 +170,8 @@ void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, 
     computeImagePairs(ctr1, 1);
 
     computeMatching();
+
+	auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+    if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
 }

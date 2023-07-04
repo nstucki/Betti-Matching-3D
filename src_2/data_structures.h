@@ -60,16 +60,10 @@ class Match{
 
 
 class CubicalGridComplex {
-	private:
-	const vector<value_t> image;
-
-	index_t getIndex(const vector<index_t>& coordinates) const;
-	value_t getValue(const vector<index_t>& coordinates) const;
-
 	public:
 	const vector<index_t> shape;
 	const index_t dim;
-	
+
 	CubicalGridComplex(const vector<value_t> _image, const vector<index_t>& _shape);
 	index_t getNumberOfCubes(const index_t dim) const;
 	index_t getCubeIndex(const Cube& cube) const;
@@ -77,15 +71,20 @@ class CubicalGridComplex {
 	value_t getBirth (const vector<index_t>& coordinates) const;
 	void printImage() const;
 	void printCubes() const;
+	index_t getIndex(const vector<index_t>& pixelCoordinates) const;
+
+	vector<index_t> pixelCoordFactor;
+	vector<index_t> cubeCoordFactor;
+	private:
+	const vector<value_t> image;
+	
+
+	
+	value_t getValue(const vector<index_t>& pixelCoordinates) const;
 };
 
 
 class UnionFind{
-	private:
-	vector<index_t> parent;
-	vector<value_t> birthtime;
-	const CubicalGridComplex& cgc;
-
 	public:
 	UnionFind(const CubicalGridComplex& cgc);
 	index_t find(index_t x);
@@ -93,15 +92,16 @@ class UnionFind{
 	value_t getBirth(const index_t& idx) const;
 	index_t getIndex(const vector<index_t>& coordinates) const;
 	vector<index_t> getCoordinates(index_t idx) const;
-};
 
-
-class UnionFindDual {
 	private:
 	vector<index_t> parent;
 	vector<value_t> birthtime;
 	const CubicalGridComplex& cgc;
 
+};
+
+
+class UnionFindDual {
 	public:
 	index_t star;
 	
@@ -111,4 +111,9 @@ class UnionFindDual {
 	value_t getBirth(const index_t& idx) const;
 	index_t getIndex(const vector<index_t>& coordinates) const;
 	vector<index_t> getCoordinates(index_t idx) const;
+
+	private:
+	vector<index_t> parent;
+	vector<value_t> birthtime;
+	const CubicalGridComplex& cgc;
 };
