@@ -13,6 +13,24 @@ Dimension0::Dimension0(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), pairs0(_pairs0), pairs1(_pairs1), pairsComp(_pairsComp), 
 						matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1), config(_config) {}
 
+void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
+	if (config.verbose) { cout << "computing dimension 0 ... "; }
+    auto start = high_resolution_clock::now();
+
+	enumerateEdges(cgc0, ctr0);
+	computePairs(ctr0, 0);
+	
+	enumerateEdges(cgc1, ctr1);
+    computePairs(ctr1, 1);
+
+	enumerateEdges(cgcComp, ctrComp);
+    computeImagePairsAndMatch(ctrComp);
+
+	auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+    if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
+}
+
 void Dimension0::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
 	edges.clear();
 	edges.reserve(cgc.getNumberOfCubes(1));
@@ -126,22 +144,4 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 			} 
 		}
 	}
-}
-
-void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
-	if (config.verbose) { cout << "computing dimension 0 ... "; }
-    auto start = high_resolution_clock::now();
-
-	enumerateEdges(cgc0, ctr0);
-	computePairs(ctr0, 0);
-	
-	enumerateEdges(cgc1, ctr1);
-    computePairs(ctr1, 1);
-
-	enumerateEdges(cgcComp, ctrComp);
-    computeImagePairsAndMatch(ctrComp);
-
-	auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - start);
-    if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
 }

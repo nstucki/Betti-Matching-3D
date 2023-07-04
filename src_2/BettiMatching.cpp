@@ -165,11 +165,20 @@ int main(int argc, char** argv) {
         printResult(dim, cgc0, cgc1, cgcComp, pairs0, pairs1, pairsComp, matches, isMatched0, isMatched1);
     }
 
+    cout << "time to compute 100,000 births:" << endl;
     start = high_resolution_clock::now();
     for (int i = 0; i < 100000; i++) {
         cgc0.getBirth({51,51,51});
     }
+    stop = high_resolution_clock::now();
+    duration = duration_cast<milliseconds>(stop - start);
+    cout << duration.count() << endl;
 
+    cout << "time to compute 1,000,000 values:" << endl;
+    start = high_resolution_clock::now();
+    for (int i = 0; i < 1000000; i++) {
+        cgc0.getValue({20,20,20});
+    }
     stop = high_resolution_clock::now();
     duration = duration_cast<milliseconds>(stop - start);
     cout << duration.count() << endl;

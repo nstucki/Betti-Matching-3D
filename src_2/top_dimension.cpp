@@ -13,6 +13,26 @@ TopDimension::TopDimension(const CubicalGridComplex& _cgc0, const CubicalGridCom
 					cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), pairs0(_pairs0), pairs1(_pairs1), pairsComp(_pairsComp), 
 					matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1), config(_config) {}
 
+void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
+	if (config.verbose) { cout << "computing top dimension ... "; }
+    auto start = high_resolution_clock::now();
+
+	enumerateDualEdges(cgcComp, ctrComp);
+	computePairsComp(ctrComp);
+	
+	enumerateDualEdges(cgc0, ctr0);
+    computeImagePairs(ctr0, 0);
+
+	enumerateDualEdges(cgc1, ctr1);
+    computeImagePairs(ctr1, 1);
+
+    computeMatching();
+
+	auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+    if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
+}
+
 void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& dualEdges) const {
 	dualEdges.clear();
 	dualEdges.reserve(cgc.getNumberOfCubes(cgc.dim-1));
@@ -154,24 +174,4 @@ void TopDimension::computeMatching() {
 			isMatched1.emplace(cgc1.getCubeIndex(pair1.birth), true);
 		}
 	}
-}
-
-void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
-	if (config.verbose) { cout << "computing top dimension ... "; }
-    auto start = high_resolution_clock::now();
-
-	enumerateDualEdges(cgcComp, ctrComp);
-	computePairsComp(ctrComp);
-	
-	enumerateDualEdges(cgc0, ctr0);
-    computeImagePairs(ctr0, 0);
-
-	enumerateDualEdges(cgc1, ctr1);
-    computeImagePairs(ctr1, 1);
-
-    computeMatching();
-
-	auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - start);
-    if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
 }

@@ -28,9 +28,9 @@ class BoundaryEnumerator {
     public:
 	BoundaryEnumerator(const CubicalGridComplex& cgc);
 	void setBoundaryEnumerator(const Cube& cube, index_t dim);
-	bool hasNextFace();
     Cube getNextFace() const;
-
+	bool hasNextFace();
+    
     private:
 	const CubicalGridComplex& cgc;
 	Cube cube;

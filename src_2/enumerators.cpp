@@ -91,6 +91,8 @@ void BoundaryEnumerator::setBoundaryEnumerator(const Cube& _cube, index_t _dim) 
     shift = -1;
 }
 
+Cube BoundaryEnumerator::getNextFace() const { return nextFace; }
+
 bool BoundaryEnumerator::hasNextFace() {
 	if ( position == -1 ) { return false; } 
     else {
@@ -107,5 +109,3 @@ bool BoundaryEnumerator::hasNextFace() {
         return true;
     }
 }
-
-Cube BoundaryEnumerator::getNextFace() const { return nextFace; }

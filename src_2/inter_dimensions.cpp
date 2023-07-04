@@ -16,6 +16,39 @@ InterDimensions::InterDimensions(const CubicalGridComplex& _cgc0, const CubicalG
 	computeDim = cgc0.dim-2;
 }
 
+void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
+	vector<Cube> ctrIm;
+
+	while (computeDim > 0) {
+		if (config.verbose) { cout << "comoputing dimension " << computeDim << " ... "; }
+        auto start = high_resolution_clock::now();
+		
+		computePairsComp(ctrComp);
+		if (computeDim > 1) { 
+			ctrIm = ctrComp;
+			assembleColumnsToReduce(cgcComp, ctrComp);
+		}
+		
+		computePairs(ctr0, 0);
+		if (computeDim > 1) { assembleColumnsToReduce(cgc0, ctr0); }
+		
+		computePairs(ctr1, 1);
+		if (computeDim > 1) { assembleColumnsToReduce(cgc1, ctr1); }
+		
+		if (computeDim > 1) { computeImagePairs(ctrIm, 0); computeImagePairs(ctrIm, 1); }
+		else { computeImagePairs(ctrComp, 0); computeImagePairs(ctrComp, 1); }
+		
+		computeMatching();
+		
+		auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>(stop - start);
+        if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
+
+		--computeDim;
+	}
+	
+}
+
 void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 	index_t ctrSize = ctr.size();
 	pivot_column_index.clear();
@@ -240,26 +273,28 @@ Cube InterDimensions::popPivot(CubeQue& column) const {
     }
 }
 
-Cube InterDimensions::getPivot(CubeQue& column) const {
-	Cube result = popPivot(column);
-	if (result.coordinates[0] != NONE) {
-		column.push(result);
-	}
-	return result;
-}
-
-void InterDimensions::addCache(index_t i, CubeQue& working_boundary) {
-	CubeQue cleanWb;
-	while (!working_boundary.empty()) {
-		auto c = working_boundary.top();
-		working_boundary.pop();
-		if (!working_boundary.empty() && c == working_boundary.top()) {
-			working_boundary.pop();
-		} else {
-			cleanWb.push(c);
+void InterDimensions::computeMatching() {
+	Cube birth0;
+	Cube birth1;
+	Pair pair0;
+	Pair pair1;
+	for (auto& pair : pairsComp[computeDim]) {
+		auto findIm0 = matchMapIm0.find(cgcComp.getCubeIndex(pair.death));
+		auto findIm1 = matchMapIm1.find(cgcComp.getCubeIndex(pair.death));
+		if (findIm0 != matchMapIm0.end() && findIm1 != matchMapIm1.end()) {
+			birth0 = findIm0->second;
+			birth1 = findIm1->second;
+			auto find0 = matchMap0.find(cgc0.getCubeIndex(birth0));
+			auto find1 = matchMap1.find(cgc1.getCubeIndex(birth1));
+			if (find0 != matchMap0.end() && find1 != matchMap1.end()) {
+				pair0 = find0->second;
+				pair1 = find1->second;
+				matches[computeDim].push_back(Match(pair0, pair1));
+				isMatched0.emplace(cgc0.getCubeIndex(pair0.birth), true);
+				isMatched1.emplace(cgc1.getCubeIndex(pair1.birth), true);
+			}
 		}
 	}
-	cache.emplace(i, cleanWb);
 }
 
 void InterDimensions::assembleColumnsToReduce(const CubicalGridComplex& cgc, vector<Cube>& ctr) const {
@@ -285,59 +320,24 @@ void InterDimensions::assembleColumnsToReduce(const CubicalGridComplex& cgc, vec
 	sort(ctr.begin(), ctr.end(), CubeComparator());
 }
 
-void InterDimensions::computeMatching() {
-	Cube birth0;
-	Cube birth1;
-	Pair pair0;
-	Pair pair1;
-	for (auto& pair : pairsComp[computeDim]) {
-		auto findIm0 = matchMapIm0.find(cgcComp.getCubeIndex(pair.death));
-		auto findIm1 = matchMapIm1.find(cgcComp.getCubeIndex(pair.death));
-		if (findIm0 != matchMapIm0.end() && findIm1 != matchMapIm1.end()) {
-			birth0 = findIm0->second;
-			birth1 = findIm1->second;
-			auto find0 = matchMap0.find(cgc0.getCubeIndex(birth0));
-			auto find1 = matchMap1.find(cgc1.getCubeIndex(birth1));
-			if (find0 != matchMap0.end() && find1 != matchMap1.end()) {
-				pair0 = find0->second;
-				pair1 = find1->second;
-				matches[computeDim].push_back(Match(pair0, pair1));
-				isMatched0.emplace(cgc0.getCubeIndex(pair0.birth), true);
-				isMatched1.emplace(cgc1.getCubeIndex(pair1.birth), true);
-			}
+Cube InterDimensions::getPivot(CubeQue& column) const {
+	Cube result = popPivot(column);
+	if (result.coordinates[0] != NONE) {
+		column.push(result);
+	}
+	return result;
+}
+
+void InterDimensions::addCache(index_t i, CubeQue& working_boundary) {
+	CubeQue cleanWb;
+	while (!working_boundary.empty()) {
+		auto c = working_boundary.top();
+		working_boundary.pop();
+		if (!working_boundary.empty() && c == working_boundary.top()) {
+			working_boundary.pop();
+		} else {
+			cleanWb.push(c);
 		}
 	}
-};
-
-void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
-	vector<Cube> ctrIm;
-
-	while (computeDim > 0) {
-		if (config.verbose) { cout << "comoputing dimension " << computeDim << " ... "; }
-        auto start = high_resolution_clock::now();
-		
-		computePairsComp(ctrComp);
-		if (computeDim > 1) { 
-			ctrIm = ctrComp;
-			assembleColumnsToReduce(cgcComp, ctrComp);
-		}
-		
-		computePairs(ctr0, 0);
-		if (computeDim > 1) { assembleColumnsToReduce(cgc0, ctr0); }
-		
-		computePairs(ctr1, 1);
-		if (computeDim > 1) { assembleColumnsToReduce(cgc1, ctr1); }
-		
-		if (computeDim > 1) { computeImagePairs(ctrIm, 0); computeImagePairs(ctrIm, 1); }
-		else { computeImagePairs(ctrComp, 0); computeImagePairs(ctrComp, 1); }
-		
-		computeMatching();
-		
-		auto stop = high_resolution_clock::now();
-        auto duration = duration_cast<milliseconds>(stop - start);
-        if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
-
-		--computeDim;
-	}
-	
+	cache.emplace(i, cleanWb);
 }

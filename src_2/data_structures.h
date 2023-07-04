@@ -71,16 +71,16 @@ class CubicalGridComplex {
 	value_t getBirth (const vector<index_t>& coordinates) const;
 	void printImage() const;
 	void printCubes() const;
-	index_t getIndex(const vector<index_t>& pixelCoordinates) const;
-
-	vector<index_t> pixelCoordFactor;
-	vector<index_t> cubeCoordFactor;
-	private:
-	const vector<value_t> image;
-	
-
 	
 	value_t getValue(const vector<index_t>& pixelCoordinates) const;
+
+	private:
+	const vector<value_t> image;
+	vector<index_t> pixelCoordFactor;
+	vector<index_t> cubeCoordFactor;
+
+	index_t getIndex(const vector<index_t>& pixelCoordinates) const;
+	
 };
 
 
