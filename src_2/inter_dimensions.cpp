@@ -25,13 +25,13 @@ void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 	matchMapComp.clear();
 	BoundaryEnumerator faces = BoundaryEnumerator(cgcComp);
 	queue<uint64_t> cached_column_idx;
-	uint64_t num_recurse;
+	uint64_t numRecurse;
 	uint64_t j;
 	bool shouldClear = false;
 	for(uint64_t i = 0; i < ctrSize; i++) {
 		CubeQue working_boundary;
 		j = i;
-		num_recurse = 0;
+		numRecurse = 0;
 		while (true) {
 			bool cacheHit = false;
 			if (i != j) {
@@ -56,10 +56,10 @@ void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 				auto pair = pivot_column_index.find(cgcComp.getCubeIndex(pivot));
 				if (pair != pivot_column_index.end()) {
 					j = pair->second;
-					num_recurse++;
+					numRecurse++;
 					continue;
 				} else {
-					if (num_recurse >= config.minRecursionToCache) {
+					if (numRecurse >= config.minRecursionToCache) {
                         addCache(i, working_boundary);
 						cached_column_idx.push(i);
 						if (cached_column_idx.size() > config.cacheSize) {
@@ -100,15 +100,14 @@ void InterDimensions::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	cache.clear();
 	cache.reserve(min(config.cacheSize, ctrSize));
 	matchMap.clear();
-
 	BoundaryEnumerator faces = BoundaryEnumerator(cgc);
 	queue<uint64_t> cached_column_idx;
-	uint64_t num_recurse;
+	uint64_t numRecurse;
 	uint64_t j;	
 	for(uint64_t i = 0; i < ctrSize; i++) {
 		CubeQue working_boundary;
 		j = i;
-		num_recurse = 0;
+		numRecurse = 0;
 		while (true) {
 			bool cacheHit = false;
 			if (i != j) {
@@ -133,10 +132,10 @@ void InterDimensions::computePairs(const vector<Cube>& ctr, uint8_t k) {
 				auto pair = pivot_column_index.find(cgc.getCubeIndex(pivot));
 				if (pair != pivot_column_index.end()) {
 					j = pair->second;
-					num_recurse++;
+					numRecurse++;
 					continue;
 				} else {
-					if (num_recurse >= config.minRecursionToCache) {
+					if (numRecurse >= config.minRecursionToCache) {
                         addCache(i, working_boundary);
 						cached_column_idx.push(i);
 						if (cached_column_idx.size() > config.cacheSize) {
@@ -167,15 +166,14 @@ void InterDimensions::computeImagePairs(const vector<Cube>& ctr, uint8_t k) {
 	cache.reserve(min(config.cacheSize, ctrSize));
 	matchMapIm.clear();
 	matchMapIm.reserve(pairsComp[computeDim].size());
-
 	BoundaryEnumerator faces = BoundaryEnumerator(cgc);
 	queue<uint64_t> cached_column_idx;
-	uint64_t num_recurse;
+	uint64_t numRecurse;
 	uint64_t j;
 	for (uint64_t i = 0; i < ctrSize; i++) {
 		CubeQue working_boundary;
 		j = i;
-		num_recurse = 0;
+		numRecurse = 0;
 		while (true) {
 			bool cacheHit = false;
 			if (i != j) {
@@ -200,10 +198,10 @@ void InterDimensions::computeImagePairs(const vector<Cube>& ctr, uint8_t k) {
 				auto pair = pivot_column_index.find(cgc.getCubeIndex(pivot));
 				if (pair != pivot_column_index.end()) {
 					j = pair->second;
-					num_recurse++;
+					numRecurse++;
 					continue;
 				} else {
-					if (num_recurse >= config.minRecursionToCache) {
+					if (numRecurse >= config.minRecursionToCache) {
                         addCache(i, working_boundary);
 						cached_column_idx.push(i);
 						if (cached_column_idx.size() > config.cacheSize) {
