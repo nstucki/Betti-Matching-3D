@@ -12,7 +12,7 @@ typedef float value_t;
 #ifdef USE_DOUBLE
 typedef double value_t;
 #endif
-typedef uint64_t index_t;
+typedef uint32_t index_t;
 
 #define NONE numeric_limits<index_t>::max()
 

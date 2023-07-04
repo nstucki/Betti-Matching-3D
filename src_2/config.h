@@ -1,5 +1,7 @@
 #pragma once
 
+#include "data_structures.h"
+
 #include <string>
 
 using namespace std;
@@ -16,8 +18,8 @@ struct Config {
 	fileFormat format_1;
 
 	float threshold = numeric_limits<float>::infinity();
-	uint64_t minRecursionToCache = 0;
-	uint64_t cacheSize = 1 << 31;
+	index_t minRecursionToCache = 0;
+	index_t cacheSize = numeric_limits<index_t>::max();
 	
 	bool print = false;
 	bool verbose = false;
