@@ -10,25 +10,25 @@ using namespace std::chrono;
 InterDimensions::InterDimensions(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, const CubicalGridComplex& _cgcComp, 
 							const Config& _config, vector<vector<Pair>>& _pairs0, vector<vector<Pair>>& _pairs1, 
 							vector<vector<Pair>>& _pairsComp, vector<vector<Match>>& _matches, 
-							unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1) : 
+							unordered_map<index_t, bool>& _isMatched0, unordered_map<index_t, bool>& _isMatched1) : 
 							cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), pairs0(_pairs0), pairs1(_pairs1),
 							pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1) {
 	computeDim = cgc0.dim-2;
 }
 
 void InterDimensions::computePairsComp(vector<Cube>& ctr) {
-	uint64_t ctrSize = ctr.size();
+	index_t ctrSize = ctr.size();
 	pivot_column_index.clear();
 	pivot_column_index.reserve(ctrSize);	
 	cache.clear();
 	cache.reserve(min(config.cacheSize, ctrSize));
 	matchMapComp.clear();
 	BoundaryEnumerator faces = BoundaryEnumerator(cgcComp);
-	queue<uint64_t> cached_column_idx;
-	uint64_t numRecurse;
-	uint64_t j;
+	queue<index_t> cached_column_idx;
+	index_t numRecurse;
+	index_t j;
 	bool shouldClear = false;
-	for(uint64_t i = 0; i < ctrSize; i++) {
+	for(index_t i = 0; i < ctrSize; i++) {
 		CubeQue working_boundary;
 		j = i;
 		numRecurse = 0;
@@ -92,19 +92,19 @@ void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 void InterDimensions::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	vector<vector<Pair>>& pairs = (k == 0) ? pairs0 : pairs1;
-	unordered_map<uint64_t,Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
+	unordered_map<index_t,Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
 
-	uint64_t ctrSize = ctr.size();
+	index_t ctrSize = ctr.size();
 	pivot_column_index.clear();
 	pivot_column_index.reserve(ctrSize);
 	cache.clear();
 	cache.reserve(min(config.cacheSize, ctrSize));
 	matchMap.clear();
 	BoundaryEnumerator faces = BoundaryEnumerator(cgc);
-	queue<uint64_t> cached_column_idx;
-	uint64_t numRecurse;
-	uint64_t j;	
-	for(uint64_t i = 0; i < ctrSize; i++) {
+	queue<index_t> cached_column_idx;
+	index_t numRecurse;
+	index_t j;	
+	for(index_t i = 0; i < ctrSize; i++) {
 		CubeQue working_boundary;
 		j = i;
 		numRecurse = 0;
@@ -157,9 +157,9 @@ void InterDimensions::computePairs(const vector<Cube>& ctr, uint8_t k) {
 
 void InterDimensions::computeImagePairs(const vector<Cube>& ctr, uint8_t k) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
-	unordered_map<uint64_t,Cube>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
+	unordered_map<index_t,Cube>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
 
-	uint64_t ctrSize = ctr.size();
+	index_t ctrSize = ctr.size();
 	pivot_column_index.clear();
 	pivot_column_index.reserve(ctrSize);
 	cache.clear();
@@ -167,10 +167,10 @@ void InterDimensions::computeImagePairs(const vector<Cube>& ctr, uint8_t k) {
 	matchMapIm.clear();
 	matchMapIm.reserve(pairsComp[computeDim].size());
 	BoundaryEnumerator faces = BoundaryEnumerator(cgc);
-	queue<uint64_t> cached_column_idx;
-	uint64_t numRecurse;
-	uint64_t j;
-	for (uint64_t i = 0; i < ctrSize; i++) {
+	queue<index_t> cached_column_idx;
+	index_t numRecurse;
+	index_t j;
+	for (index_t i = 0; i < ctrSize; i++) {
 		CubeQue working_boundary;
 		j = i;
 		numRecurse = 0;
@@ -248,18 +248,18 @@ Cube InterDimensions::getPivot(CubeQue& column) const {
 	return result;
 }
 
-void InterDimensions::addCache(uint64_t i, CubeQue& working_boundary) {
-	CubeQue clean_wb;
+void InterDimensions::addCache(index_t i, CubeQue& working_boundary) {
+	CubeQue cleanWb;
 	while (!working_boundary.empty()) {
 		auto c = working_boundary.top();
 		working_boundary.pop();
 		if (!working_boundary.empty() && c == working_boundary.top()) {
 			working_boundary.pop();
 		} else {
-			clean_wb.push(c);
+			cleanWb.push(c);
 		}
 	}
-	cache.emplace(i, clean_wb);
+	cache.emplace(i, cleanWb);
 }
 
 void InterDimensions::assembleColumnsToReduce(const CubicalGridComplex& cgc, vector<Cube>& ctr) const {

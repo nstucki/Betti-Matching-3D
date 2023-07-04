@@ -4,7 +4,7 @@
 
 TopDimension::TopDimension(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, const CubicalGridComplex& _cgcComp,
 					const Config& _config, vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp,
-					vector<Match>& _matches, unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1) : 
+					vector<Match>& _matches, unordered_map<index_t, bool>& _isMatched0, unordered_map<index_t, bool>& _isMatched1) : 
 					cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), pairs0(_pairs0), pairs1(_pairs1), pairsComp(_pairsComp), 
 					matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1), config(_config) {}
 
@@ -27,17 +27,17 @@ void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube
 
 void TopDimension::computePairsComp(vector<Cube>& dualEdges) {
 	UnionFindDual uf(cgcComp);
-	vector<uint64_t> boundaryCoordinates;
-	uint64_t degenAxis;
-	uint64_t boundaryIdx0;
-	uint64_t boundaryIdx1;
-	uint64_t parentIdx0;
-	uint64_t parentIdx1;
-	uint64_t birthIdx;
-	float birth;
+	vector<index_t> boundaryCoordinates;
+	index_t degenAxis;
+	index_t boundaryIdx0;
+	index_t boundaryIdx1;
+	index_t parentIdx0;
+	index_t parentIdx1;
+	index_t birthIdx;
+	value_t birth;
 	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge) {
 		boundaryCoordinates = edge->coordinates;
-		for (uint64_t i = 0; i < cgcComp.dim; i++) {
+		for (index_t i = 0; i < cgcComp.dim; i++) {
 			if (boundaryCoordinates[i]%2 == 0) {
 				degenAxis = i;
 				break;
@@ -75,22 +75,22 @@ void TopDimension::computePairsComp(vector<Cube>& dualEdges) {
 void TopDimension::computeImagePairs(vector<Cube>& dualEdges, uint8_t k) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
-	unordered_map<uint64_t,Pair>& matchMap = (k==0) ? matchMap0 : matchMap1;
+	unordered_map<index_t,Pair>& matchMap = (k==0) ? matchMap0 : matchMap1;
 	
 	UnionFindDual uf(cgc);
 	UnionFindDual ufComp(cgcComp);
-	vector<uint64_t> boundaryCoordinates;
-	uint64_t degenAxis;
-	uint64_t boundaryIdx0;
-	uint64_t boundaryIdx1;
-	uint64_t parentIdx0;
-	uint64_t parentIdx1;
-	uint64_t birthIdx;
-	uint64_t birthIdxComp;
-	float birth;
+	vector<index_t> boundaryCoordinates;
+	index_t degenAxis;
+	index_t boundaryIdx0;
+	index_t boundaryIdx1;
+	index_t parentIdx0;
+	index_t parentIdx1;
+	index_t birthIdx;
+	index_t birthIdxComp;
+	value_t birth;
 	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge) {
 		boundaryCoordinates = edge->coordinates;
-		for (uint64_t i = 0; i < cgc.dim; i++) {
+		for (index_t i = 0; i < cgc.dim; i++) {
 			if (boundaryCoordinates[i]%2 == 0) {
 				degenAxis = i;
 				break;

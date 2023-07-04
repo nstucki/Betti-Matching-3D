@@ -4,16 +4,26 @@
 
 using namespace std;
 
-#define NONE numeric_limits<uint64_t>::max()
+#define USE_DOUBLE
+
+#ifdef USE_FLOAT
+typedef float value_t;
+#endif
+#ifdef USE_DOUBLE
+typedef double value_t;
+#endif
+typedef uint64_t index_t;
+
+#define NONE numeric_limits<index_t>::max()
 
 
 class Cube {
 	public:
-	float birth;
-	vector<uint64_t> coordinates;
+	value_t birth;
+	vector<index_t> coordinates;
 
 	Cube();
-    Cube(float birth, vector<uint64_t> coordinates);
+    Cube(value_t birth, vector<index_t> coordinates);
     Cube(const Cube& cube);
     bool operator==(const Cube& rhs) const;
 	bool operator!=(const Cube& rhs) const;
@@ -51,20 +61,20 @@ class Match{
 
 class CubicalGridComplex {
 	private:
-	const vector<float> image;
+	const vector<value_t> image;
 
-	uint64_t getIndex(const vector<uint64_t>& coordinates) const;
-	float getValue(const vector<uint64_t>& coordinates) const;
+	index_t getIndex(const vector<index_t>& coordinates) const;
+	value_t getValue(const vector<index_t>& coordinates) const;
 
 	public:
-	const vector<uint64_t> shape;
-	const uint64_t dim;
+	const vector<index_t> shape;
+	const index_t dim;
 	
-	CubicalGridComplex(const vector<float> _image, const vector<uint64_t>& _shape);
-	uint64_t getNumberOfCubes(const uint64_t dim) const;
-	uint64_t getCubeIndex(const Cube& cube) const;
-	uint64_t getCubeIndex(const vector<uint64_t>& coordinates) const;
-	float getBirth (const vector<uint64_t>& coordinates) const;
+	CubicalGridComplex(const vector<value_t> _image, const vector<index_t>& _shape);
+	index_t getNumberOfCubes(const index_t dim) const;
+	index_t getCubeIndex(const Cube& cube) const;
+	index_t getCubeIndex(const vector<index_t>& coordinates) const;
+	value_t getBirth (const vector<index_t>& coordinates) const;
 	void printImage() const;
 	void printCubes() const;
 };
@@ -72,33 +82,33 @@ class CubicalGridComplex {
 
 class UnionFind{
 	private:
-	vector<uint64_t> parent;
-	vector<float> birthtime;
+	vector<index_t> parent;
+	vector<value_t> birthtime;
 	const CubicalGridComplex& cgc;
 
 	public:
 	UnionFind(const CubicalGridComplex& cgc);
-	uint64_t find(uint64_t x);
-	uint64_t link(const uint64_t& x, const uint64_t& y);
-	float getBirth(const uint64_t& idx) const;
-	uint64_t getIndex(const vector<uint64_t>& coordinates) const;
-	vector<uint64_t> getCoordinates(uint64_t idx) const;
+	index_t find(index_t x);
+	index_t link(const index_t& x, const index_t& y);
+	value_t getBirth(const index_t& idx) const;
+	index_t getIndex(const vector<index_t>& coordinates) const;
+	vector<index_t> getCoordinates(index_t idx) const;
 };
 
 
 class UnionFindDual {
 	private:
-	vector<uint64_t> parent;
-	vector<float> birthtime;
+	vector<index_t> parent;
+	vector<value_t> birthtime;
 	const CubicalGridComplex& cgc;
 
 	public:
-	uint64_t star;
+	index_t star;
 	
 	UnionFindDual(const CubicalGridComplex& cgc);
-	uint64_t find(uint64_t x);
-	uint64_t link(const uint64_t& x, const uint64_t& y);
-	float getBirth(const uint64_t& idx) const;
-	uint64_t getIndex(const vector<uint64_t>& coordinates) const;
-	vector<uint64_t> getCoordinates(uint64_t idx) const;
+	index_t find(index_t x);
+	index_t link(const index_t& x, const index_t& y);
+	value_t getBirth(const index_t& idx) const;
+	index_t getIndex(const vector<index_t>& coordinates) const;
+	vector<index_t> getCoordinates(index_t idx) const;
 };

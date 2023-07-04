@@ -3,7 +3,7 @@
 
 Dimension0::Dimension0(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, const CubicalGridComplex& _cgcComp,
 						const Config& _config, vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp,
-						vector<Match>& _matches, unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1) : 
+						vector<Match>& _matches, unordered_map<index_t, bool>& _isMatched0, unordered_map<index_t, bool>& _isMatched1) : 
 						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), pairs0(_pairs0), pairs1(_pairs1), pairsComp(_pairsComp), 
 						matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1), config(_config) {}
 
@@ -27,21 +27,21 @@ void Dimension0::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edg
 void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
-	unordered_map<uint64_t, Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
+	unordered_map<index_t, Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
 
 	UnionFind uf(cgc);
-	vector<uint64_t> boundaryCoordinates;
-	vector<uint64_t> birthCoordinates;
-	uint64_t nonDegenAxis;
-	uint64_t boundaryIdx0;
-	uint64_t boundaryIdx1;
-	uint64_t birthIdx0;
-	uint64_t birthIdx1;
-	uint64_t birthIdx;
-	float birth;
+	vector<index_t> boundaryCoordinates;
+	vector<index_t> birthCoordinates;
+	index_t nonDegenAxis;
+	index_t boundaryIdx0;
+	index_t boundaryIdx1;
+	index_t birthIdx0;
+	index_t birthIdx1;
+	index_t birthIdx;
+	float_t birth;
 	for (auto& edge : edges) {
 		boundaryCoordinates = edge.coordinates;
-		for (uint64_t i = 0; i < cgcComp.dim; i++) {
+		for (index_t i = 0; i < cgcComp.dim; i++) {
 			if (boundaryCoordinates[i]%2 == 1) {
 				nonDegenAxis = i;
 				break;
@@ -69,21 +69,21 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 	UnionFind uf0(cgc0);
 	UnionFind uf1(cgc1);
 	UnionFind ufComp(cgcComp);
-	vector<uint64_t> boundaryCoordinates;
+	vector<index_t> boundaryCoordinates;
 	Pair pair0;
 	Pair pair1;
-	uint64_t nonDegenAxis;
-	uint64_t boundaryIdx0;
-	uint64_t boundaryIdx1;
-	uint64_t parentIdx0;
-	uint64_t parentIdx1;
-	uint64_t birthIdx0;
-	uint64_t birthIdx1;
-	uint64_t birthIdxComp;
-	float birth;
+	index_t nonDegenAxis;
+	index_t boundaryIdx0;
+	index_t boundaryIdx1;
+	index_t parentIdx0;
+	index_t parentIdx1;
+	index_t birthIdx0;
+	index_t birthIdx1;
+	index_t birthIdxComp;
+	float_t birth;
 	for (auto& edge : edges) {
 		boundaryCoordinates = edge.coordinates;
-		for (uint64_t i = 0; i < cgcComp.dim; i++) {
+		for (index_t i = 0; i < cgcComp.dim; i++) {
 			if (boundaryCoordinates[i]%2 == 1) {
 				nonDegenAxis = i;
 				break;

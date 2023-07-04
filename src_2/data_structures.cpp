@@ -12,7 +12,7 @@ Cube::Cube() {
 	coordinates.push_back(NONE);
 }
 
-Cube::Cube(float _birth, vector<uint64_t>_coordinates) : birth(_birth), coordinates(_coordinates) {}
+Cube::Cube(value_t _birth, vector<index_t>_coordinates) : birth(_birth), coordinates(_coordinates) {}
 
 Cube::Cube(const Cube &cube) {
     birth = cube.birth;
@@ -37,7 +37,7 @@ void Cube::print() const {
 
 bool CubeComparator::operator()(const Cube& cube1, const Cube& cube2) const {
     if (cube1.birth == cube2.birth) {
-        for (uint64_t i = 0; i < cube1.coordinates.size(); i++) {
+        for (index_t i = 0; i < cube1.coordinates.size(); i++) {
             if (cube1.coordinates[i] == cube2.coordinates[i]) {
                 continue;
             } else { return cube1.coordinates[i] < cube2.coordinates[i]; } 
@@ -64,29 +64,29 @@ void Match::print() const {
 }
 
 
-CubicalGridComplex::CubicalGridComplex(vector<float> _image, const vector<uint64_t>& _shape) : 
+CubicalGridComplex::CubicalGridComplex(vector<value_t> _image, const vector<index_t>& _shape) : 
 	image(_image), shape(_shape), dim(_shape.size()) {}
 
-uint64_t CubicalGridComplex::getIndex(const vector<uint64_t>& coordinates) const {
+index_t CubicalGridComplex::getIndex(const vector<index_t>& coordinates) const {
 	//std::vector<int> multiplies(data.size());?
-	uint64_t idx = coordinates[dim-1];
-	uint64_t factor = shape[dim-1];
-	for (uint64_t i = dim-1; i-- >0;) {
+	index_t idx = coordinates[dim-1];
+	index_t factor = shape[dim-1];
+	for (index_t i = dim-1; i-- >0;) {
 		idx += coordinates[i]*factor;
 		factor *= shape[i];
 	}
 	return idx;
 }
 
-float CubicalGridComplex::getValue(const vector<uint64_t>& coordinates_image) const { return image[getIndex(coordinates_image)]; }
+value_t CubicalGridComplex::getValue(const vector<index_t>& coordinates_image) const { return image[getIndex(coordinates_image)]; }
 
-uint64_t CubicalGridComplex::getNumberOfCubes(uint64_t _dim) const {
+index_t CubicalGridComplex::getNumberOfCubes(index_t _dim) const {
     vector<vector<bool>> degenCoords = getSubsets(dim, _dim);
-    uint64_t numCubes = 0;
-    uint64_t numCubesForDegenCoord;
+    index_t numCubes = 0;
+    index_t numCubesForDegenCoord;
     for (auto& degenCoord : degenCoords) {
         numCubesForDegenCoord = 1;
-        for (uint64_t i = 0; i < dim; i++) {
+        for (index_t i = 0; i < dim; i++) {
             numCubesForDegenCoord *= (shape[i] - degenCoord[i]);
         }
         numCubes += numCubesForDegenCoord;
@@ -94,38 +94,38 @@ uint64_t CubicalGridComplex::getNumberOfCubes(uint64_t _dim) const {
     return numCubes;
 }
 
-uint64_t CubicalGridComplex::getCubeIndex(const Cube& cube) const {
-	uint64_t idx = cube.coordinates[dim-1];
-	uint64_t factor = 2*shape[dim-1]-1;
-	for (uint64_t i = dim-1; i-- > 0;) {
+index_t CubicalGridComplex::getCubeIndex(const Cube& cube) const {
+	index_t idx = cube.coordinates[dim-1];
+	index_t factor = 2*shape[dim-1]-1;
+	for (index_t i = dim-1; i-- > 0;) {
 		idx += cube.coordinates[i]*factor;
 		factor *= 2*shape[i]-1;
 	}
 	return idx;
 }
 
-uint64_t CubicalGridComplex::getCubeIndex(const vector<uint64_t>& coordinates) const {
-	uint64_t idx = coordinates[dim-1];
-	uint64_t factor = 2*shape[dim-1]-1;
-	for (uint64_t i = dim-1; i-- > 0;) {
+index_t CubicalGridComplex::getCubeIndex(const vector<index_t>& coordinates) const {
+	index_t idx = coordinates[dim-1];
+	index_t factor = 2*shape[dim-1]-1;
+	for (index_t i = dim-1; i-- > 0;) {
 		idx += coordinates[i]*factor;
 		factor *= 2*shape[i]-1;
 	}
 	return idx;
 }
 
-float CubicalGridComplex::getBirth(const vector<uint64_t>& coordinates_cube) const {
+value_t CubicalGridComplex::getBirth(const vector<index_t>& coordinates_cube) const {
 	//std::vector<int> multiplies(data.size());?
-	vector<uint64_t> coordinates = DivideContainerElementwise(coordinates_cube, 2);
-	uint64_t idx = getIndex(coordinates);
-	float birth = image[idx];
-	vector<uint64_t> indices{idx};
-	vector<uint64_t> newIndices;
-	uint64_t previousAxis = dim-1;
-	uint64_t factor = 1;
-	for (uint64_t i = dim; i-- > 0;) {
+	vector<index_t> coordinates = DivideContainerElementwise(coordinates_cube, 2);
+	index_t idx = getIndex(coordinates);
+	value_t birth = image[idx];
+	vector<index_t> indices{idx};
+	vector<index_t> newIndices;
+	index_t previousAxis = dim-1;
+	index_t factor = 1;
+	for (index_t i = dim; i-- > 0;) {
 		if (coordinates_cube[i]%2 == 1) {
-			for (uint64_t j = previousAxis+1; j-- > i+1;) {
+			for (index_t j = previousAxis+1; j-- > i+1;) {
 				factor *= shape[j];
 			}
 			previousAxis = i;
@@ -143,11 +143,11 @@ float CubicalGridComplex::getBirth(const vector<uint64_t>& coordinates_cube) con
 }
 
 void CubicalGridComplex::printImage() const {
-    float birth;
-    for (uint64_t i = 0; i < shape[0]; i++) {
-        for (uint64_t j = 0; j < shape[1]; j++) {
-            for (uint64_t k = 0; k < shape[2]; k++) {
-                birth = getValue(vector<uint64_t> {i,j,k});
+    value_t birth;
+    for (index_t i = 0; i < shape[0]; i++) {
+        for (index_t j = 0; j < shape[1]; j++) {
+            for (index_t k = 0; k < shape[2]; k++) {
+                birth = getValue(vector<index_t> {i,j,k});
                 if (birth < 10){
                     cout << ' ' << birth << ' ';
                 }else{
@@ -161,11 +161,11 @@ void CubicalGridComplex::printImage() const {
 }
 
 void CubicalGridComplex::printCubes() const {
-    float birth;
-    for (uint64_t i = 0; i < 2*shape[0]-1; i++) {
-        for (uint64_t j = 0; j < 2*shape[1]-1; j++) {
-            for (uint64_t k = 0; k < 2*shape[2]-1; k++) {
-                birth = getBirth(vector<uint64_t> {i,j,k});
+    value_t birth;
+    for (index_t i = 0; i < 2*shape[0]-1; i++) {
+        for (index_t j = 0; j < 2*shape[1]-1; j++) {
+            for (index_t k = 0; k < 2*shape[2]-1; k++) {
+                birth = getBirth(vector<index_t> {i,j,k});
                 if (birth < 10){
                     cout << ' ' << birth << ' ';
                 }else{
@@ -180,17 +180,17 @@ void CubicalGridComplex::printCubes() const {
 
 
 UnionFind::UnionFind(const CubicalGridComplex& _cgc) : cgc(_cgc) {
-	uint64_t n = cgc.getNumberOfCubes(0);
+	index_t n = cgc.getNumberOfCubes(0);
 	parent.reserve(n);
 	birthtime.reserve(n);
-	for (uint64_t i = 0; i < n; i++) {
+	for (index_t i = 0; i < n; i++) {
 		parent[i] = i;
 		birthtime[i] = cgc.getBirth(getCoordinates(i));
 	}
 }
 
-uint64_t UnionFind::find(uint64_t x) {
-	uint64_t y = x, z = parent[y];
+index_t UnionFind::find(index_t x) {
+	index_t y = x, z = parent[y];
 	while (z != y) {
 		y = z;
 		z = parent[y];
@@ -204,7 +204,7 @@ uint64_t UnionFind::find(uint64_t x) {
 	return z;
 }
 
-uint64_t UnionFind::link(const uint64_t& x, const uint64_t& y){
+index_t UnionFind::link(const index_t& x, const index_t& y){
 	if (birthtime[x] > birthtime[y]){
 		parent[x] = y; 
 		return x;
@@ -222,22 +222,22 @@ uint64_t UnionFind::link(const uint64_t& x, const uint64_t& y){
 	}
 }
 
-float UnionFind::getBirth(const uint64_t& idx) const { return birthtime[idx]; }
+value_t UnionFind::getBirth(const index_t& idx) const { return birthtime[idx]; }
 
-uint64_t UnionFind::getIndex(const vector<uint64_t>& coordinates) const {
-	uint64_t idx = 0;
-	uint64_t factor = 1;
-	for (uint64_t d = cgc.dim; d-- > 0;) {
+index_t UnionFind::getIndex(const vector<index_t>& coordinates) const {
+	index_t idx = 0;
+	index_t factor = 1;
+	for (index_t d = cgc.dim; d-- > 0;) {
 		idx += coordinates[d]/2 * factor;
 		factor *= cgc.shape[d];
 	}
 	return idx;
 }
 
-vector<uint64_t> UnionFind::getCoordinates(uint64_t idx) const {
-	vector<uint64_t> coordinates(cgc.dim, 0);
-	uint64_t remainder;
-	for (uint64_t d = cgc.dim; d-- > 0;) {
+vector<index_t> UnionFind::getCoordinates(index_t idx) const {
+	vector<index_t> coordinates(cgc.dim, 0);
+	index_t remainder;
+	for (index_t d = cgc.dim; d-- > 0;) {
 		remainder = idx%cgc.shape[d];
 		idx -= remainder;
 		idx /= cgc.shape[d];
@@ -251,16 +251,16 @@ UnionFindDual::UnionFindDual(const CubicalGridComplex &_cgc) : cgc(_cgc) {
 	star = cgc.getNumberOfCubes(cgc.dim);
 	parent.reserve(star+1);
 	birthtime.reserve(star+1);
-	for (uint64_t i = 0; i < star; i++) {
+	for (index_t i = 0; i < star; i++) {
 		parent[i] = i;
 		birthtime[i] = cgc.getBirth(getCoordinates(i));
 	}
 	parent[star] = star;
-	birthtime[star] = numeric_limits<float>::infinity();
+	birthtime[star] = numeric_limits<value_t>::infinity();
 }
 
-uint64_t UnionFindDual::find(uint64_t x) {
-	uint64_t y = x, z = parent[y];
+index_t UnionFindDual::find(index_t x) {
+	index_t y = x, z = parent[y];
 	while (z != y) {
 		y = z;
 		z = parent[y];
@@ -274,7 +274,7 @@ uint64_t UnionFindDual::find(uint64_t x) {
 	return z;
 }
 
-uint64_t UnionFindDual::link(const uint64_t& x, const uint64_t& y){
+index_t UnionFindDual::link(const index_t& x, const index_t& y){
 	if (birthtime[x] < birthtime[y]){
 		parent[x] = y; 
 		return x;
@@ -292,22 +292,22 @@ uint64_t UnionFindDual::link(const uint64_t& x, const uint64_t& y){
 	}
 }
 
-float UnionFindDual::getBirth(const uint64_t& idx) const { return birthtime[idx]; }
+value_t UnionFindDual::getBirth(const index_t& idx) const { return birthtime[idx]; }
 
-uint64_t UnionFindDual::getIndex(const vector<uint64_t>& coordinates) const {
-	uint64_t idx = 0;
-	uint64_t factor = 1;
-	for (uint64_t d = cgc.dim; d-- > 0;) {
+index_t UnionFindDual::getIndex(const vector<index_t>& coordinates) const {
+	index_t idx = 0;
+	index_t factor = 1;
+	for (index_t d = cgc.dim; d-- > 0;) {
 		idx += ((coordinates[d]-1)/2 * factor);
 		factor *= (cgc.shape[d]-1);
 	}
 	return idx;
 }
 
-vector<uint64_t> UnionFindDual::getCoordinates(uint64_t idx) const {
-	vector<uint64_t> coordinates(cgc.dim, 0);
-	uint64_t remainder;
-	for (uint64_t d = cgc.dim; d-- > 0;) {
+vector<index_t> UnionFindDual::getCoordinates(index_t idx) const {
+	vector<index_t> coordinates(cgc.dim, 0);
+	index_t remainder;
+	for (index_t d = cgc.dim; d-- > 0;) {
 		remainder = idx%(cgc.shape[d]-1);
 		idx -= remainder;
 		idx /= (cgc.shape[d]-1);

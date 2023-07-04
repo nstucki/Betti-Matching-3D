@@ -1,5 +1,3 @@
-#include "template_functions.h"
-
 #include "utils.h"
 #include "top_dimension.h"
 #include "inter_dimensions.h"
@@ -107,12 +105,18 @@ int main(int argc, char** argv) {
 
     vector<double> readImage0;
     vector<double> readImage1;
-    vector<uint64_t> shape0;
-    vector<uint64_t> shape1;
+    vector<index_t> shape0;
+    vector<index_t> shape1;
     readImage(config.filename_0, config.format_0, readImage0, shape0);
     readImage(config.filename_1, config.format_1, readImage1, shape1);
-    vector<float> image0(readImage0.begin(), readImage0.end());
-    vector<float> image1(readImage1.begin(), readImage1.end());
+    #ifdef USE_FLOAT
+    vector<value_t> image0(readImage0.begin(), readImage0.end());
+    vector<value_t> image1(readImage1.begin(), readImage1.end());
+    #endif
+    #ifdef USE_DOUBLE
+    vector<value_t>& image0 = readImage0;
+    vector<value_t>& image1 = readImage1;
+    #endif
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
@@ -121,27 +125,21 @@ int main(int argc, char** argv) {
     
 
     assert (shape0 == shape1);
-    uint64_t dim = shape0.size();
+    index_t dim = shape0.size();
     
-    vector<float> imageComp;
-    transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](float a, float b){return min(a,b);});
+    vector<value_t> imageComp;
+    transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](value_t a, value_t b){return min(a,b);});
 
     CubicalGridComplex cgc0(move(image0), shape0);
     CubicalGridComplex cgc1(move(image1), shape1);
     CubicalGridComplex cgcComp(move(imageComp), shape0);
 
-    if (config.print) {
-        cout << "Input 0:" << endl << endl; cgc0.printImage(); cout << endl;
-        cout << "Input 1" << endl << endl; cgc1.printImage(); cout << endl;
-        cout << "Comparison" << endl << endl; cgcComp.printImage(); cout << endl;
-    }
-
     vector<vector<Pair>> pairs0(dim);
 	vector<vector<Pair>> pairs1(dim);
 	vector<vector<Pair>> pairsComp(dim);
 	vector<vector<Match>> matches(dim);
-	unordered_map<uint64_t, bool> isMatched0;
-	unordered_map<uint64_t, bool> isMatched1;
+	unordered_map<index_t, bool> isMatched0;
+	unordered_map<index_t, bool> isMatched1;
 
  	vector<Cube> ctr0;
  	vector<Cube> ctr1;
