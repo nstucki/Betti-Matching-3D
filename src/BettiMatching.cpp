@@ -479,22 +479,4 @@ int main(int argc, char** argv){
     if (config.print) {
         print_result(cgc_0, cgc_1, cgc_comp, pairs_0, pairs_1, pairs_comp, matched, unmatched_0, unmatched_1);
     }
-
-    cout << "time to compute 100,000 births:" << endl;
-    start = high_resolution_clock::now();
-    for (int i = 0; i < 100000; i++) {
-        cgc_0->getBirth(20,20,20,0,3);
-    }
-    stop = high_resolution_clock::now();
-    duration = duration_cast<milliseconds>(stop - start);
-    cout << duration.count() << endl;
-
-    cout << "time to compute 1,000,000 values:" << endl;
-    start = high_resolution_clock::now();
-    for (int i = 0; i < 1000000; i++) {
-        cgc_0->getBirth(20,20,20);
-    }
-    stop = high_resolution_clock::now();
-    duration = duration_cast<milliseconds>(stop - start);
-    cout << duration.count() << endl;
 }

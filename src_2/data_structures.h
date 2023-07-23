@@ -68,17 +68,17 @@ class CubicalGridComplex {
 	index_t getNumberOfCubes(const index_t dim) const;
 	index_t getCubeIndex(const Cube& cube) const;
 	index_t getCubeIndex(const vector<index_t>& coordinates) const;
+	vector<index_t> getCubeCoordinates(index_t idx) const;
 	value_t getBirth (const vector<index_t>& coordinates) const;
 	void printImage() const;
 	void printCubes() const;
-	
-	value_t getValue(const vector<index_t>& pixelCoordinates) const;
 
 	private:
 	const vector<value_t> image;
 	vector<index_t> pixelCoordFactor;
 	vector<index_t> cubeCoordFactor;
 
+	value_t getValue(const vector<index_t>& pixelCoordinates) const;
 	index_t getIndex(const vector<index_t>& pixelCoordinates) const;
 	
 };
@@ -92,6 +92,7 @@ class UnionFind{
 	value_t getBirth(const index_t& idx) const;
 	index_t getIndex(const vector<index_t>& coordinates) const;
 	vector<index_t> getCoordinates(index_t idx) const;
+	void reset();
 
 	private:
 	vector<index_t> parent;
@@ -111,6 +112,7 @@ class UnionFindDual {
 	value_t getBirth(const index_t& idx) const;
 	index_t getIndex(const vector<index_t>& coordinates) const;
 	vector<index_t> getCoordinates(index_t idx) const;
+	void reset();
 
 	private:
 	vector<index_t> parent;

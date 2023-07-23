@@ -114,7 +114,6 @@ void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 			}
 		}
 	}
-	// create new vector instead?
 	if (shouldClear) {
 		auto new_end = remove_if(ctr.begin(), ctr.end(), [](const Cube& edge){ return edge.coordinates[0] == NONE; });
 		ctr.erase(new_end, ctr.end());

@@ -104,6 +104,20 @@ index_t CubicalGridComplex::getCubeIndex(const vector<index_t>& coordinates) con
 	return idx;
 }
 
+vector<index_t> CubicalGridComplex::getCubeCoordinates(index_t idx) const {
+	vector<index_t> coordinates;
+	coordinates.reserve(dim);
+	index_t c;
+	for (index_t i = dim-1; i > 0; i--) {
+		c = idx % (2*shape[i-1]-1);
+		coordinates.push_back(c);
+		idx = (idx-c)/(2*shape[i-1]-1);
+	}
+	coordinates.push_back(idx);
+	std::reverse(coordinates.begin(), coordinates.end());
+	return coordinates;
+}
+
 value_t CubicalGridComplex::getBirth(const vector<index_t>& coordinatesCube) const {
 	index_t idx = getIndex(divideContainerElementwise(coordinatesCube, 2));
 	value_t birth = image[idx];
@@ -202,8 +216,8 @@ UnionFind::UnionFind(const CubicalGridComplex& _cgc) : cgc(_cgc) {
 	parent.reserve(n);
 	birthtime.reserve(n);
 	for (index_t i = 0; i < n; i++) {
-		parent[i] = i;
-		birthtime[i] = cgc.getBirth(getCoordinates(i));
+		parent.push_back(i);
+		birthtime.push_back(cgc.getBirth(getCoordinates(i)));
 	}
 }
 
@@ -264,17 +278,19 @@ vector<index_t> UnionFind::getCoordinates(index_t idx) const {
 	return coordinates;
 }
 
+void UnionFind::reset() { for (index_t i = 0; i < parent.size(); i++) { parent[i] = i; } }
+
 
 UnionFindDual::UnionFindDual(const CubicalGridComplex &_cgc) : cgc(_cgc) {
 	star = cgc.getNumberOfCubes(cgc.dim);
 	parent.reserve(star+1);
 	birthtime.reserve(star+1);
 	for (index_t i = 0; i < star; i++) {
-		parent[i] = i;
-		birthtime[i] = cgc.getBirth(getCoordinates(i));
+		parent.push_back(i);
+		birthtime.push_back(cgc.getBirth(getCoordinates(i)));
 	}
-	parent[star] = star;
-	birthtime[star] = numeric_limits<value_t>::infinity();
+	parent.push_back(star);
+	birthtime.push_back(numeric_limits<value_t>::infinity());
 }
 
 index_t UnionFindDual::find(index_t x) {
@@ -333,3 +349,5 @@ vector<index_t> UnionFindDual::getCoordinates(index_t idx) const {
 	}
 	return coordinates;
 }
+
+void UnionFindDual::reset() { for (index_t i = 0; i < parent.size(); i++) { parent[i] = i; } }

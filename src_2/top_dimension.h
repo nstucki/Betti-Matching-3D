@@ -26,6 +26,9 @@ class TopDimension {
 	unordered_map<index_t, bool>& isMatched1;
 	unordered_map<index_t, Pair> matchMap0;
 	unordered_map<index_t, Pair> matchMap1;
+	UnionFindDual uf0;
+	UnionFindDual uf1;
+	UnionFindDual ufComp;
 
 	void enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& dualEdges) const;
 	void computePairsComp(vector<Cube>& dualEdges);

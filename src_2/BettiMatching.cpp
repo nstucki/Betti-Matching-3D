@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
     index_t dim = shape0.size();
     
     vector<value_t> imageComp;
-    transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](value_t a, value_t b){return min(a,b);});
+    transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](value_t a, value_t b) { return min(a,b); });
 
     CubicalGridComplex cgc0(move(image0), shape0);
     CubicalGridComplex cgc1(move(image1), shape1);
@@ -164,23 +164,5 @@ int main(int argc, char** argv) {
     if (config.print) {
         printResult(dim, cgc0, cgc1, cgcComp, pairs0, pairs1, pairsComp, matches, isMatched0, isMatched1);
     }
-
-    cout << "time to compute 100,000 births:" << endl;
-    start = high_resolution_clock::now();
-    for (int i = 0; i < 100000; i++) {
-        cgc0.getBirth({51,51,51});
-    }
-    stop = high_resolution_clock::now();
-    duration = duration_cast<milliseconds>(stop - start);
-    cout << duration.count() << endl;
-
-    cout << "time to compute 1,000,000 values:" << endl;
-    start = high_resolution_clock::now();
-    for (int i = 0; i < 1000000; i++) {
-        cgc0.getValue({20,20,20});
-    }
-    stop = high_resolution_clock::now();
-    duration = duration_cast<milliseconds>(stop - start);
-    cout << duration.count() << endl;
 }
     

@@ -17,7 +17,8 @@ struct Config {
 	fileFormat format_0;
 	fileFormat format_1;
 
-	float threshold = numeric_limits<float>::infinity();
+	value_t threshold = numeric_limits<value_t>::infinity();
+	
 	index_t minRecursionToCache = 0;
 	index_t cacheSize = numeric_limits<index_t>::max();
 	

@@ -50,9 +50,9 @@ void Dimension0::compute_pairs(vector<Cube>& ctr){
 		u = uf.find(uind);
 		v = uf.find(vind);
 		if (u!=v){
-			birth_ind = uf.link(u,v);
+			birth_ind = uf.link(u, v);
 			birth = uf.birthtime[birth_ind];
-			if (birth != c->birth){
+			if (birth != c->birth) {
 				pairs->push_back(WritePair(Cube(birth, birth_ind/(cgc->m_yz), birth_ind/(cgc->shape[2]) % (cgc->shape[1]), birth_ind % (cgc->shape[2]), 0, 0), *c));
 			}
 		}
