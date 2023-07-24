@@ -6,9 +6,10 @@
 using namespace std::chrono;
 
 
-Dimension0::Dimension0(const CubicalGridComplex* const _cgc0, const CubicalGridComplex* const _cgc1, const CubicalGridComplex* const _cgcComp, 
-						const Config& _config, vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, 
-						vector<Match>& _matches, unordered_map<index_t, bool>& _isMatched0, unordered_map<index_t, bool>& _isMatched1) : 
+Dimension0::Dimension0(const CubicalGridComplex* const _cgc0, const CubicalGridComplex* const _cgc1, 
+						const CubicalGridComplex* const _cgcComp, const Config& _config, 
+						vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, vector<Match>& _matches, 
+						unordered_map<index_t, bool>& _isMatched0, unordered_map<index_t, bool>& _isMatched1) : 
 						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), 
 						pairs0(_pairs0), pairs1(_pairs1), pairsComp(_pairsComp),
 						matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1),
@@ -60,7 +61,6 @@ void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 	index_t birthIdx;
 	value_t birth;
 	vector<index_t> birthCoordinates(3);
-	cout << edges.size() << endl;
 	for (auto edge = edges.begin(), last = edges.end(); edge != last; ++edge) {
 		boundaryIndices = uf.getBoundaryIndices(*edge);
 		parentIdx0 = uf.find(boundaryIndices[0]);

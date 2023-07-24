@@ -7,16 +7,17 @@ using namespace std;
 using namespace std::chrono;
 
 
-TopDimension::TopDimension(const CubicalGridComplex* const _cgc0, const CubicalGridComplex* const _cgc1, const CubicalGridComplex* const _cgcComp, 
-							const Config& _config, vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp,
-							vector<Match>& _matches, unordered_map<index_t, bool>& _isMatched0, unordered_map<index_t, bool>& _isMatched1) :
+TopDimension::TopDimension(const CubicalGridComplex* const _cgc0, const CubicalGridComplex* const _cgc1, 
+							const CubicalGridComplex* const _cgcComp, const Config& _config, 
+							vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, vector<Match>& _matches, 
+							unordered_map<index_t, bool>& _isMatched0, unordered_map<index_t, bool>& _isMatched1) :
 							cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), 
 							pairs0(_pairs0), pairs1(_pairs1), pairsComp(_pairsComp),
 							matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1), 
 							uf0(UnionFindDual(cgc0)), uf1(UnionFindDual(cgc1)), ufComp(UnionFindDual(cgcComp)) {}
 
 void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
-	if (config.verbose) { cout << "computing top dimension ... "; }
+	if (config.verbose) { cout << "computing dimension 2 ... "; }
     auto start = high_resolution_clock::now();
 	
 	enumerateDualEdges(cgc0, ctr0);
