@@ -1,34 +1,34 @@
 #include "enumerators.h"
 
-BoundaryEnumerator::BoundaryEnumerator(CubicalGridComplex* _cgc) {
+BoundaryEnumerator::BoundaryEnumerator(const CubicalGridComplex* const _cgc) : cgc(_cgc) {
 	nextFace = Cube();
-	cgc = _cgc;
 }
 
-void BoundaryEnumerator::setBoundaryEnumerator(Cube& _cube) {
+void BoundaryEnumerator::setBoundaryEnumerator(const Cube& _cube) {
 	cube = _cube;
 	position = 0; 
 }
 
 bool BoundaryEnumerator::hasNextFace() {
-	if (position == 4) {
-		return false;
-	} else {
-		auto x = cube.x;
-		auto y = cube.y;
-		auto z = cube.z;
-		double birth;
-		switch (cube.type) {
+	if (position == 4) { return false; } 
+	else {
+		index_t x = cube.x();
+		index_t y = cube.y();
+		index_t z = cube.z();
+		index_t birth;
+		switch (cube.type()) {
 			case 0:
 			switch (position) {
 				case 0:
-				birth = cgc->getBirth(x,y,z,1,1);
-				nextFace = Cube(birth,x,y,z,1,1);
+				birth = cgc->getBirth(x, y, z, 1, 1);
+				nextFace = Cube(birth, x, y, z, 1);
 				break;
+
 				case 1:
-				birth = cgc->getBirth(x,y,z,2,1);
+				birth = cgc->getBirth(x , y, z, 2, 1);
 				nextFace = Cube(birth,x,y,z,2,1);
 				break;
+
 				case 2:
 				birth = cgc->getBirth(x,y+1,z,2,1);
 				nextFace = Cube(birth,x,y+1,z,2,1);
