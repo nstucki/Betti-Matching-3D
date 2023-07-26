@@ -40,7 +40,7 @@ void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube
 	dualEdges.reserve(cgc.getNumberOfCubes(cgc.dim-1));
 	CubeEnumerator cubeEnum(cgc, cgc.dim-1);
 	Cube cube = cubeEnum.getNextCube();
-	if (cube.birth <= config.threshold) { dualEdges.push_back(cube); }
+	if (cube.birth < config.threshold) { dualEdges.push_back(cube); }
 	while (cubeEnum.hasNextCube()) {
 		cube = cubeEnum.getNextCube();
 		if (cube.birth < config.threshold) { dualEdges.push_back(cube); }

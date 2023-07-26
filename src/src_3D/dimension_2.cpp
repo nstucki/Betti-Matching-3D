@@ -7,16 +7,16 @@ using namespace std;
 using namespace std::chrono;
 
 
-TopDimension::TopDimension(const CubicalGridComplex* const _cgc0, const CubicalGridComplex* const _cgc1, 
-							const CubicalGridComplex* const _cgcComp, const Config& _config, 
-							vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, vector<Match>& _matches, 
-							unordered_map<index_t, bool>& _isMatched0, unordered_map<index_t, bool>& _isMatched1) :
-							cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), 
-							pairs0(_pairs0), pairs1(_pairs1), pairsComp(_pairsComp),
-							matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1), 
-							uf0(UnionFindDual(cgc0)), uf1(UnionFindDual(cgc1)), ufComp(UnionFindDual(cgcComp)) {}
+Dimension2::Dimension2(const CubicalGridComplex* const _cgc0, const CubicalGridComplex* const _cgc1, 
+						const CubicalGridComplex* const _cgcComp, const Config& _config, 
+						vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, vector<Match>& _matches, 
+						unordered_map<index_t, bool>& _isMatched0, unordered_map<index_t, bool>& _isMatched1) :
+						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), 
+						pairs0(_pairs0), pairs1(_pairs1), pairsComp(_pairsComp),
+						matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1), 
+						uf0(UnionFindDual(cgc0)), uf1(UnionFindDual(cgc1)), ufComp(UnionFindDual(cgcComp)) {}
 
-void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
+void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
 	if (config.verbose) { cout << "computing dimension 2 ... "; }
     auto start = high_resolution_clock::now();
 	
@@ -34,7 +34,7 @@ void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, 
     if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
 }
 
-void TopDimension::enumerateDualEdges(const CubicalGridComplex* const cgc, vector<Cube>& dualEdges) const {
+void Dimension2::enumerateDualEdges(const CubicalGridComplex* const cgc, vector<Cube>& dualEdges) const {
 	dualEdges.clear();
 	for (index_t x = 0; x < cgc->shape[0]; x++) {
 		for (index_t y = 0; y < cgc->shape[1]; y++) {
@@ -49,7 +49,7 @@ void TopDimension::enumerateDualEdges(const CubicalGridComplex* const cgc, vecto
 	sort(dualEdges.begin(), dualEdges.end(), CubeComparator());
 }
 
-void TopDimension::computeImagePairs(vector<Cube>& dualEdges, uint8_t k) {
+void Dimension2::computeImagePairs(vector<Cube>& dualEdges, uint8_t k) {
 	const CubicalGridComplex* const cgc = (k == 0) ? cgc0 : cgc1;
 	UnionFindDual& uf = (k == 0) ? uf0 : uf1; 
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
@@ -85,7 +85,7 @@ void TopDimension::computeImagePairs(vector<Cube>& dualEdges, uint8_t k) {
 	dualEdges.erase(new_end, dualEdges.end());
 }
 
-void TopDimension::computePairsCompAndMatch(vector<Cube>& dualEdges) {	
+void Dimension2::computePairsCompAndMatch(vector<Cube>& dualEdges) {	
 	vector<index_t> boundaryIndices;
 	index_t parentIdx0;
 	index_t parentIdx1;

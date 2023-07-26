@@ -51,7 +51,7 @@ Match::Match(Pair* _pair0, Pair* _pair1) : pair0(_pair0), pair1(_pair1) {}
 
 Match::Match(Pair& _pair_0, Pair& _pair_1) : pair0(&_pair_0), pair1(&_pair_1) {}
 
-void Match::print() const { cout << "matched "; pair0->print(); cout << " with "; pair1->print(); cout << endl; }
+void Match::print() const { pair0->print(); cout << " <-> "; pair1->print(); cout << endl; }
 
 
 CubicalGridComplex::CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& _shape) : 

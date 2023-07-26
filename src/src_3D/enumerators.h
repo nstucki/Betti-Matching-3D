@@ -5,7 +5,7 @@
 class BoundaryEnumerator {
 	public:
 	BoundaryEnumerator(const CubicalGridComplex* const _cgc);
-	void setBoundaryEnumerator(const Cube& _cube);
+	void setBoundaryEnumerator(const Cube& cube);
 	bool hasNextFace();
 	Cube getNextFace() const;
 

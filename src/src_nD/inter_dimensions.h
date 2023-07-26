@@ -27,14 +27,14 @@ class InterDimensions{
 	vector<vector<Match>>& matches;
 	unordered_map<index_t, bool>& isMatched0;
 	unordered_map<index_t, bool>& isMatched1;
-	index_t computeDim;
-	unordered_map<index_t, index_t> pivot_column_index;
-	unordered_map<index_t, CubeQue> cache;
+	unordered_map<index_t, bool> matchMapComp;
 	unordered_map<index_t, Pair> matchMap0;
 	unordered_map<index_t, Pair> matchMap1;
-	unordered_map<index_t, bool> matchMapComp;
 	unordered_map<index_t, Cube> matchMapIm0;
 	unordered_map<index_t, Cube> matchMapIm1;
+	unordered_map<index_t, index_t> pivotColumnIndex;
+	unordered_map<index_t, CubeQue> cache;
+	index_t computeDim;
 
 	void computePairsComp(vector<Cube>& ctr);
 	void computePairs(const vector<Cube>& ctr, uint8_t k);

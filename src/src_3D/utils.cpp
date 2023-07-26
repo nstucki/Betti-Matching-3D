@@ -1,11 +1,10 @@
 #include "utils.h"
-
 #include "npy.hpp"
 
 #include <cfloat>
 
 
-void readImage(string const &filename, file_format const &format, vector<double> &image, vector<uint32_t> &shape) {
+void readImage(const string &filename, const file_format &format, vector<double> &image, vector<uint32_t> &shape) {
     switch(format) {
         case DIPHA: {
             ifstream fin(filename, ios::in | ios::binary );
@@ -88,20 +87,21 @@ void readImage(string const &filename, file_format const &format, vector<double>
     }
 }
 
-void tokenize(string const &str, const char delim, vector<string> &out) { 
+void tokenize(const string &str, const char delim, vector<string> &out) { 
     stringstream ss(str); 
     string s; 
     while (getline(ss, s, delim)) { out.push_back(s); } 
 } 
 
-void print_result(const CubicalGridComplex* const cgc0, const CubicalGridComplex* const cgc1, const CubicalGridComplex* const cgcComp, 
-    const vector<vector<Pair>>& pairs0, const vector<vector<Pair>>& pairs1, const vector<vector<Match>>& matches, 
-    unordered_map<index_t, bool>& isMatched0, unordered_map<index_t, bool>& isMatched1) {
+void printResult(const CubicalGridComplex* const cgc0, const CubicalGridComplex* const cgc1, const CubicalGridComplex* const cgcComp, 
+                    const vector<vector<Pair>>& pairs0, const vector<vector<Pair>>& pairs1, const vector<vector<Pair>>& pairsComp,
+                    const vector<vector<Match>>& matches, 
+                    unordered_map<index_t, bool>& isMatched0, unordered_map<index_t, bool>& isMatched1) {
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
     cout << "Input 0:" << endl; cout << endl; cgc0->printImage(); cout << endl;
-    cout << "pairs:" << endl;
-    for (index_t d = 0; d < 1; d++) {
-        cout << "in dimension " << d << ":" << endl;
+    cout << "pairs ... " << endl;
+    for (uint8_t d = 0; d < 3; d++) {
+        cout << "... in dim " << unsigned(d) << ":" << endl;
         for (auto &pair : pairs0[d]) {
             pair.print(); cout << endl;
         }
@@ -109,9 +109,9 @@ void print_result(const CubicalGridComplex* const cgc0, const CubicalGridComplex
     }
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
     cout << "Input 1" << endl; cout << endl; cgc1->printImage(); cout << endl;
-    cout << "pairs:" << endl;
-    for (index_t d = 0; d < 1; d++) {
-        cout << "in dimension " << d << ":" << endl;
+    cout << "pairs ..." << endl;
+    for (uint8_t d = 0; d < 3; d++) {
+        cout << "... in dim " << unsigned(d) << ":" << endl;
         for (auto &pair : pairs1[d]) {
             pair.print(); cout << endl;
         }
@@ -119,19 +119,28 @@ void print_result(const CubicalGridComplex* const cgc0, const CubicalGridComplex
     }
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
     cout << "Comparison" << endl; cout << endl; cgcComp->printImage(); cout << endl;
+    cout << "pairs ..." << endl;
+    for (uint8_t d = 0; d < 3; d++) {
+        cout << "... in dim " << unsigned(d) << ":" << endl;
+        for (auto &pair : pairsComp[d]) {
+            pair.print(); cout << endl;
+        }
+        cout << endl;
+    }
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
 
     cout << "Betti Matching:" << endl;
-    for (index_t d = 0; d < 1; d++) {
-        cout << "in dimension " << d << ":" << endl;
+    cout << "matched ..." << endl;
+    for (uint8_t d = 0; d < 3; d++) {
+        cout << "... in dim " << unsigned(d) << ":" << endl;
         for (auto &match : matches[d]) {
             match.print();
         }
         cout << endl;
     }
-    cout << "unmatched in Input 0:" << endl;
-    for (index_t d = 0; d < 1; d++) {
-        cout << "dim " << d << ":" << endl;
+    cout << "unmatched in Input 0 ..." << endl;
+    for (uint8_t d = 0; d < 3; d++) {
+        cout << "... in dim " << unsigned(d) << ":" << endl;
         for (auto &pair : pairs0[d]) {
             if (!isMatched0[pair.birth.index]) {
                 pair.print(); cout << endl;
@@ -139,9 +148,9 @@ void print_result(const CubicalGridComplex* const cgc0, const CubicalGridComplex
         }
         cout << endl;
     }
-    cout << "unmatched in Input 2:" << endl;
-    for (index_t d = 0; d < 1; d++) {
-        cout << "dim " << d << ":" << endl;
+    cout << "unmatched in Input 1 ..." << endl;
+    for (uint8_t d = 0; d < 3; d++) {
+        cout << "... in dim " << unsigned(d) << ":" << endl;
         for (auto &pair : pairs1[d]) {
             if (!isMatched1[pair.birth.index]) {
                 pair.print(); cout << endl;

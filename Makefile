@@ -1,8 +1,8 @@
 CC = g++
 FLAGS = -g -c --std=c++17
 
-SOURCEDIR = src/src-3D
-BUILDDIR = build/build-3D
+SOURCEDIR = src/src_nD
+BUILDDIR = build/build_nD
 
 EXECUTABLE = BettiMatching
 SOURCES = $(wildcard $(SOURCEDIR)/*.cpp)
