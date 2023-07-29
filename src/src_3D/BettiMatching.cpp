@@ -1,6 +1,7 @@
 #include "utils.h"
 #include "dimension_0.h"
-#include "top_dimension.h"
+#include "dimension_1.h"
+#include "dimension_2.h"
 
 #include <iostream>
 #include <sstream> 
@@ -43,49 +44,49 @@ int main(int argc, char** argv) {
 		} else if (arg == "--verbose" || arg == "-v") {
 			config.verbose = true;
 		} else if (arg == "--matched" || arg == "-m") {
-			config.matched_filename = string(argv[++i]);
+			config.matchedFilename = string(argv[++i]);
         } else if (arg == "--unmatched_0" || arg == "-u0") {
-			config.unmatched_0_filename = string(argv[++i]);
+			config.unmatched0Filename = string(argv[++i]);
         } else if (arg == "--unmatched_1" || arg == "-u1") {
-			config.unmatched_1_filename = string(argv[++i]);
+			config.unmatched1Filename = string(argv[++i]);
 		} else if (arg == "--min_recursion_to_cache" || arg == "-mc") {
-            config.min_recursion_to_cache = stoi(argv[++i]);
+            config.minRecursionToCache = stoi(argv[++i]);
 		} else if (arg == "--cache_size" || arg == "-c") {
-            config.cache_size = stoi(argv[++i]);
+            config.cacheSize = stoi(argv[++i]);
 		} else if (arg == "--print" || arg == "-p") {
 			config.print = true;
 		} else {
-            if (config.filename_0.empty()) {
-                config.filename_0 = argv[i];
+            if (config.filename0.empty()) {
+                config.filename0 = argv[i];
             } else {
-                config.filename_1 = argv[i];
+                config.filename1 = argv[i];
             }
 		}
 	}
-    if (config.filename_0.empty()) {print_usage_and_exit(-1);} 
-    if (config.filename_0.find(".txt")!= std::string::npos) { config.format_0 = PERSEUS; } 
-    else if (config.filename_0.find(".npy")!= std::string::npos) { config.format_0 = NUMPY; } 
-    else if(config.filename_0.find(".complex")!= std::string::npos) { config.format_0 = DIPHA; } 
+    if (config.filename0.empty()) { print_usage_and_exit(-1); } 
+    if (config.filename0.find(".txt")!= std::string::npos) { config.format0 = PERSEUS; } 
+    else if (config.filename0.find(".npy")!= std::string::npos) { config.format0 = NUMPY; } 
+    else if(config.filename0.find(".complex")!= std::string::npos) { config.format0 = DIPHA; } 
     else {
-		cerr << "unknown input file format! (the filename extension should be .txt/.npy/.complex): " << config.filename_0 << endl;
+		cerr << "unknown input file format! (the filename extension should be .txt/.npy/.complex): " << config.filename0 << endl;
 		exit(-1);
 	}
-    ifstream file_stream_0(config.filename_0);
-	if (!config.filename_0.empty() && file_stream_0.fail()) {
-		cerr << "couldn't open file " << config.filename_0 << endl;
+    ifstream fileStream0(config.filename0);
+	if (!config.filename0.empty() && fileStream0.fail()) {
+		cerr << "couldn't open file " << config.filename0 << endl;
 		exit(-1);
 	}
-    if (config.filename_1.empty()) { print_usage_and_exit(-1); }
-    if (config.filename_1.find(".txt")!= std::string::npos) { config.format_1 = PERSEUS; } 
-    else if (config.filename_1.find(".npy")!= std::string::npos) { config.format_1 = NUMPY; } 
-    else if (config.filename_1.find(".complex")!= std::string::npos) { config.format_1 = DIPHA; } 
+    if (config.filename1.empty()) { print_usage_and_exit(-1); }
+    if (config.filename1.find(".txt")!= std::string::npos) { config.format1 = PERSEUS; } 
+    else if (config.filename1.find(".npy")!= std::string::npos) { config.format1 = NUMPY; } 
+    else if (config.filename1.find(".complex")!= std::string::npos) { config.format1 = DIPHA; } 
     else {
-		cerr << "unknown input file format! (the filename extension should be .txt/.npy/.complex): " << config.filename_1 << endl;
+		cerr << "unknown input file format! (the filename extension should be .txt/.npy/.complex): " << config.filename1 << endl;
 		exit(-1);
 	}
-    ifstream file_stream_1(config.filename_1);
-	if (!config.filename_1.empty() && file_stream_1.fail()) {
-		cerr << "couldn't open file " << config.filename_1 << endl;
+    ifstream fileStream1(config.filename1);
+	if (!config.filename1.empty() && fileStream1.fail()) {
+		cerr << "couldn't open file " << config.filename1 << endl;
 		exit(-1);
 	}
 
@@ -96,15 +97,14 @@ int main(int argc, char** argv) {
     vector<double> readImage1;
     vector<index_t> shape0;
     vector<index_t> shape1;
-    readImage(config.filename_0, config.format_0, readImage0, shape0);
-    readImage(config.filename_1, config.format_1, readImage1, shape1);
-    #ifdef USE_FLOAT
-    vector<value_t> image0(readImage0.begin(), readImage0.end());
-    vector<value_t> image1(readImage1.begin(), readImage1.end());
-    #endif
+    readImage(config.filename0, config.format0, readImage0, shape0);
+    readImage(config.filename1, config.format1, readImage1, shape1);
     #ifdef USE_DOUBLE
     vector<value_t>& image0 = readImage0;
     vector<value_t>& image1 = readImage1;
+    #else
+    vector<value_t> image0(readImage0.begin(), readImage0.end());
+    vector<value_t> image1(readImage1.begin(), readImage1.end()); 
     #endif
 
     auto stop = high_resolution_clock::now();
@@ -126,18 +126,21 @@ int main(int argc, char** argv) {
     vector<vector<Pair>> pairs1(3);
     vector<vector<Pair>> pairsComp(3);
     vector<vector<Match>> matches(3);
-    unordered_map<index_t, bool> isMatched0;
-	unordered_map<index_t, bool> isMatched1;
+    unordered_map<uint64_t, bool> isMatched0;
+	unordered_map<uint64_t, bool> isMatched1;
 
     vector<Cube> ctr0;
     vector<Cube> ctr1;
     vector<Cube> ctrComp;
 
     {
-        TopDimension topDim(cgc0, cgc1, cgcComp,  config, pairs0[2], pairs1[2], pairsComp[2], matches[2], isMatched0, isMatched1);       
-        topDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
+        Dimension2 dim2(cgc0, cgc1, cgcComp,  config, pairs0[2], pairs1[2], pairsComp[2], matches[2], isMatched0, isMatched1);       
+        dim2.computePairsAndMatch(ctr0, ctr1, ctrComp);
     }
-
+    {
+        Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0, isMatched1);       
+        dim1.computePairsAndMatch(ctr0, ctr1, ctrComp);
+    }
     {
         Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0, isMatched1);       
         dim0.computePairsAndMatch(ctr0, ctr1, ctrComp);

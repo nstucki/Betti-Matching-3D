@@ -93,3 +93,5 @@ bool BoundaryEnumerator::hasNextFace() {
 		return true;
 	}	
 }
+
+Cube BoundaryEnumerator::getNextFace() const { return nextFace; }

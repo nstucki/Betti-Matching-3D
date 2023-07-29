@@ -47,22 +47,20 @@ bool Pair::operator==(const Pair &rhs) const { return (birth == rhs.birth && dea
 void Pair::print() const { cout << "("; birth.print(); cout << ","; death.print(); cout << ")"; }
 
 
-Match::Match(Pair* _pair0, Pair* _pair1) : pair0(_pair0), pair1(_pair1) {}
+Match::Match(Pair _pair0, Pair _pair1) : pair0(_pair0), pair1(_pair1) {}
 
-Match::Match(Pair& _pair_0, Pair& _pair_1) : pair0(&_pair_0), pair1(&_pair_1) {}
-
-void Match::print() const { pair0->print(); cout << " <-> "; pair1->print(); cout << endl; }
+void Match::print() const { pair0.print(); cout << " <-> "; pair1.print(); cout << endl; }
 
 
-CubicalGridComplex::CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& _shape) : 
-	shape(_shape), n_x(shape[0]-1), n_y(shape[1]-1), n_z(shape[2]-1), n_yz(n_y*n_z), n_xyz(n_x*n_yz), 
-	m_yz(shape[1]*shape[2]), m_xyz(shape[0]*m_yz) {
+CubicalGridComplex::CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& _shape) : shape(_shape), 
+										n_x(shape[0]-1), n_y(shape[1]-1), n_z(shape[2]-1), n_yz(n_y*n_z), n_xyz(n_x*n_yz), 
+										m_yz(shape[1]*shape[2]), m_xyz(shape[0]*m_yz) {
 	getGridFromVector(image);
 }
 
-CubicalGridComplex::~CubicalGridComplex(){
-	for (int i = 0; i < shape[0]+2; i++){
-        for (int j = 0; j < shape[1]+2; j++){
+CubicalGridComplex::~CubicalGridComplex() {
+	for (index_t i = 0; i < shape[0]+2; i++) {
+        for (index_t j = 0; j < shape[1]+2; j++) {
             delete[] grid[i][j];
         }
         delete[] grid[i];
@@ -95,29 +93,35 @@ value_t CubicalGridComplex::getBirth(index_t x, index_t y, index_t z, uint8_t ty
 	switch (dim) {
 		case 0:
 			return grid[x+1][y+1][z+1];
+
 		case 1:
 			switch (type) {
-			case 0:
-				return max(grid[x+1][y+1][z+1],grid[x+2][y+1][z+1]);
-			case 1:
-				return max(grid[x+1][y+1][z+1],grid[x+1][y+2][z+1]);
-			case 2:
-				return max(grid[x+1][y+1][z+1],grid[x+1][y+1][z+2]);
+				case 0:
+					return max(grid[x+1][y+1][z+1],grid[x+2][y+1][z+1]);
+
+				case 1:
+					return max(grid[x+1][y+1][z+1],grid[x+1][y+2][z+1]);
+
+				case 2:
+					return max(grid[x+1][y+1][z+1],grid[x+1][y+1][z+2]);
 			}
 		case 2:
 			switch (type) {
-			case 0:
-				return max({grid[x+1][y+1][z+1],grid[x+1][y+2][z+1],grid[x+1][y+1][z+2],grid[x+1][y+2][z+2]});
-			case 1:
-				return max({grid[x+1][y+1][z+1],grid[x+2][y+1][z+1],grid[x+1][y+1][z+2],grid[x+2][y+1][z+2]});
-			case 2:
-				return max({grid[x+1][y+1][z+1],grid[x+2][y+1][z+1],grid[x+1][y+2][z+1],grid[x+2][y+2][z+1]});
-			}
+				case 0:
+					return max({grid[x+1][y+1][z+1],grid[x+1][y+2][z+1],grid[x+1][y+1][z+2],grid[x+1][y+2][z+2]});
+
+				case 1:
+					return max({grid[x+1][y+1][z+1],grid[x+2][y+1][z+1],grid[x+1][y+1][z+2],grid[x+2][y+1][z+2]});
+
+				case 2:
+					return max({grid[x+1][y+1][z+1],grid[x+2][y+1][z+1],grid[x+1][y+2][z+1],grid[x+2][y+2][z+1]});
+			}	
 		case 3:
 			return max({grid[x+1][y+1][z+1], grid[x+2][y+1][z+1], grid[x+1][y+2][z+1], grid[x+1][y+1][z+2],
 						grid[x+2][y+2][z+1], grid[x+2][y+1][z+2], grid[x+1][y+2][z+2], grid[x+2][y+2][z+2] });
 	}
-	return numeric_limits<value_t>::infinity();
+	cerr << "birth not found!" << endl;
+	return INFTY;
 }
 
 vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, uint8_t dim) const {
@@ -131,48 +135,46 @@ vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, uint8_t dim
 		case 1:
 		switch (cube.type()) {
 			case 0:
-			if (cube.birth == grid[x+2][y+1][z+1]) { return {x+1,y,z}; }
-			else { return {x,y,z}; }
+				if (cube.birth == grid[x+2][y+1][z+1]) { return {x+1,y,z}; }
+				else { return {x,y,z}; }
 
 			case 1:
-			if (cube.birth == grid[x+1][y+2][z+1]) { return {x,y+1,z}; }
-			else { return {x,y,z}; }
+				if (cube.birth == grid[x+1][y+2][z+1]) { return {x,y+1,z}; }
+				else { return {x,y,z}; }
 
 			case 2:
-			if (cube.birth == grid[x+1][y+1][z+2]) { return {x,y,z+1}; }
-			else { return {x,y,z}; }
+				if (cube.birth == grid[x+1][y+1][z+2]) { return {x,y,z+1}; }
+				else { return {x,y,z}; }
 		}
-
 		case 2:
 		switch(cube.type()) {
 			case 0:
-			if (cube.birth == grid[x+1][y+2][z+2]) { return {x,y+1,z+1}; }
-			else if (cube.birth == grid[x+1][y+2][z+1]) { return {x,y+1,z}; }
-			else if(cube.birth == grid[x+1][y+1][z+2]) { return {x,y,z+1}; }
-			else { return {x,y,z}; }
+				if (cube.birth == grid[x+1][y+2][z+2]) { return {x,y+1,z+1}; }
+				else if (cube.birth == grid[x+1][y+2][z+1]) { return {x,y+1,z}; }
+				else if(cube.birth == grid[x+1][y+1][z+2]) { return {x,y,z+1}; }
+				else { return {x,y,z}; }
 
 			case 1:
-			if (cube.birth == grid[x+2][y+1][z+2]) { return {x+1,y,z+1}; }
-			else if(cube.birth == grid[x+2][y+1][z+1]) { return {x+1,y,z}; }
-			else if(cube.birth == grid[x+1][y+1][z+2]) { return {x,y,z+1}; }
-			else { return {x,y,z}; }
+				if (cube.birth == grid[x+2][y+1][z+2]) { return {x+1,y,z+1}; }
+				else if(cube.birth == grid[x+2][y+1][z+1]) { return {x+1,y,z}; }
+				else if(cube.birth == grid[x+1][y+1][z+2]) { return {x,y,z+1}; }
+				else { return {x,y,z}; }
 
 			case 2:
-			if (cube.birth == grid[x+2][y+2][z+1]) { return {x+1,y+1,z}; } 
-			else if (cube.birth == grid[x+2][y+1][z+1]) { return {x+1,y,z}; }
-			else if (cube.birth == grid[x+1][y+2][z+1]) { return {x,y+1,z}; } 
-			else { return {x,y,z}; }
+				if (cube.birth == grid[x+2][y+2][z+1]) { return {x+1,y+1,z}; } 
+				else if (cube.birth == grid[x+2][y+1][z+1]) { return {x+1,y,z}; }
+				else if (cube.birth == grid[x+1][y+2][z+1]) { return {x,y+1,z}; } 
+				else { return {x,y,z}; }
 		}
-
 		case 3:
-		if (cube.birth == grid[x+2][y+2][z+2]){ return {x+1,y+1,z+1}; }
-		else if (cube.birth == grid[x+2][y+2][z+1]) { return {x+1,y+1,z}; }
-		else if (cube.birth == grid[x+2][y+1][z+2]) { return {x+1,y,z+1}; }
-		else if (cube.birth == grid[x+2][y+1][z+1]) { return {x+1,y,z}; }
-		else if (cube.birth == grid[x+1][y+2][z+2]) { return {x,y+1,z+1}; }
-		else if (cube.birth == grid[x+1][y+2][z+1]) { return {x,y+1,z}; }
-		else if(cube.birth == grid[x+1][y+1][z+2]) { return {x,y,z+1}; } 
-		else { return {x,y,z}; }	
+			if (cube.birth == grid[x+2][y+2][z+2]){ return {x+1,y+1,z+1}; }
+			else if (cube.birth == grid[x+2][y+2][z+1]) { return {x+1,y+1,z}; }
+			else if (cube.birth == grid[x+2][y+1][z+2]) { return {x+1,y,z+1}; }
+			else if (cube.birth == grid[x+2][y+1][z+1]) { return {x+1,y,z}; }
+			else if (cube.birth == grid[x+1][y+2][z+2]) { return {x,y+1,z+1}; }
+			else if (cube.birth == grid[x+1][y+2][z+1]) { return {x,y+1,z}; }
+			else if(cube.birth == grid[x+1][y+1][z+2]) { return {x,y,z+1}; } 
+			else { return {x,y,z}; }	
 	}
 	cerr << "parent voxel not found!" << endl;
 	return {0,0,0};
@@ -213,12 +215,8 @@ void CubicalGridComplex::getGridFromVector(const vector<value_t> vec) {
 	for (index_t x = 0; x < shape[0]+2; x++) {
 		for (index_t y = 0; y < shape[1]+2; y++) {
 			for (index_t z = 0; z < shape[2]+2; z++) {
-				if (x == 0 || x == shape[0]+1 || y == 0 || y == shape[1]+1 || z == 0 || z == shape[2]+1){
-					grid[x][y][z] = numeric_limits<value_t>::infinity();
-				}
-				else{
-					grid[x][y][z] = vec[i++];
-				}
+				if (x == 0 || x == shape[0]+1 || y == 0 || y == shape[1]+1 || z == 0 || z == shape[2]+1) { grid[x][y][z] = INFTY; }
+				else { grid[x][y][z] = vec[i++]; }
 			}
 		}
 	}
@@ -226,7 +224,7 @@ void CubicalGridComplex::getGridFromVector(const vector<value_t> vec) {
 
 
 UnionFind::UnionFind(const CubicalGridComplex* const _cgc) : cgc(_cgc) {
-	index_t n = _cgc->getNumberOfCubes(0);
+	index_t n = cgc->getNumberOfCubes(0);
 	parent.reserve(n);
 	birthtime.reserve(n);
 	index_t i = 0;
@@ -234,13 +232,13 @@ UnionFind::UnionFind(const CubicalGridComplex* const _cgc) : cgc(_cgc) {
 		for (index_t y = 0; y < _cgc->shape[1]; y++) {
 			for(index_t z = 0; z < _cgc->shape[2]; z++){
 				parent.push_back(i++);
-				birthtime.push_back(_cgc->getBirth(x, y, z));
+				birthtime.push_back(cgc->getBirth(x, y, z));
 			}
 		}
 	}
 }
 
-index_t UnionFind::find(index_t x){
+index_t UnionFind::find(index_t x) {
 	index_t y = x, z = parent[y];
 	while (z != y) {
 		y = z;
@@ -276,7 +274,7 @@ index_t UnionFind::link(index_t x, index_t y) {
 value_t UnionFind::getBirth(index_t x) const { return birthtime[x]; }
 
 vector<index_t> UnionFind::getCoordinates(index_t x) const { 
-	return {x/(cgc->m_yz), x/(cgc->shape[2]) % (cgc->shape[1]), x % (cgc->shape[2])};
+	return {x/(cgc->m_yz),x/(cgc->shape[2])%(cgc->shape[1]),x%(cgc->shape[2])};
 }
 
 vector<index_t> UnionFind::getBoundaryIndices(const Cube& edge) const {
@@ -300,24 +298,24 @@ vector<index_t> UnionFind::getBoundaryIndices(const Cube& edge) const {
 	return boundaryIndices;
 }
 
-void UnionFind::reset() { for (index_t i = 0; i < parent.size(); i++) { parent[i] = i; } }
+void UnionFind::reset() { for (size_t i = 0; i < parent.size(); i++) { parent[i] = i; } }
 
 
 UnionFindDual::UnionFindDual(const CubicalGridComplex* const _cgc) : cgc(_cgc) {
-	index_t n = _cgc->getNumberOfCubes(3) + 1;
+	index_t n = cgc->getNumberOfCubes(3) + 1;
 	parent.reserve(n);
 	birthtime.reserve(n);
 	index_t i = 0;
 	for (index_t x = 0; x < _cgc->n_x; x++) {
 		for (index_t y = 0; y < _cgc->n_y; y++) {
-			for(index_t z = 0; z < _cgc->n_z; z++){
+			for(index_t z = 0; z < _cgc->n_z; z++) {
 				parent.push_back(i++);
-				birthtime.push_back(_cgc->getBirth(x, y, z, 0, 3));
+				birthtime.push_back(cgc->getBirth(x, y, z, 0, 3));
 			}
 		}
 	}
 	parent.push_back(i);
-	birthtime.push_back(numeric_limits<value_t>::infinity());
+	birthtime.push_back(INFTY);
 }
 
 index_t UnionFindDual::find(index_t x){
@@ -336,14 +334,14 @@ index_t UnionFindDual::find(index_t x){
 }
 
 index_t UnionFindDual::link(index_t x, index_t y){
-	if (birthtime[x] < birthtime[y]){
+	if (birthtime[x] < birthtime[y]) {
 		parent[x] = y; 
 		return x;
 	} else if (birthtime[x] > birthtime[y]) {
 		parent[y] = x;
 		return y;
 	} else {
-		if (x < y){
+		if (x < y) {
 			parent[x] = y;
 			return x;
 		} else {
@@ -356,7 +354,7 @@ index_t UnionFindDual::link(index_t x, index_t y){
 value_t UnionFindDual::getBirth(index_t x) const { return birthtime[x]; }
 
 vector<index_t> UnionFindDual::getCoordinates(index_t x) const { 
-	return {x/(cgc->n_yz), x/(cgc->n_z) % (cgc->n_y), x % (cgc->n_z)};
+	return {x/(cgc->n_yz),x/(cgc->n_z)%(cgc->n_y),x%(cgc->n_z)};
 }
 
 vector<index_t> UnionFindDual::getBoundaryIndices(const Cube& edge) const {
@@ -386,4 +384,4 @@ vector<index_t> UnionFindDual::getBoundaryIndices(const Cube& edge) const {
 	return boundaryIndices;
 }
 
-void UnionFindDual::reset() { for (index_t i = 0; i < parent.size(); i++) { parent[i] = i; } }
+void UnionFindDual::reset() { for (size_t i = 0; i < parent.size(); i++) { parent[i] = i; } }

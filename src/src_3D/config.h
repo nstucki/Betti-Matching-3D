@@ -1,26 +1,37 @@
 #pragma once
 
-#include "data_structures.h"
-
 #include <string>
 
 using namespace std;
 
-enum file_format {DIPHA, PERSEUS, NUMPY};
+#define USE_CLEARING_DIM_0
+#define USE_DOUBLE
+typedef uint32_t index_t;
+
+#define INFTY numeric_limits<value_t>::infinity()
+#define NONE numeric_limits<index_t>::max()
+#ifdef USE_DOUBLE
+typedef double value_t;
+#else
+typedef float value_t;
+#endif
+
+enum fileFormat {DIPHA, PERSEUS, NUMPY};
+
 
 struct Config {
-	string filename_0 = "";
-	string filename_1 = "";
-	string matched_filename = "../matched.csv";
-	string unmatched_0_filename = "../unmatched_0.csv";
-	string unmatched_1_filename = "../unmatched_1.csv";
-	file_format format_0;
-	file_format format_1;
+	string filename0 = "";
+	string filename1 = "";
+	string matchedFilename = "../matched.csv";
+	string unmatched0Filename = "../unmatched_0.csv";
+	string unmatched1Filename = "../unmatched_1.csv";
+	fileFormat format0;
+	fileFormat format1;
 
 	value_t threshold = numeric_limits<value_t>::infinity();
 
-	index_t min_recursion_to_cache = 0;
-	index_t cache_size = 1 << 31;
+	index_t minRecursionToCache = 0;
+	index_t cacheSize = 1 << 31;
 
 	bool print = false;
 	bool verbose = false;

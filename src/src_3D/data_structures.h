@@ -1,21 +1,11 @@
 #pragma once
 
+#include "config.h"
+
 #include <cstdint>
 #include <vector>
 
 using namespace std;
-
-#define USE_DOUBLE
-
-#ifdef USE_FLOAT
-typedef float value_t;
-#endif
-#ifdef USE_DOUBLE
-typedef double value_t;
-#endif
-typedef uint32_t index_t;
-
-#define NONE numeric_limits<index_t>::max()
 
 
 class Cube {
@@ -35,9 +25,7 @@ class Cube {
 };
 
 
-struct CubeComparator{
-    bool operator()(const Cube& Cube1, const Cube& Cube2) const;
-};
+struct CubeComparator{ bool operator()(const Cube& Cube1, const Cube& Cube2) const; };
 
 
 class Pair {
@@ -55,11 +43,10 @@ class Pair {
 
 class Match {
 	public:
-	Pair* pair0;
-	Pair* pair1;
+	Pair pair0;
+	Pair pair1;
 
-	Match(Pair* pair0, Pair* pair1);
-    Match(Pair& pair0, Pair& pair1);
+	Match(Pair pair0, Pair pair1);
 	void print() const;
 };
 
@@ -71,14 +58,13 @@ class CubicalGridComplex {
 	const index_t n_y;
 	const index_t n_z;
 
-	//testen ob sinnvoll
 	const index_t n_yz;
 	const index_t n_xyz;
 	const index_t m_yz;
 	const index_t m_xyz;
 
 	// vector
-	CubicalGridComplex(const vector<double>& image, const vector<uint32_t>& shape);
+	CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& shape);
 	~CubicalGridComplex();
 	index_t getNumberOfCubes(uint8_t dim) const;
 	value_t getBirth(index_t x, index_t y, index_t z) const;

@@ -32,8 +32,8 @@ vector<vector<bool>> getSubsets(index_t n, index_t k) {
 }
 
 
-void readImage(string const &filename, fileFormat const &format, vector<double> &image, vector<index_t> &shape) {
-    switch(format){
+void readImage(const string& filename, const fileFormat& format, vector<double>& image, vector<index_t>& shape) {
+    switch(format) {
         case DIPHA: {
             ifstream fin(filename, ios::in | ios::binary );
             int64_t d;
@@ -60,13 +60,14 @@ void readImage(string const &filename, fileFormat const &format, vector<double> 
             }
             double value;
             image.reserve(n);
-            while (!fin.eof()){
+            while (!fin.eof()) {
                 fin.read((char *)&value, sizeof(double));
                 image.push_back(value);
             }
             fin.close();
             return;
         }
+
         case PERSEUS: {
             ifstream reading_file; 
             reading_file.open(filename.c_str(), ios::in); 
@@ -92,27 +93,22 @@ void readImage(string const &filename, fileFormat const &format, vector<double> 
             while(!reading_file.eof()){
                 getline(reading_file, reading_line_buffer);
                 value = atof(reading_line_buffer.c_str());
-                if (value != -1) {
-                    image.push_back(value);
-                }else{
-                    image.push_back(DBL_MAX);
-                }
+                if (value != -1) { image.push_back(value); }
+                else { image.push_back(DBL_MAX); }
             }
             reading_file.close();
             return;
-		}
+        }
+
         case NUMPY: {
             vector<unsigned long> _shape;
-            try{
-                npy::LoadArrayFromNumpy(filename.c_str(), _shape, image);
-            } catch (...) {
+            try { npy::LoadArrayFromNumpy(filename.c_str(), _shape, image); } 
+            catch (...) {
                 cerr << "The data type of an numpy array should be numpy.float64." << endl;
                 exit(-2);
             }
             uint8_t dim = shape.size();
-            for (uint32_t i : _shape) {
-                shape.push_back(i);
-            }
+            for (uint32_t i : _shape) { shape.push_back(i); }
             return;
         }
     }

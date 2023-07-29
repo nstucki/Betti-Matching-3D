@@ -111,13 +111,12 @@ int main(int argc, char** argv) {
     vector<index_t> shape1;
     readImage(config.filename_0, config.format_0, readImage0, shape0);
     readImage(config.filename_1, config.format_1, readImage1, shape1);
-    #ifdef USE_FLOAT
-    vector<value_t> image0(readImage0.begin(), readImage0.end());
-    vector<value_t> image1(readImage1.begin(), readImage1.end());
-    #endif
     #ifdef USE_DOUBLE
     vector<value_t>& image0 = readImage0;
     vector<value_t>& image1 = readImage1;
+    #else
+    vector<value_t> image0(readImage0.begin(), readImage0.end());
+    vector<value_t> image1(readImage1.begin(), readImage1.end());
     #endif
 
     auto stop = high_resolution_clock::now();

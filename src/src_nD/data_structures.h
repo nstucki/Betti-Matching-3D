@@ -1,20 +1,10 @@
 #pragma once
 
+#include "config.h"
+
 #include <vector>
 
 using namespace std;
-
-#define USE_DOUBLE
-
-#ifdef USE_FLOAT
-typedef float value_t;
-#endif
-#ifdef USE_DOUBLE
-typedef double value_t;
-#endif
-typedef uint32_t index_t;
-
-#define NONE numeric_limits<index_t>::max()
 
 
 class Cube {

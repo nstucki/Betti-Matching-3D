@@ -1,6 +1,3 @@
-#include <chrono>
-using namespace std::chrono;
-
 #include "data_structures.h"
 #include "utils.h"
 #include "template_functions.h"

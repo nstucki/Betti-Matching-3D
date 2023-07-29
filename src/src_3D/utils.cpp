@@ -4,8 +4,8 @@
 #include <cfloat>
 
 
-void readImage(const string &filename, const file_format &format, vector<double> &image, vector<uint32_t> &shape) {
-    switch(format) {
+void readImage(const string& filename, const fileFormat& format, vector<double>& image, vector<index_t>& shape) {
+    switch (format) {
         case DIPHA: {
             ifstream fin(filename, ios::in | ios::binary );
             int64_t d;
@@ -40,6 +40,7 @@ void readImage(const string &filename, const file_format &format, vector<double>
             fin.close();
             return;
         }
+
         case PERSEUS: {
             ifstream reading_file; 
             reading_file.open(filename.c_str(), ios::in); 
@@ -63,7 +64,7 @@ void readImage(const string &filename, const file_format &format, vector<double>
             }
             image.reserve(n);
             double value;
-            while(!reading_file.eof()){
+            while(!reading_file.eof()) {
                 getline(reading_file, reading_line_buffer);
                 value = atof(reading_line_buffer.c_str());
                 if (value != -1) { image.push_back(value); }
@@ -72,6 +73,7 @@ void readImage(const string &filename, const file_format &format, vector<double>
             reading_file.close();
             return;
 		}
+
         case NUMPY: {
             vector<unsigned long> _shape;
             try { npy::LoadArrayFromNumpy(filename.c_str(), _shape, image); } 
@@ -87,7 +89,7 @@ void readImage(const string &filename, const file_format &format, vector<double>
     }
 }
 
-void tokenize(const string &str, const char delim, vector<string> &out) { 
+void tokenize(const string& str, const char delim, vector<string>& out) { 
     stringstream ss(str); 
     string s; 
     while (getline(ss, s, delim)) { out.push_back(s); } 
@@ -96,7 +98,7 @@ void tokenize(const string &str, const char delim, vector<string> &out) {
 void printResult(const CubicalGridComplex* const cgc0, const CubicalGridComplex* const cgc1, const CubicalGridComplex* const cgcComp, 
                     const vector<vector<Pair>>& pairs0, const vector<vector<Pair>>& pairs1, const vector<vector<Pair>>& pairsComp,
                     const vector<vector<Match>>& matches, 
-                    unordered_map<index_t, bool>& isMatched0, unordered_map<index_t, bool>& isMatched1) {
+                    unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1) {
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
     cout << "Input 0:" << endl; cout << endl; cgc0->printImage(); cout << endl;
     cout << "pairs ... " << endl;

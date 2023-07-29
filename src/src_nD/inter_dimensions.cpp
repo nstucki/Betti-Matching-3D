@@ -8,16 +8,16 @@ using namespace std::chrono;
 
 
 InterDimensions::InterDimensions(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, const CubicalGridComplex& _cgcComp, 
-							const Config& _config, vector<vector<Pair>>& _pairs0, vector<vector<Pair>>& _pairs1, 
-							vector<vector<Pair>>& _pairsComp, vector<vector<Match>>& _matches, 
-							unordered_map<index_t, bool>& _isMatched0, unordered_map<index_t, bool>& _isMatched1) : 
-							cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), pairs0(_pairs0), pairs1(_pairs1),
-							pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1) {
+									const Config& _config, vector<vector<Pair>>& _pairs0, vector<vector<Pair>>& _pairs1, 
+									vector<vector<Pair>>& _pairsComp, vector<vector<Match>>& _matches, 
+									unordered_map<index_t, bool>& _isMatched0, unordered_map<index_t, bool>& _isMatched1) : 
+									cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), pairs0(_pairs0), pairs1(_pairs1),
+									pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1) {
 	computeDim = cgc0.dim-2;
 }
 
 void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
-	vector<Cube> ctrIm;
+	vector<Cube> ctrImage;
 
 	while (computeDim > 0) {
 		if (config.verbose) { cout << "comoputing dimension " << computeDim << " ... "; }
@@ -25,7 +25,7 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
 		
 		computePairsComp(ctrComp);
 		if (computeDim > 1) { 
-			ctrIm = ctrComp;
+			ctrImage = ctrComp;
 			assembleColumnsToReduce(cgcComp, ctrComp);
 		}
 		
@@ -36,8 +36,8 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
 		if (computeDim > 1) { assembleColumnsToReduce(cgc1, ctr1); }
 		
 		if (computeDim > 1) { 
-			computeImagePairs(ctrIm, 0); 
-			computeImagePairs(ctrIm, 1); 
+			computeImagePairs(ctrImage, 0); 
+			computeImagePairs(ctrImage, 1); 
 		} else { 
 			computeImagePairs(ctrComp, 0); 
 			computeImagePairs(ctrComp, 1); 
@@ -66,7 +66,7 @@ void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 	index_t j;
 	bool shouldClear = false;
 	for(index_t i = 0; i < ctrSize; i++) {
-		CubeQue workingBoundary;
+		CubeQueue workingBoundary;
 		j = i;
 		numRecurse = 0;
 		while (true) {
@@ -117,8 +117,8 @@ void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 		}
 	}
 	if (shouldClear) {
-		auto new_end = remove_if(ctr.begin(), ctr.end(), [](const Cube& edge) { return edge.coordinates[0] == NONE; });
-		ctr.erase(new_end, ctr.end());
+		auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.coordinates[0] == NONE; });
+		ctr.erase(newEnd, ctr.end());
 	}	
 }
 
@@ -138,7 +138,7 @@ void InterDimensions::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	index_t numRecurse;
 	index_t j;	
 	for(index_t i = 0; i < ctrSize; i++) {
-		CubeQue workingBoundary;
+		CubeQueue workingBoundary;
 		j = i;
 		numRecurse = 0;
 		while (true) {
@@ -202,7 +202,7 @@ void InterDimensions::computeImagePairs(const vector<Cube>& ctr, uint8_t k) {
 	index_t numRecurse;
 	index_t j;
 	for (index_t i = 0; i < ctrSize; i++) {
-		CubeQue workingBoundary;
+		CubeQueue workingBoundary;
 		j = i;
 		numRecurse = 0;
 		while (true) {
@@ -252,12 +252,12 @@ void InterDimensions::computeMatching() {
 	Cube birth1;
 	Pair pair0;
 	Pair pair1;
-	for (auto& pair : pairsComp[computeDim]) {
-		auto findIm0 = matchMapIm0.find(cgcComp.getCubeIndex(pair.death));
-		auto findIm1 = matchMapIm1.find(cgcComp.getCubeIndex(pair.death));
-		if (findIm0 != matchMapIm0.end() && findIm1 != matchMapIm1.end()) {
-			birth0 = findIm0->second;
-			birth1 = findIm1->second;
+	for (Pair& pair : pairsComp[computeDim]) {
+		auto find0 = matchMapIm0.find(cgcComp.getCubeIndex(pair.death));
+		auto find1 = matchMapIm1.find(cgcComp.getCubeIndex(pair.death));
+		if (find0 != matchMapIm0.end() && find1 != matchMapIm1.end()) {
+			birth0 = find0->second;
+			birth1 = find1->second;
 			auto find0 = matchMap0.find(cgc0.getCubeIndex(birth0));
 			auto find1 = matchMap1.find(cgc1.getCubeIndex(birth1));
 			if (find0 != matchMap0.end() && find1 != matchMap1.end()) {
@@ -273,8 +273,8 @@ void InterDimensions::computeMatching() {
 
 void InterDimensions::assembleColumnsToReduce(const CubicalGridComplex& cgc, vector<Cube>& ctr) const {
 	ctr.clear();
-	ctr.reserve(cgc.getNumberOfCubes(computeDim-1));	
-	CubeEnumerator cubeEnum(cgc, computeDim-1);
+	ctr.reserve(cgc.getNumberOfCubes(computeDim));	
+	CubeEnumerator cubeEnum(cgc, computeDim);
 	Cube cube = cubeEnum.getNextCube();
 	if (cube.birth < config.threshold) {
 		auto find = pivotColumnIndex.find(cgc.getCubeIndex(cube));
@@ -290,16 +290,14 @@ void InterDimensions::assembleColumnsToReduce(const CubicalGridComplex& cgc, vec
 	sort(ctr.begin(), ctr.end(), CubeComparator());
 }
 
-Cube InterDimensions::popPivot(CubeQue& column) const {
-    if (column.empty()) {
-        return Cube();
-    } else {
+Cube InterDimensions::popPivot(CubeQueue& column) const {
+    if (column.empty()) { return Cube(); } 
+	else {
         Cube pivot = column.top();
         column.pop();
         while (!column.empty() && column.top() == pivot) {
             column.pop();
-            if (column.empty())
-                return Cube();
+            if (column.empty()) {return Cube(); }
             else {
                 pivot = column.top();
                 column.pop();
@@ -309,16 +307,16 @@ Cube InterDimensions::popPivot(CubeQue& column) const {
     }
 }
 
-Cube InterDimensions::getPivot(CubeQue& column) const {
+Cube InterDimensions::getPivot(CubeQueue& column) const {
 	Cube result = popPivot(column);
 	if (result.coordinates[0] != NONE) { column.push(result); }
 	return result;
 }
 
-void InterDimensions::addCache(index_t i, CubeQue& workingBoundary) {
-	CubeQue cleanWb;
+void InterDimensions::addCache(index_t i, CubeQueue& workingBoundary) {
+	CubeQueue cleanWb;
 	while (!workingBoundary.empty()) {
-		auto c = workingBoundary.top();
+		Cube c = workingBoundary.top();
 		workingBoundary.pop();
 		if (!workingBoundary.empty() && c == workingBoundary.top()) { workingBoundary.pop(); } 
 		else { cleanWb.push(c); }

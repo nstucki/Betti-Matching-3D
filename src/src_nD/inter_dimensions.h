@@ -1,12 +1,11 @@
 #pragma once
 
 #include "data_structures.h"
-#include "config.h"
 
 #include <queue>
 #include <unordered_map>
 
-typedef priority_queue<Cube, vector<Cube>, CubeComparator> CubeQue;
+typedef priority_queue<Cube, vector<Cube>, CubeComparator> CubeQueue;
 
 
 class InterDimensions{
@@ -33,7 +32,7 @@ class InterDimensions{
 	unordered_map<index_t, Cube> matchMapIm0;
 	unordered_map<index_t, Cube> matchMapIm1;
 	unordered_map<index_t, index_t> pivotColumnIndex;
-	unordered_map<index_t, CubeQue> cache;
+	unordered_map<index_t, CubeQueue> cache;
 	index_t computeDim;
 
 	void computePairsComp(vector<Cube>& ctr);
@@ -41,7 +40,7 @@ class InterDimensions{
 	void computeImagePairs(const vector<Cube>& ctr, uint8_t k);
 	void computeMatching();
 	void assembleColumnsToReduce(const CubicalGridComplex& cgc, vector<Cube>& ctr) const;
-	Cube popPivot(CubeQue& column) const;
-	Cube getPivot(CubeQue& column) const;
-	void addCache(index_t i, CubeQue &working_boundary);
+	Cube popPivot(CubeQueue& column) const;
+	Cube getPivot(CubeQueue& column) const;
+	void addCache(index_t i, CubeQueue &working_boundary);
 };
