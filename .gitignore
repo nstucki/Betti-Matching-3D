@@ -1,2 +1,14 @@
 venv
 build
+build-3D
+build-nD
+.vscode
+CMakeFiles
+CMakeCache.txt
+Makefile
+Makefile.old
+bettiMatching.cpython-311-x86_64-linux-gnu.so
+betti_matching.cpython-311-x86_64-linux-gnu.so
+cmake_install.cmake
+BettiMatching
+Makefile
