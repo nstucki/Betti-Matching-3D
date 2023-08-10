@@ -1,15 +1,8 @@
 # CMakeLists.txt
-set(CMAKE_CXX_FLAGS
-"-include /usr/include/c++/13.1.1/limits \
--include /usr/include/c++/13.1.1/cassert \
--include /usr/include/c++/13.1.1/algorithm \
--include /usr/include/c++/13.1.1/cstdint \
--include /usr/include/c++/13.1.1/utility \
--I usr/lib/python3.11/site-packages/pybind11/include")
 
 set(CMAKE_BUILD_TYPE, "Release")
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.5)
 project(bettiMatching)
 
 find_package(pybind11 REQUIRED)
@@ -36,7 +29,9 @@ add_executable(BettiMatching
     src/src_nD/betti_matching_nD.cpp
 )
 
-# set(CPLUS_INCLUDE_PATH "/usr/include/c++/13.1.1")
 
-# target_compile_options(BettiMatching "-include /usr/include/c++/13.1.1/limits")
-#  -include /usr/include/c++/13.1.1/cassert -include /usr/include/c++/13.1.1/algorithm -include /usr/include/c++/13.1.1/cstdint)
+set_target_properties(BettiMatchingND BettiMatching3D betti_matching
+PROPERTIES
+CXX_STANDARD 17
+CXX_EXTENSIONS OFF
+)
