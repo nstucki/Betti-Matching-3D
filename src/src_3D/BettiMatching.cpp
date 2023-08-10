@@ -8,6 +8,8 @@
 #include <fstream>
 #include <cfloat>
 #include <chrono>
+#include <algorithm>
+#include <cassert>
 
 using namespace std;
 using namespace std::chrono;
@@ -115,7 +117,8 @@ int main(int argc, char** argv) {
     assert (shape0 == shape1);
 
     vector<value_t> imageComp;
-    transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](value_t a, value_t b) { return min(a,b); });
+    std::transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](value_t a, value_t b)
+                   { return min(a, b); });
 
     // keine pointer nutzen
     CubicalGridComplex* cgc0 = new CubicalGridComplex(move(image0), shape0);

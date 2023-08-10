@@ -2,7 +2,7 @@
 #include "npy.hpp"
 
 #include <cfloat>
-
+#include <cassert>
 
 void readImage(const string& filename, const fileFormat& format, vector<double>& image, vector<index_t>& shape) {
     switch (format) {
