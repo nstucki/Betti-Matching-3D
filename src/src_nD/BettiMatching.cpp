@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
+#include <cassert>
 
 using namespace std;
 using namespace std::chrono;
@@ -129,9 +130,9 @@ int main(int argc, char** argv) {
     vector<value_t> imageComp;
     transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](value_t a, value_t b) { return min(a,b); });
 
-    CubicalGridComplex cgc0(move(image0), shape0);
-    CubicalGridComplex cgc1(move(image1), shape1);
-    CubicalGridComplex cgcComp(move(imageComp), shape0);
+    CubicalGridComplex cgc0(std::move(image0), shape0);
+    CubicalGridComplex cgc1(std::move(image1), shape1);
+    CubicalGridComplex cgcComp(std::move(imageComp), shape0);
 
     vector<vector<Pair>> pairs0(dim);
 	vector<vector<Pair>> pairs1(dim);

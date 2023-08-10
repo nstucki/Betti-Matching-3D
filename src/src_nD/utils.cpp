@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <cfloat>
+#include <cassert>
 
 using namespace std;
 

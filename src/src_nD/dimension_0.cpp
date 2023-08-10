@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <chrono>
+#include <algorithm>
+#include <cstdint>
 
 using namespace std;
 using namespace std::chrono;
