@@ -19,6 +19,7 @@ add_executable(BettiMatching
     src/src_nD/data_structures.cpp
     src/src_nD/enumerators.cpp
     src/src_nD/utils.cpp
+    src/src_nD/betti_matching_nD.cpp
 )
 
 # set(CPLUS_INCLUDE_PATH "/usr/include/c++/13.1.1")
