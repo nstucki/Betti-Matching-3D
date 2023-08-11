@@ -99,65 +99,70 @@ void printResult(const CubicalGridComplex* const cgc0, const CubicalGridComplex*
                     const vector<vector<Pair>>& pairs0, const vector<vector<Pair>>& pairs1, const vector<vector<Pair>>& pairsComp,
                     const vector<vector<Match>>& matches, 
                     unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1) {
+    index_t count;
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Input 0:" << endl; cout << endl; cgc0->printImage(); cout << endl;
-    cout << "pairs ... " << endl;
+    cout << "Input 0:" << endl << endl;
+    if (cgc0->shape[0] < 10 && cgc0->shape[1] < 10 && cgc0->shape[2] < 10) { cgc0->printImage(); }
     for (uint8_t d = 0; d < 3; d++) {
-        cout << "... in dim " << unsigned(d) << ":" << endl;
-        for (auto &pair : pairs0[d]) {
-            pair.print(); cout << endl;
-        }
-        cout << endl;
+        cout << "dim " << unsigned(d) << ": ";
+        count = pairs0[d].size();
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto &pair : pairs0[d]) { pair.print(); cout << endl; }
+        } else { cout << count << endl; }
     }
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Input 1" << endl; cout << endl; cgc1->printImage(); cout << endl;
-    cout << "pairs ..." << endl;
+    cout << "Input 1" << endl; 
+    if (cgc1->shape[0] < 10 && cgc1->shape[1] < 10 && cgc1->shape[2] < 10) { cgc1->printImage(); }
     for (uint8_t d = 0; d < 3; d++) {
-        cout << "... in dim " << unsigned(d) << ":" << endl;
-        for (auto &pair : pairs1[d]) {
-            pair.print(); cout << endl;
-        }
-        cout << endl;
+        cout << "dim " << unsigned(d) << ": ";
+        count = pairs1[d].size();
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto &pair : pairs1[d]) { pair.print(); cout << endl; }
+        } else { cout << count << endl; }
     }
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Comparison" << endl; cout << endl; cgcComp->printImage(); cout << endl;
-    cout << "pairs ..." << endl;
+    cout << "Comparison" << endl; 
+    if (cgcComp->shape[0] < 10 && cgcComp->shape[1] < 10 && cgcComp->shape[2] < 10) { cgcComp->printImage(); }
     for (uint8_t d = 0; d < 3; d++) {
-        cout << "... in dim " << unsigned(d) << ":" << endl;
-        for (auto &pair : pairsComp[d]) {
-            pair.print(); cout << endl;
-        }
-        cout << endl;
+        cout << "dim " << unsigned(d) << ": ";
+        count = pairsComp[d].size();
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto &pair : pairsComp[d]) { pair.print(); cout << endl; }
+        } else { cout << "number of pairs: " << count << endl; }
     }
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
 
     cout << "Betti Matching:" << endl;
-    cout << "matched ..." << endl;
+    cout << "matched: " << endl;
     for (uint8_t d = 0; d < 3; d++) {
-        cout << "... in dim " << unsigned(d) << ":" << endl;
-        for (auto &match : matches[d]) {
-            match.print();
-        }
-        cout << endl;
+        cout << "dim " << unsigned(d) << ": ";
+        count = matches[d].size();
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto &match : matches[d]) { match.print(); }
+        } else { cout << count << endl; }
     }
-    cout << "unmatched in Input 0 ..." << endl;
+    cout << "unmatched in Input 0" << endl;
     for (uint8_t d = 0; d < 3; d++) {
-        cout << "... in dim " << unsigned(d) << ":" << endl;
-        for (auto &pair : pairs0[d]) {
-            if (!isMatched0[pair.birth.index]) {
-                pair.print(); cout << endl;
-            }
-        }
-        cout << endl;
+        cout << "dim " << unsigned(d) << ": ";
+        count = 0;
+        for (auto &pair : pairs0[d]) { if (!isMatched0[pair.birth.index]) { ++count; } }
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto &pair : pairs0[d]) { if (!isMatched0[pair.birth.index]) { pair.print(); cout << endl; } }
+        } else { cout << count << endl; }
     }
-    cout << "unmatched in Input 1 ..." << endl;
+    cout << "unmatched in Input 1" << endl;
     for (uint8_t d = 0; d < 3; d++) {
-        cout << "... in dim " << unsigned(d) << ":" << endl;
-        for (auto &pair : pairs1[d]) {
-            if (!isMatched1[pair.birth.index]) {
-                pair.print(); cout << endl;
-            }
-        }
-        cout << endl;
+        cout << "dim " << unsigned(d) << ": ";
+        count = 0;
+        for (auto &pair : pairs1[d]) {if (!isMatched1[pair.birth.index]) { ++count; } }
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto &pair : pairs1[d]) { if (!isMatched1[pair.birth.index]) { pair.print(); cout << endl; } }
+        } else { cout << count << endl; }
     }
 }
