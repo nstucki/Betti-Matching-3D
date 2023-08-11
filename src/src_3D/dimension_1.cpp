@@ -15,35 +15,75 @@ Dimension1::Dimension1(const CubicalGridComplex* const _cgc0, const CubicalGridC
 						pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1) {}
 
 void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
-	if (config.verbose) { cout << "comoputing dimension 1 ... "; }
+	#ifdef RUNTIME
+	cout << "input 0 ... ";
 	auto start = high_resolution_clock::now();
+	#endif
+	computePairs(ctr0, 0);
+	#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+	
+	start = high_resolution_clock::now();
+	#endif
+	#ifdef USE_CLEARING_DIM_0
+	ctr0.clear();
+	enumerateEdges(cgc0, ctr0);
+	#endif
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	auto durationEnumerate = duration;
 
+	cout << "input 1 ... ";
+	start = high_resolution_clock::now();
+	#endif
+	pivotColumnIndex.clear();
+	cache.clear();
+	computePairs(ctr1, 1);
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+
+	start = high_resolution_clock::now();
+	#endif
+	#ifdef USE_CLEARING_DIM_0
+	ctr1.clear();
+	enumerateEdges(cgc1, ctr1);
+	#endif
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	durationEnumerate += duration;
+
+	cout << "comparison image ... ";
+	start = high_resolution_clock::now();
+	#endif
+	pivotColumnIndex.clear();
+	cache.clear();
 	computePairsComp(ctrComp);
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
 
+	start = high_resolution_clock::now();
+	#endif
 	#ifdef USE_CLEARING_DIM_0
 	vector<Cube> ctrImage = ctrComp;
 	ctrComp.clear();
 	enumerateEdges(cgcComp, ctrComp);
 	#endif
-	
-	pivotColumnIndex.clear();
-	cache.clear();
-	computePairs(ctr0, 0);
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	durationEnumerate += duration;
 
-	#ifdef USE_CLEARING_DIM_0
-	ctr0.clear();
-	enumerateEdges(cgc0, ctr0);
+	cout << "image 0 ... ";
+	start = high_resolution_clock::now();
 	#endif
-	
-	pivotColumnIndex.clear();
-	cache.clear();
-	computePairs(ctr1, 1);
-
-	#ifdef USE_CLEARING_DIM_0
-	ctr1.clear();
-	enumerateEdges(cgc1, ctr1);
-	#endif
-	
 	pivotColumnIndex.clear();
 	cache.clear();
 	#ifdef USE_CLEARING_DIM_0
@@ -51,22 +91,39 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	#else
 	computeImagePairs(ctrComp, 0); 
 	#endif
-
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+	
+	cout << "image 1 ... ";
+	start = high_resolution_clock::now();
+	#endif
 	pivotColumnIndex.clear();
 	cache.clear();
 	#ifdef USE_CLEARING_DIM_0
 	computeImagePairs(ctrImage, 1);
 	#else
-	pivotColumnIndex.clear();
-	cache.clear();
 	computeImagePairs(ctrComp, 1); 
 	#endif
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+	#endif
 	
+	#ifdef RUNTIME
+	cout << "matching ... ";
+	start = high_resolution_clock::now();
+	#endif
 	computeMatching();
-	
-	auto stop = high_resolution_clock::now();
-	auto duration = duration_cast<milliseconds>(stop - start);
-	if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+
+	cout << "enumeration: " << durationEnumerate.count() << " ms" << endl;
+	#endif
 }
 
 void Dimension1::computePairsComp(vector<Cube>& ctr) {

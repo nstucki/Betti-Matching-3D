@@ -4,17 +4,13 @@
 
 using namespace std;
 
+#define RUNTIME
 #define USE_CLEARING_DIM_0
-#define USE_DOUBLE
-typedef uint32_t index_t;
-
 #define INFTY numeric_limits<value_t>::infinity()
 #define NONE numeric_limits<index_t>::max()
-#ifdef USE_DOUBLE
+
+typedef uint32_t index_t;
 typedef double value_t;
-#else
-typedef float value_t;
-#endif
 
 enum fileFormat {DIPHA, PERSEUS, NUMPY};
 
@@ -33,6 +29,5 @@ struct Config {
 	index_t minRecursionToCache = 0;
 	index_t cacheSize = 1 << 31;
 
-	bool print = false;
 	bool verbose = false;
 };

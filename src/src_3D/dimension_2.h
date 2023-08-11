@@ -32,5 +32,5 @@ class Dimension2 {
 
 	void enumerateDualEdges(const CubicalGridComplex* const cgc, vector<Cube>& dualEdges) const;
 	void computeImagePairs(vector<Cube>& dualEdges, uint8_t k);
-	void computePairsCompAndMatch(vector<Cube>& dualEdges);
+	void computeCompPairsAndMatch(vector<Cube>& dualEdges);
 };

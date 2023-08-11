@@ -17,22 +17,62 @@ Dimension2::Dimension2(const CubicalGridComplex* const _cgc0, const CubicalGridC
 						uf0(UnionFindDual(cgc0)), uf1(UnionFindDual(cgc1)), ufComp(UnionFindDual(cgcComp)) {}
 
 void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
-	if (config.verbose) { cout << "computing dimension 2 ... "; }
-    auto start = high_resolution_clock::now();
-	
+	#ifdef RUNTIME
+	cout << "input & image 0 ... ";
+	auto start = high_resolution_clock::now();
+	#endif
 	enumerateDualEdges(cgc0, ctr0);
-	enumerateDualEdges(cgc1, ctr1);
-	enumerateDualEdges(cgcComp, ctrComp);
+	#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	auto durationEnumerate = duration;
 
+	start = high_resolution_clock::now();
+	#endif
     computeImagePairs(ctr0, 0);
 	ufComp.reset();
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+    
+	cout << "input & image 1 ... ";
+	start = high_resolution_clock::now();
+	#endif
+	enumerateDualEdges(cgc1, ctr1);
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	durationEnumerate += duration;
+
+	start = high_resolution_clock::now();
+	#endif
     computeImagePairs(ctr1, 1);
 	ufComp.reset();
-	computePairsCompAndMatch(ctrComp);
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+    
+	cout << "comparison image & matching ... ";
+	start = high_resolution_clock::now();
+	#endif
+	enumerateDualEdges(cgcComp, ctrComp);
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	durationEnumerate += duration;
+	
+	start = high_resolution_clock::now();
+	#endif
+	computeCompPairsAndMatch(ctrComp);
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
 
-	auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - start);
-    if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
+	cout << "enumeration: " << durationEnumerate.count() << " ms" << endl;
+    #endif
 }
 
 void Dimension2::enumerateDualEdges(const CubicalGridComplex* const cgc, vector<Cube>& dualEdges) const {
@@ -87,7 +127,7 @@ void Dimension2::computeImagePairs(vector<Cube>& dualEdges, uint8_t k) {
 	dualEdges.erase(new_end, dualEdges.end());
 }
 
-void Dimension2::computePairsCompAndMatch(vector<Cube>& dualEdges) {	
+void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges) {	
 	vector<index_t> boundaryIndices;
 	index_t parentIdx0;
 	index_t parentIdx1;

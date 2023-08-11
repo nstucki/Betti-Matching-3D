@@ -57,13 +57,11 @@ class CubicalGridComplex {
 	const index_t n_x;
 	const index_t n_y;
 	const index_t n_z;
-
 	const index_t n_yz;
 	const index_t n_xyz;
 	const index_t m_yz;
 	const index_t m_xyz;
 
-	// vector
 	CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& shape);
 	~CubicalGridComplex();
 	index_t getNumberOfCubes(uint8_t dim) const;

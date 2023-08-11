@@ -16,25 +16,69 @@ Dimension0::Dimension0(const CubicalGridComplex* const _cgc0, const CubicalGridC
 						uf0(UnionFind(cgc0)), uf1(UnionFind(cgc1)), ufComp(UnionFind(cgcComp)) {}
 
 void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
-	if (config.verbose) { cout << "computing dimension 0 ... "; }
-    auto start = high_resolution_clock::now();
-	
+	#ifdef RUNTIME
+	cout << "input 0 ... ";
+	auto start = high_resolution_clock::now();
+	#endif
 	#ifndef USE_CLEARING_DIM_0
 	ctr0.clear();
 	enumerateEdges(cgc0, ctr0);
+	#endif
+	#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	auto durationEnumerate = duration;
+
+	start = high_resolution_clock::now();
+	#endif
+	computePairs(ctr0, 0);
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+    
+	cout << "input 1 ... ";
+	start = high_resolution_clock::now();
+	#endif
+	#ifndef USE_CLEARING_DIM_0
 	ctr1.clear();
 	enumerateEdges(cgc1, ctr1);
+	#endif
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	durationEnumerate = duration;
+
+	start = high_resolution_clock::now();
+	#endif
+    computePairs(ctr1, 1);
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+    
+	cout << "comparison image, image 0, image 1 & matching ... ";
+	start = high_resolution_clock::now();
+	#endif
+	#ifndef USE_CLEARING_DIM_0
 	ctrComp.clear();
 	enumerateEdges(cgcComp, ctrComp);
 	#endif
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	durationEnumerate = duration;
 
-	computePairs(ctr0, 0);
-    computePairs(ctr1, 1);
-    computeImagePairsAndMatch(ctrComp);
+	start = high_resolution_clock::now();
+	#endif
+	computeImagePairsAndMatch(ctrComp);
+	#ifdef RUNTIME
+	stop = high_resolution_clock::now();
+	duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
 
-	auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - start);
-    if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
+	cout << "enumeration: " << durationEnumerate.count() << " ms" << endl;
+    #endif
 }
 
 void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
