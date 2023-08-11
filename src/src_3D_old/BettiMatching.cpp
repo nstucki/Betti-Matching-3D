@@ -337,9 +337,9 @@ int main(int argc, char** argv){
     vector<double> image_comp;
     transform(image_0.begin(), image_0.end(), image_1.begin(), back_inserter(image_comp), [](double a, double b){return min(a,b);});
     // keine pointer nutzen
-    CubicalGridComplex* cgc_0 = new CubicalGridComplex(move(image_0), shape_0);
-    CubicalGridComplex* cgc_1 = new CubicalGridComplex(move(image_1), shape_1);
-    CubicalGridComplex* cgc_comp = new CubicalGridComplex(move(image_comp), shape_0);
+    CubicalGridComplex* cgc_0 = new CubicalGridComplex(std::move(image_0), shape_0);
+    CubicalGridComplex* cgc_1 = new CubicalGridComplex(std::move(image_1), shape_1);
+    CubicalGridComplex* cgc_comp = new CubicalGridComplex(std::move(image_comp), shape_0);
     vector<WritePair> pairs_0[3];
     vector<WritePair> pairs_1[3];
     vector<WritePair> pairs_comp[3];
@@ -349,29 +349,35 @@ int main(int argc, char** argv){
 
     if (config.verbose) {cout << "comoputing dim 2 of comparison ... ";}
     start = high_resolution_clock::now();
+    
     TopDimension* TD_comp = new TopDimension(cgc_comp, pairs_comp[2]);
     TD_comp->compute_pairs(ctr);
     delete TD_comp;
     stop = high_resolution_clock::now();
+
     duration = duration_cast<milliseconds>(stop - start);
     duration_total += duration;
     if (config.verbose){ cout << "took " << duration.count() << " ms" << endl;}
 
     if (config.verbose) {cout << "comoputing dim 1 of comparison ... ";}
     start = high_resolution_clock::now();
+
     Dimension1* D1_comp = new Dimension1(cgc_comp, pairs_comp[1], config);
     D1_comp->compute_pairs(ctr);
     delete D1_comp;
     stop = high_resolution_clock::now();
+
     duration = duration_cast<milliseconds>(stop - start);
     duration_total += duration;
     if (config.verbose) {cout << "took " << duration.count() << " ms" << endl;}
 
     if (config.verbose) {cout << "comoputing dim 1 of im_0 ... ";}
     start = high_resolution_clock::now();
+
     Dimension1* D1_im_0 = new Dimension1(cgc_0, pairs_im_0[1], config);
     D1_im_0->compute_pairs(ctr, true);
     delete D1_im_0;
+
     stop = high_resolution_clock::now();
     duration = duration_cast<milliseconds>(stop - start);
     duration_total += duration;
@@ -379,29 +385,35 @@ int main(int argc, char** argv){
 
     if (config.verbose) {cout << "comoputing dim 1 of im_1 ... ";}
     start = high_resolution_clock::now();
+
     Dimension1* D1_im_1 = new Dimension1(cgc_1, pairs_im_1[1], config);
     D1_im_1->compute_pairs(ctr, true);
     delete D1_im_1;
     stop = high_resolution_clock::now();
+
     duration = duration_cast<milliseconds>(stop - start);
     duration_total += duration;
     if (config.verbose) {cout << "took " << duration.count() << " ms" << endl;}
 
     if (config.verbose) {cout << "comoputing dim 2 of input_0 and im_0 ... ";}
     start = high_resolution_clock::now();
+
     TopDimensionImage* TDI_0 = new TopDimensionImage(cgc_0, cgc_comp, pairs_0[2], pairs_im_0[2]);
     TDI_0->compute_pairs(ctr);
     delete TDI_0;
     stop = high_resolution_clock::now();
+
     duration = duration_cast<milliseconds>(stop - start);
     duration_total += duration;
     if (config.verbose) {cout << "took " << duration.count() << " ms" << endl;}
 
     if (config.verbose) {cout << "comoputing dim 1 of input_0 ... ";}
     start = high_resolution_clock::now();
+
     Dimension1* D1_0 = new Dimension1(cgc_0, pairs_0[1], config);
     D1_0->compute_pairs(ctr);
     delete D1_0;
+
     stop = high_resolution_clock::now();
     duration = duration_cast<milliseconds>(stop - start);
     duration_total += duration;
@@ -409,9 +421,11 @@ int main(int argc, char** argv){
 
     if (config.verbose) {cout << "comoputing dim 2 of input_1 and im_1 ... ";}
     start = high_resolution_clock::now();
+
     TopDimensionImage* TDI_1 = new TopDimensionImage(cgc_1, cgc_comp, pairs_1[2], pairs_im_1[2]);
     TDI_1->compute_pairs(ctr);
     delete TDI_1;
+
     stop = high_resolution_clock::now();
     duration = duration_cast<milliseconds>(stop - start);
     duration_total += duration;
@@ -419,9 +433,11 @@ int main(int argc, char** argv){
 
     if (config.verbose) {cout << "comoputing dim 1 of input_1 ... ";}
     start = high_resolution_clock::now();
+
     Dimension1* D1_1 = new Dimension1(cgc_1, pairs_1[1], config);
     D1_1->compute_pairs(ctr);
     delete D1_1;
+
     stop = high_resolution_clock::now();
     duration = duration_cast<milliseconds>(stop - start);
     duration_total += duration;
@@ -429,9 +445,11 @@ int main(int argc, char** argv){
 
     if (config.verbose) {cout << "comoputing dim 0 of input_0 ... ";}
     start = high_resolution_clock::now();
+
     Dimension0* D0_0 = new Dimension0(cgc_0, pairs_0[0]);
     D0_0->compute_pairs(ctr);
     delete D0_0;
+
     stop = high_resolution_clock::now();
     duration = duration_cast<milliseconds>(stop - start);
     duration_total += duration;
@@ -439,9 +457,11 @@ int main(int argc, char** argv){
 
     if (config.verbose) {cout << "comoputing dim 0 of input_1 ... ";}
     start = high_resolution_clock::now();
+
     Dimension0* D0_1 = new Dimension0(cgc_1, pairs_1[0]);
     D0_1->compute_pairs(ctr);
     delete D0_1;
+
     stop = high_resolution_clock::now();
     duration = duration_cast<milliseconds>(stop - start);
     duration_total += duration;
@@ -449,9 +469,11 @@ int main(int argc, char** argv){
 
     if (config.verbose) {cout << "comoputing dim 0 of comparison, im_0 and im_1 ... ";}
     start = high_resolution_clock::now();
+
     Dimension0Image* D0I = new Dimension0Image(cgc_0, cgc_1, cgc_comp, pairs_im_0[0], pairs_im_1[0], pairs_comp[0]);
     D0I->compute_pairs(ctr);
     delete D0I;
+
     stop = high_resolution_clock::now();
     duration = duration_cast<milliseconds>(stop - start);
     duration_total += duration;
@@ -459,12 +481,14 @@ int main(int argc, char** argv){
 
     if (config.verbose) {cout << "comoputing the matching ... ";}
     start = high_resolution_clock::now();
+    
     vector<WriteMatch> matched[3];
     vector<WritePair> unmatched_0[3];
     vector<WritePair> unmatched_1[3];
     Match* match = new Match(pairs_0, pairs_1, pairs_comp, pairs_im_0, pairs_im_1, matched, unmatched_0, unmatched_1);
     match->compute_matching();
     delete match;
+
     stop = high_resolution_clock::now();
     duration = duration_cast<milliseconds>(stop - start);
     duration_total += duration;
@@ -475,8 +499,5 @@ int main(int argc, char** argv){
     write_unmatched_pairs(config.unmatched_1_filename, unmatched_1, cgc_1);
 
     if (config.verbose) {cout << "total computation time: " << duration_total.count() << " ms" << endl;}
-
-    if (config.print) {
-        print_result(cgc_0, cgc_1, cgc_comp, pairs_0, pairs_1, pairs_comp, matched, unmatched_0, unmatched_1);
-    }
+    if (config.print) { print_result(cgc_0, cgc_1, cgc_comp, pairs_0, pairs_1, pairs_comp, matched, unmatched_0, unmatched_1); }
 }

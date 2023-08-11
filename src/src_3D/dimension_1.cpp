@@ -24,7 +24,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	#ifdef USE_CLEARING_DIM_0
 	vector<Cube> ctrImage = ctrComp;
 	ctrComp.clear();
-	assembleColumnsToReduce(cgcComp, ctrComp);
+	enumerateEdges(cgcComp, ctrComp);
 	#endif
 	
 	pivotColumnIndex.clear();
@@ -33,7 +33,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 
 	#ifdef USE_CLEARING_DIM_0
 	ctr0.clear();
-	assembleColumnsToReduce(cgc0, ctr0);
+	enumerateEdges(cgc0, ctr0);
 	#endif
 	
 	pivotColumnIndex.clear();
@@ -42,22 +42,20 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 
 	#ifdef USE_CLEARING_DIM_0
 	ctr1.clear();
-	assembleColumnsToReduce(cgc1, ctr1);
+	enumerateEdges(cgc1, ctr1);
 	#endif
 	
-	#ifdef USE_CLEARING_DIM_0
 	pivotColumnIndex.clear();
 	cache.clear();
+	#ifdef USE_CLEARING_DIM_0
 	computeImagePairs(ctrImage, 0);
 	#else
-	pivotColumnIndex.clear();
-	cache.clear();
 	computeImagePairs(ctrComp, 0); 
 	#endif
 
-	#ifdef USE_CLEARING_DIM_0
 	pivotColumnIndex.clear();
 	cache.clear();
+	#ifdef USE_CLEARING_DIM_0
 	computeImagePairs(ctrImage, 1);
 	#else
 	pivotColumnIndex.clear();
@@ -277,8 +275,8 @@ void Dimension1::computeMatching() {
 	}
 }
 
-void Dimension1::assembleColumnsToReduce(const CubicalGridComplex* const cgc, vector<Cube>& ctr) const {
-	ctr.reserve(cgc->getNumberOfCubes(1));
+void Dimension1::enumerateEdges(const CubicalGridComplex* const cgc, vector<Cube>& edges) const {
+	edges.reserve(cgc->getNumberOfCubes(1));
 	value_t birth;
 	Cube cube;
 	for (index_t x = 0; x < cgc->shape[0]; x++) {
@@ -289,13 +287,13 @@ void Dimension1::assembleColumnsToReduce(const CubicalGridComplex* const cgc, ve
 					if (birth < config.threshold) {
 						cube = Cube(birth, x, y, z, type);
 						auto find = pivotColumnIndex.find(cube.index);
-						if (find != pivotColumnIndex.end()) { ctr.push_back(cube); }
+						if (find == pivotColumnIndex.end()) { edges.push_back(cube); }
 					}	
 				}				
 			}
 		}
 	}
-	sort(ctr.begin(), ctr.end(), CubeComparator());
+	sort(edges.begin(), edges.end(), CubeComparator());
 }
 
 Cube Dimension1::popPivot(CubeQueue& column) const {
