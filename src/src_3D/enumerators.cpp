@@ -1,8 +1,6 @@
 #include "enumerators.h"
 
-BoundaryEnumerator::BoundaryEnumerator(const CubicalGridComplex* const _cgc) : cgc(_cgc) {
-	nextFace = Cube();
-}
+BoundaryEnumerator::BoundaryEnumerator(const CubicalGridComplex* const _cgc) : cgc(_cgc) { nextFace = Cube(); }
 
 void BoundaryEnumerator::setBoundaryEnumerator(const Cube& _cube) {
 	cube = _cube;
@@ -15,7 +13,7 @@ bool BoundaryEnumerator::hasNextFace() {
 		index_t x = cube.x();
 		index_t y = cube.y();
 		index_t z = cube.z();
-		index_t birth;
+		value_t birth;
 		switch(cube.type()) {
 			case 0:
 			switch (position) {
