@@ -39,7 +39,7 @@ class Dimension1 {
 	void computePairs(const vector<Cube>& ctr, uint8_t k);
 	void computeImagePairs(const vector<Cube>& ctr, uint8_t k);
 	void computeMatching();
-	void assembleColumnsToReduce(const CubicalGridComplex* const cgc, vector<Cube>& ctr) const;
+	void enumerateEdges(const CubicalGridComplex* const cgc, vector<Cube>& edges) const;
 	Cube popPivot(CubeQueue& column) const;
 	Cube getPivot(CubeQueue& column) const;
 	void addCache(index_t i, CubeQueue &working_boundary);

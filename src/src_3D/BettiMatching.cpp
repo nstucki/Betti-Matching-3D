@@ -115,12 +115,12 @@ int main(int argc, char** argv) {
     assert (shape0 == shape1);
 
     vector<value_t> imageComp;
-    transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](value_t a, value_t b) { return min(a,b); });
+    transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](value_t a, value_t b) { return min(a, b); });
 
     // keine pointer nutzen
-    CubicalGridComplex* cgc0 = new CubicalGridComplex(move(image0), shape0);
-    CubicalGridComplex* cgc1 = new CubicalGridComplex(move(image1), shape1);
-    CubicalGridComplex* cgcComp = new CubicalGridComplex(move(imageComp), shape0);
+    CubicalGridComplex* cgc0 = new CubicalGridComplex(std::move(image0), shape0);
+    CubicalGridComplex* cgc1 = new CubicalGridComplex(std::move(image1), shape1);
+    CubicalGridComplex* cgcComp = new CubicalGridComplex(std::move(imageComp), shape0);
 
     vector<vector<Pair>> pairs0(3);
     vector<vector<Pair>> pairs1(3);
@@ -137,10 +137,12 @@ int main(int argc, char** argv) {
         Dimension2 dim2(cgc0, cgc1, cgcComp,  config, pairs0[2], pairs1[2], pairsComp[2], matches[2], isMatched0, isMatched1);       
         dim2.computePairsAndMatch(ctr0, ctr1, ctrComp);
     }
+
     {
         Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0, isMatched1);       
         dim1.computePairsAndMatch(ctr0, ctr1, ctrComp);
     }
+    
     {
         Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0, isMatched1);       
         dim0.computePairsAndMatch(ctr0, ctr1, ctrComp);
