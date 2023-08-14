@@ -19,10 +19,6 @@ class Cube {
 	index_t x() const;
 	index_t y() const;
 	index_t z() const;
-	// dimension 0: type doesn't matter
-	// dimension 1: type = index of direction of change
-	// dimension 2: type = index 0f direction of no change
-	// dimension 3: type doesn't matter
 	uint8_t type() const;
     bool operator==(const Cube& rhs) const;
 	void print() const;
