@@ -60,6 +60,7 @@ class CubicalGridComplex {
 	index_t getCubeIndex(const vector<index_t>& coordinates) const;
 	vector<index_t> getCubeCoordinates(index_t idx) const;
 	value_t getBirth (const vector<index_t>& coordinates) const;
+	vector<index_t> getParentVoxel(const Cube &c) const;
 	void printImage() const;
 	void printCubes() const;
 

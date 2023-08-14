@@ -3,6 +3,10 @@
 #include "template_functions.h"
 
 #include <iostream>
+#include <functional>
+#include <algorithm>
+#include <limits>
+#include <vector>
 
 using namespace std;
 
@@ -131,6 +135,43 @@ value_t CubicalGridComplex::getBirth(const vector<index_t>& coordinatesCube) con
 		}
 	}
 	return birth;
+}
+
+vector<index_t> CubicalGridComplex::getParentVoxel(const Cube &c) const
+{
+	auto workingCoordinates(c.coordinates);
+	auto birth = this->getBirth(c.coordinates);
+	std::function<bool(int)> getParentVoxelRecursively;
+	getParentVoxelRecursively = [&workingCoordinates, &getParentVoxelRecursively, this, birth](int dim)
+	{
+		index_t coord = workingCoordinates[dim];
+		if (dim < workingCoordinates.size())
+		{
+			if (coord % 2 == 0)
+			{
+				return getParentVoxelRecursively(dim + 1);
+			}
+			else
+			{
+				workingCoordinates[dim] = coord - 1;
+				if (getParentVoxelRecursively(dim + 1))
+				{
+					return true;
+				}
+				workingCoordinates[dim] = coord + 1;
+				return getParentVoxelRecursively(dim + 1);
+			}
+		}
+		return this->getBirth(workingCoordinates) == birth;
+	};
+	if (!getParentVoxelRecursively(0))
+	{
+		throw std::runtime_error("no adjacent voxel with same birth found");
+	}
+	vector<index_t> pixelCoordinates;
+	std::transform(std::begin(workingCoordinates), std::end(workingCoordinates), back_inserter(pixelCoordinates), [](auto coordinate)
+				   { return coordinate / 2; });
+	return pixelCoordinates;
 }
 
 void CubicalGridComplex::printImage() const {

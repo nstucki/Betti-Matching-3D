@@ -4,7 +4,7 @@
 #include "config.h"
 
 #include <unordered_map>
-
+#include <cstdint>
 
 class TopDimension {
 	public:

@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <algorithm>
 
 using namespace std;
 using namespace std::chrono;

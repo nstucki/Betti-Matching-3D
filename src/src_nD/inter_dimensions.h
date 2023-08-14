@@ -4,6 +4,7 @@
 
 #include <queue>
 #include <unordered_map>
+#include <cstdint>
 
 typedef priority_queue<Cube, vector<Cube>, CubeComparator> CubeQueue;
 

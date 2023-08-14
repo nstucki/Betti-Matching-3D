@@ -8,6 +8,8 @@
 #include <fstream>
 #include <cfloat>
 #include <chrono>
+#include <algorithm>
+#include <cassert>
 
 using namespace std;
 using namespace std::chrono;

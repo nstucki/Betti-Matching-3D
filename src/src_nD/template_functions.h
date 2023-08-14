@@ -2,13 +2,14 @@
 
 #include <iostream>
 #include <numeric>
+#include <algorithm>
 
 using namespace std;
 
 template <typename Container>
 Container multiplyFromRightExclusively(Container c) {
     std::reverse(c.begin(), c.end());
-    exclusive_scan(c.begin(), c.end(), c.begin(), 1, std::multiplies<>{});
+    std::exclusive_scan(c.begin(), c.end(), c.begin(), 1, std::multiplies<>{});
     std::reverse(c.begin(), c.end());
     return c;
 }

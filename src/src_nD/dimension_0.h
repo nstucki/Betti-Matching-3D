@@ -4,7 +4,7 @@
 #include "config.h"
 
 #include <unordered_map>
-
+#include <cstdint>
 
 class Dimension0 {
 	public:
