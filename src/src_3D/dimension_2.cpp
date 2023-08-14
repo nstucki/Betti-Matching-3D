@@ -19,64 +19,30 @@ Dimension2::Dimension2(const CubicalGridComplex* const _cgc0, const CubicalGridC
 
 void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
 	#ifdef RUNTIME
-	cout << "input & image 0 ... ";
-	auto start = high_resolution_clock::now();
+	cout << "input & image 0:" << endl;
 	#endif
 	enumerateDualEdges(cgc0, ctr0);
-	#ifdef RUNTIME
-	auto stop = high_resolution_clock::now();
-	auto duration = duration_cast<milliseconds>(stop - start);
-	auto durationEnumerate = duration;
-
-	start = high_resolution_clock::now();
-	#endif
     computeImagePairs(ctr0, 0);
-	ufComp.reset();
+
 	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
-    
-	cout << "input & image 1 ... ";
-	start = high_resolution_clock::now();
+	cout << "input & image 1:" << endl;
 	#endif
 	enumerateDualEdges(cgc1, ctr1);
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	durationEnumerate += duration;
-
-	start = high_resolution_clock::now();
-	#endif
-    computeImagePairs(ctr1, 1);
 	ufComp.reset();
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
+    computeImagePairs(ctr1, 1);
     
-	cout << "comparison image & matching ... ";
-	start = high_resolution_clock::now();
-	#endif
+	cout << "comparison image & matching:" << endl;
 	enumerateDualEdges(cgcComp, ctrComp);
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	durationEnumerate += duration;
-	
-	start = high_resolution_clock::now();
-	#endif
+	ufComp.reset();
 	computeCompPairsAndMatch(ctrComp);
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
-
-	cout << "enumeration: " << durationEnumerate.count() << " ms" << endl;
-    #endif
 }
 
 void Dimension2::enumerateDualEdges(const CubicalGridComplex* const cgc, vector<Cube>& dualEdges) const {
+	#ifdef RUNTIME
+	cout << "enumeration: ";
+	auto start = high_resolution_clock::now();
+	#endif 
+
 	dualEdges.clear();
 	dualEdges.reserve(cgc->getNumberOfCubes(2));
 	value_t birth;
@@ -91,9 +57,20 @@ void Dimension2::enumerateDualEdges(const CubicalGridComplex* const cgc, vector<
 		}
 	}
 	sort(dualEdges.begin(), dualEdges.end(), CubeComparator());
+
+	#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+	#endif
 }
 
 void Dimension2::computeImagePairs(vector<Cube>& dualEdges, uint8_t k) {
+	#ifdef RUNTIME
+	cout << "barcodes: ";
+	auto start = high_resolution_clock::now();
+	#endif
+
 	const CubicalGridComplex* const cgc = (k == 0) ? cgc0 : cgc1;
 	UnionFindDual& uf = (k == 0) ? uf0 : uf1; 
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
@@ -126,9 +103,20 @@ void Dimension2::computeImagePairs(vector<Cube>& dualEdges, uint8_t k) {
 	}
 	auto new_end = remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& cube){ return cube.index == NONE; });
 	dualEdges.erase(new_end, dualEdges.end());
+
+	#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+	#endif
 }
 
-void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges) {	
+void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges) {
+	#ifdef RUNTIME
+	cout << "barcode and matching: ";
+	auto start = high_resolution_clock::now();
+	#endif 
+
 	vector<index_t> boundaryIndices;
 	index_t parentIdx0;
 	index_t parentIdx1;
@@ -158,4 +146,10 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges) {
 	}
 	auto new_end = std::remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& cube){ return cube.index == NONE; });
 	dualEdges.erase(new_end, dualEdges.end());
+
+	#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+	#endif
 }

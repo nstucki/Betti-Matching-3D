@@ -18,71 +18,41 @@ Dimension0::Dimension0(const CubicalGridComplex* const _cgc0, const CubicalGridC
 
 void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
 	#ifdef RUNTIME
-	cout << "input 0 ... ";
-	auto start = high_resolution_clock::now();
+	cout << "input 0:" << endl;
 	#endif
 	#ifndef USE_CLEARING_DIM_0
 	ctr0.clear();
 	enumerateEdges(cgc0, ctr0);
 	#endif
-	#ifdef RUNTIME
-	auto stop = high_resolution_clock::now();
-	auto duration = duration_cast<milliseconds>(stop - start);
-	auto durationEnumerate = duration;
-
-	start = high_resolution_clock::now();
-	#endif
 	computePairs(ctr0, 0);
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
-    
-	cout << "input 1 ... ";
-	start = high_resolution_clock::now();
+
+    #ifdef RUNTIME
+	cout << "input 1:" << endl;
 	#endif
 	#ifndef USE_CLEARING_DIM_0
 	ctr1.clear();
 	enumerateEdges(cgc1, ctr1);
 	#endif
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	durationEnumerate = duration;
-
-	start = high_resolution_clock::now();
-	#endif
     computePairs(ctr1, 1);
+
 	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
-    
-	cout << "comparison image, image 0, image 1 & matching ... ";
-	start = high_resolution_clock::now();
+	cout << "comparison image, image 0, image 1 & matching:" << endl;
 	#endif
 	#ifndef USE_CLEARING_DIM_0
 	ctrComp.clear();
 	enumerateEdges(cgcComp, ctrComp);
 	#endif
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	durationEnumerate = duration;
-
-	start = high_resolution_clock::now();
-	#endif
+	uf0.reset();
+	uf1.reset();
 	computeImagePairsAndMatch(ctrComp);
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
-
-	cout << "enumeration: " << durationEnumerate.count() << " ms" << endl;
-    #endif
 }
 
 void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
+	#ifdef RUNTIME
+	cout <<"barcode: ";
+	auto start = high_resolution_clock::now();
+	#endif
+
 	const CubicalGridComplex* const cgc = (k == 0) ? cgc0 : cgc1;
 	UnionFind& uf = (k == 0) ? uf0 : uf1; 
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
@@ -108,11 +78,20 @@ void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 			}
 		}
 	}
+
+	#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+	#endif
 }
 
 void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
-	uf0.reset();
-	uf1.reset();
+	#ifdef RUNTIME
+	cout << "barcodes & matching: ";
+	auto start = high_resolution_clock::now();
+	#endif
+	
 	vector<index_t> boundaryIndices(2);
 	index_t parentIdx0;
 	index_t parentIdx1;
@@ -147,9 +126,20 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 			} 
 		}
 	}
+
+	#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+	#endif
 }
 
 void Dimension0::enumerateEdges(const CubicalGridComplex* const cgc, vector<Cube>& edges) const {
+	#ifdef RUNTIME
+	cout << "enumeration: ";
+	auto start = high_resolution_clock::now();
+	#endif
+
 	edges.reserve(cgc->getNumberOfCubes(1));
 	value_t birth;
 	for (index_t x = 0; x < cgc->shape[0]; x++) {
@@ -163,4 +153,10 @@ void Dimension0::enumerateEdges(const CubicalGridComplex* const cgc, vector<Cube
 		}
 	}
 	sort(edges.begin(), edges.end(), CubeComparator());
+
+	#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+	#endif
 }

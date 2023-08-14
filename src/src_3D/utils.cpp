@@ -101,7 +101,7 @@ void printResult(const CubicalGridComplex* const cgc0, const CubicalGridComplex*
                     unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1) {
     index_t count;
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Input 0:" << endl << endl;
+    cout << "Input 0:" << endl;
     if (cgc0->shape[0] < 10 && cgc0->shape[1] < 10 && cgc0->shape[2] < 10) { cgc0->printImage(); }
     for (uint8_t d = 0; d < 3; d++) {
         cout << "dim " << unsigned(d) << ": ";

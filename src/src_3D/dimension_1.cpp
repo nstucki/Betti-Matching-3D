@@ -18,72 +18,38 @@ Dimension1::Dimension1(const CubicalGridComplex* const _cgc0, const CubicalGridC
 void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
 	#ifdef RUNTIME
 	cout << "input 0 ... ";
-	auto start = high_resolution_clock::now();
 	#endif
 	computePairs(ctr0, 0);
-	#ifdef RUNTIME
-	auto stop = high_resolution_clock::now();
-	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
-	
-	start = high_resolution_clock::now();
-	#endif
 	#ifdef USE_CLEARING_DIM_0
 	ctr0.clear();
 	enumerateEdges(cgc0, ctr0);
 	#endif
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	auto durationEnumerate = duration;
 
+	#ifdef RUNTIME
 	cout << "input 1 ... ";
-	start = high_resolution_clock::now();
 	#endif
 	pivotColumnIndex.clear();
 	cache.clear();
 	computePairs(ctr1, 1);
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
-
-	start = high_resolution_clock::now();
-	#endif
 	#ifdef USE_CLEARING_DIM_0
 	ctr1.clear();
 	enumerateEdges(cgc1, ctr1);
 	#endif
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	durationEnumerate += duration;
 
+	#ifdef RUNTIME
 	cout << "comparison image ... ";
-	start = high_resolution_clock::now();
 	#endif
 	pivotColumnIndex.clear();
 	cache.clear();
 	computePairsComp(ctrComp);
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
-
-	start = high_resolution_clock::now();
-	#endif
 	#ifdef USE_CLEARING_DIM_0
 	vector<Cube> ctrImage = ctrComp;
 	ctrComp.clear();
 	enumerateEdges(cgcComp, ctrComp);
 	#endif
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	durationEnumerate += duration;
 
+	#ifdef RUNTIME
 	cout << "image 0 ... ";
-	start = high_resolution_clock::now();
 	#endif
 	pivotColumnIndex.clear();
 	cache.clear();
@@ -92,13 +58,9 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	#else
 	computeImagePairs(ctrComp, 0); 
 	#endif
+
 	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
-	
 	cout << "image 1 ... ";
-	start = high_resolution_clock::now();
 	#endif
 	pivotColumnIndex.clear();
 	cache.clear();
@@ -107,27 +69,19 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	#else
 	computeImagePairs(ctrComp, 1); 
 	#endif
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
-	#endif
 	
 	#ifdef RUNTIME
 	cout << "matching ... ";
-	start = high_resolution_clock::now();
 	#endif
 	computeMatching();
-	#ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
-
-	cout << "enumeration: " << durationEnumerate.count() << " ms" << endl;
-	#endif
 }
 
 void Dimension1::computePairsComp(vector<Cube>& ctr) {
+	#ifdef RUNTIME
+	cout << "barcode: ";
+	auto start = high_resolution_clock::now();
+	#endif
+
 	index_t ctrSize = ctr.size();
 	pivotColumnIndex.reserve(ctrSize);	
 	cache.reserve(min(config.cacheSize, ctrSize));
@@ -190,10 +144,21 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	if (shouldClear) {
 		auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.index == NONE; });
 		ctr.erase(newEnd, ctr.end());
-	}	
+	}
+
+	#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+	#endif
 }
 
 void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
+	#ifdef RUNTIME
+	cout << "barcode: ";
+	auto start = high_resolution_clock::now();
+	#endif
+
 	const CubicalGridComplex* const cgc = (k == 0) ? cgc0 : cgc1;
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<uint64_t, Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
@@ -252,9 +217,20 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 			} else { break; }
 		}
 	}
+
+	#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+	#endif
 }
 
 void Dimension1::computeImagePairs(const vector<Cube>& ctr, uint8_t k) {
+	#ifdef RUNTIME
+	cout << "barcode: ";
+	auto start = high_resolution_clock::now();
+	#endif
+
 	const CubicalGridComplex* const cgc = (k == 0) ? cgc0 : cgc1;
 	unordered_map<uint64_t, uint64_t>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
 
@@ -310,9 +286,20 @@ void Dimension1::computeImagePairs(const vector<Cube>& ctr, uint8_t k) {
 			} else { break; }
 		}
 	}
+
+	#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+	#endif
 }
 
 void Dimension1::computeMatching() {
+	#ifdef RUNTIME
+	cout << "matching: ";
+	auto start = high_resolution_clock::now();
+	#endif
+
 	uint64_t birthIndex0;
 	uint64_t birthIndex1;
 	for (Pair& pair : pairsComp) {
@@ -330,9 +317,20 @@ void Dimension1::computeMatching() {
 			}
 		}
 	}
+
+	#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+	#endif
 }
 
 void Dimension1::enumerateEdges(const CubicalGridComplex* const cgc, vector<Cube>& edges) const {
+	#ifdef RUNTIME
+	cout << "enumeration: ";
+	auto start = high_resolution_clock::now();
+	#endif
+
 	edges.reserve(cgc->getNumberOfCubes(1));
 	value_t birth;
 	Cube cube;
@@ -351,6 +349,12 @@ void Dimension1::enumerateEdges(const CubicalGridComplex* const cgc, vector<Cube
 		}
 	}
 	sort(edges.begin(), edges.end(), CubeComparator());
+
+	#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms" << endl;
+	#endif
 }
 
 Cube Dimension1::popPivot(CubeQueue& column) const {
