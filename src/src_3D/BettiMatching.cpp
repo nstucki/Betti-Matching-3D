@@ -38,7 +38,7 @@ void print_usage_and_exit(int exit_code) {
 
 int main(int argc, char** argv) {
     #ifdef RUNTIME
-    cout << endl <<  "reading config & images ... ";
+    cout << endl << "reading config & images ... ";
     auto startTotal = high_resolution_clock::now();
     auto start = high_resolution_clock::now();
     #endif 
@@ -146,8 +146,8 @@ int main(int argc, char** argv) {
 
     {   
         #ifdef RUNTIME
+        cout << "computing dimension 1 ... " << endl;
         start = high_resolution_clock::now();
-        cout << "computing dimension 1 ... " << endl; 
         #endif
         Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);       
         dim1.computePairsAndMatch(ctr0, ctr1, ctrComp);
@@ -160,8 +160,8 @@ int main(int argc, char** argv) {
     
     {   
         #ifdef RUNTIME
+        cout << "computing dimension 0 ... " << endl;
         start = high_resolution_clock::now();
-        cout << "computing dimension 0 ... " << endl; 
         #endif
         Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);       
         dim0.computePairsAndMatch(ctr0, ctr1, ctrComp);
@@ -173,10 +173,23 @@ int main(int argc, char** argv) {
     }
 
     #ifdef RUNTIME
+    cout << "computing voxels ... " << endl;
+    start = high_resolution_clock::now();
+    #endif
+    vector<vector<VoxelPair>> unmatched0(3);
+    vector<vector<VoxelPair>> unmatched1(3);
+    vector<vector<VoxelMatch>> matched(3);
+    computeVoxels(cgc0, cgc1, pairs0, pairs1, matches, isMatched0, isMatched1, unmatched0, unmatched1, matched);
+    #ifdef RUNTIME
+    stop = high_resolution_clock::now();
+    duration = duration_cast<milliseconds>(stop - start);
+    cout << duration.count() << " ms" << endl << endl;
+    
     stop = high_resolution_clock::now();
     duration = duration_cast<milliseconds>(stop - startTotal);
     cout << "Betti Matching runtime: " << duration.count() << " ms" << endl << endl;
     #endif
 
-    if (config.verbose) { printResult(cgc0, cgc1, cgcComp, pairs0, pairs1, pairsComp, matches, isMatched0, isMatched1); }
+    if (config.verbose) { printResult(cgc0, cgc1, cgcComp, pairs0, pairs1, pairsComp, isMatched0, isMatched1, matches, matched, 
+                                        unmatched0, unmatched1); }
 }

@@ -15,7 +15,7 @@ using namespace std;
 typedef uint32_t index_t;
 typedef double value_t;
 
-enum fileFormat {DIPHA, PERSEUS, NUMPY};
+enum fileFormat { DIPHA, PERSEUS, NUMPY };
 
 
 struct Config {
