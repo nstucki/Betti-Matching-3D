@@ -8,6 +8,7 @@ using namespace std;
 
 #define RUNTIME
 #define USE_CLEARING_DIM_0
+
 #define INFTY numeric_limits<value_t>::infinity()
 #define NONE numeric_limits<index_t>::max()
 

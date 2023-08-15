@@ -37,6 +37,11 @@ void print_usage_and_exit(int exit_code) {
 
 
 int main(int argc, char** argv) {
+    #ifdef RUNTIME
+    cout << endl <<  "reading config & images ... ";
+    auto startTotal = high_resolution_clock::now();
+    auto start = high_resolution_clock::now();
+    #endif 
     Config config;
     for (int i = 1; i < argc; ++i) {
 		const string arg(argv[i]);
@@ -79,11 +84,6 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
-    #ifdef RUNTIME
-    cout << endl <<  "reading images ... ";
-    auto startTotal = high_resolution_clock::now();
-    auto start = high_resolution_clock::now();
-    #endif    
     vector<value_t> image0;
     vector<value_t> image1;
     vector<value_t> imageComp;
@@ -104,7 +104,9 @@ int main(int argc, char** argv) {
     auto duration_total = duration;
     cout << "of shape (" << shape[0] << "," << shape[1] << "," << shape[2] << ") ... ";
     cout << duration.count() << " ms" << endl << endl;
+    #endif
 
+    #ifdef RUNTIME
     cout << "initializing CubicalGridComplex and results ... ";
     start = start = high_resolution_clock::now();
     #endif
@@ -116,8 +118,8 @@ int main(int argc, char** argv) {
     vector<vector<Pair>> pairs1(3);
     vector<vector<Pair>> pairsComp(3);
     vector<vector<Match>> matches(3);
-    unordered_map<uint64_t, bool> isMatched0;
-	unordered_map<uint64_t, bool> isMatched1;
+    vector<unordered_map<uint64_t, bool>> isMatched0(3);
+	vector<unordered_map<uint64_t, bool>> isMatched1(3);
 
     vector<Cube> ctr0;
     vector<Cube> ctr1;
@@ -133,7 +135,7 @@ int main(int argc, char** argv) {
         cout << "computing dimension 2 ... " << endl;
         start = high_resolution_clock::now();
         #endif
-        Dimension2 dim2(cgc0, cgc1, cgcComp,  config, pairs0[2], pairs1[2], pairsComp[2], matches[2], isMatched0, isMatched1);       
+        Dimension2 dim2(cgc0, cgc1, cgcComp,  config, pairs0[2], pairs1[2], pairsComp[2], matches[2], isMatched0[2], isMatched1[2]);       
         dim2.computePairsAndMatch(ctr0, ctr1, ctrComp);
         #ifdef RUNTIME
         stop = high_resolution_clock::now();
@@ -147,7 +149,7 @@ int main(int argc, char** argv) {
         start = high_resolution_clock::now();
         cout << "computing dimension 1 ... " << endl; 
         #endif
-        Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0, isMatched1);       
+        Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);       
         dim1.computePairsAndMatch(ctr0, ctr1, ctrComp);
         #ifdef RUNTIME
         stop = high_resolution_clock::now();
@@ -161,7 +163,7 @@ int main(int argc, char** argv) {
         start = high_resolution_clock::now();
         cout << "computing dimension 0 ... " << endl; 
         #endif
-        Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0, isMatched1);       
+        Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);       
         dim0.computePairsAndMatch(ctr0, ctr1, ctrComp);
         #ifdef RUNTIME
         stop = high_resolution_clock::now();
@@ -175,5 +177,6 @@ int main(int argc, char** argv) {
     duration = duration_cast<milliseconds>(stop - startTotal);
     cout << "Betti Matching runtime: " << duration.count() << " ms" << endl << endl;
     #endif
+
     if (config.verbose) { printResult(cgc0, cgc1, cgcComp, pairs0, pairs1, pairsComp, matches, isMatched0, isMatched1); }
 }

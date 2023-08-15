@@ -9,7 +9,7 @@
 typedef priority_queue<Cube, vector<Cube>, CubeComparator> CubeQueue;
 
 
-class InterDimensions{
+class InterDimensions {
 	public:
 	InterDimensions(const CubicalGridComplex& cgc0, const CubicalGridComplex& cgc1, const CubicalGridComplex& cgcComp, 
 					const Config& config, vector<vector<Pair>>& pairs0, vector<vector<Pair>>& pairs1, vector<vector<Pair>>& pairsComp,

@@ -31,7 +31,9 @@ void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	ufComp.reset();
     computeImagePairs(ctr1, 1);
     
+	#ifdef RUNTIME
 	cout << "comparison image & matching:" << endl;
+	#endif
 	enumerateDualEdges(cgcComp, ctrComp);
 	ufComp.reset();
 	computeCompPairsAndMatch(ctrComp);
