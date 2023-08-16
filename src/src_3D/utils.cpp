@@ -169,15 +169,6 @@ void printResult(const CubicalGridComplex* const cgc0, const CubicalGridComplex*
             for (auto &match : matches[d]) { match.print(); }
         } else { cout << count << endl; }
     }
-    cout << "matched voxels: " << endl;
-    for (uint8_t d = 0; d < 3; ++d) {
-        cout << "dim " << unsigned(d) << ": ";
-        count = matched[d].size();
-        if (0 < count && count < 10) {
-            cout << endl;
-            for (auto& match : matched[d]) { match.print(); }
-        } else { cout << count << endl; }
-    }
     cout << endl;
     cout << "unmatched cubes in Input 0" << endl;
     for (uint8_t d = 0; d < 3; d++) {
@@ -187,15 +178,6 @@ void printResult(const CubicalGridComplex* const cgc0, const CubicalGridComplex*
         if (0 < count && count < 10) {
             cout << endl;
             for (auto &pair : pairs0[d]) { if (!isMatched0[d][pair.birth.index]) { pair.print(); cout << endl; } }
-        } else { cout << count << endl; }
-    }
-    cout << "unmatched voxels in Input 0" << endl;
-    for (uint8_t d = 0; d < 3; ++d) {
-        cout << "dim " << unsigned(d) << ": ";
-        count = unmatched0[d].size();
-        if (0 < count && count < 10) {
-            cout << endl;
-            for (auto& pair : unmatched0[d]) { pair.print(); cout << endl; }
         } else { cout << count << endl; }
     }
     cout << endl;
@@ -209,6 +191,27 @@ void printResult(const CubicalGridComplex* const cgc0, const CubicalGridComplex*
             for (auto &pair : pairs1[d]) { if (!isMatched1[d][pair.birth.index]) { pair.print(); cout << endl; } }
         } else { cout << count << endl; }
     }
+    cout << endl;
+    cout << "matched voxels: " << endl;
+    for (uint8_t d = 0; d < 3; ++d) {
+        cout << "dim " << unsigned(d) << ": ";
+        count = matched[d].size();
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto& match : matched[d]) { match.print(); }
+        } else { cout << count << endl; }
+    }
+    cout << endl;
+    cout << "unmatched voxels in Input 0" << endl;
+    for (uint8_t d = 0; d < 3; ++d) {
+        cout << "dim " << unsigned(d) << ": ";
+        count = unmatched0[d].size();
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto& pair : unmatched0[d]) { pair.print(); cout << endl; }
+        } else { cout << count << endl; }
+    }
+    cout << endl;
     cout << "unmatched voxels in Input 1" << endl;
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
@@ -218,4 +221,5 @@ void printResult(const CubicalGridComplex* const cgc0, const CubicalGridComplex*
             for (auto& pair : unmatched1[d]) { pair.print(); cout << endl; }
         } else { cout << count << endl; }
     }
+    cout << endl;
 }

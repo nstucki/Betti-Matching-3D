@@ -17,7 +17,7 @@ Dimension1::Dimension1(const CubicalGridComplex* const _cgc0, const CubicalGridC
 
 void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
 	#ifdef RUNTIME
-	cout << "input 0 ... ";
+	cout << "input 0:" << endl;
 	#endif
 	computePairs(ctr0, 0);
 	#ifdef USE_CLEARING_DIM_0
@@ -26,7 +26,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	#endif
 
 	#ifdef RUNTIME
-	cout << "input 1 ... ";
+	cout << "input 1:" << endl;
 	#endif
 	pivotColumnIndex.clear();
 	cache.clear();
@@ -37,7 +37,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	#endif
 
 	#ifdef RUNTIME
-	cout << "comparison image ... ";
+	cout << "comparison image:" << endl;
 	#endif
 	pivotColumnIndex.clear();
 	cache.clear();
@@ -49,7 +49,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	#endif
 
 	#ifdef RUNTIME
-	cout << "image 0 ... ";
+	cout << "image 0:" << endl;
 	#endif
 	pivotColumnIndex.clear();
 	cache.clear();
@@ -60,7 +60,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	#endif
 
 	#ifdef RUNTIME
-	cout << "image 1 ... ";
+	cout << "image 1:" << endl;
 	#endif
 	pivotColumnIndex.clear();
 	cache.clear();
@@ -71,7 +71,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	#endif
 	
 	#ifdef RUNTIME
-	cout << "matching ... ";
+	cout << "matching:" << endl;
 	#endif
 	computeMatching();
 }
