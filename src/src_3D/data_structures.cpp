@@ -56,7 +56,7 @@ void Match::print() const { pair0.print(); cout << " <-> "; pair1.print(); cout 
 VoxelPair::VoxelPair(const vector<index_t>& _birth, const vector<index_t>& _death) : birth(_birth), death(_death) {}
 
 void VoxelPair::print() const {
-	cout << "(" << birth[0] << "," << birth[1] << "," << birth[2] << ";" << death[0] << "," << death[1] << "," << death[2] << ")";
+	cout << "(" << birth[0] << "," << birth[1] << "," << birth[2] << " ; " << death[0] << "," << death[1] << "," << death[2] << ")";
 }
 
 
@@ -81,7 +81,7 @@ CubicalGridComplex::~CubicalGridComplex() {
     delete[] grid;
 }
 
-index_t CubicalGridComplex::getNumberOfCubes(uint8_t dim) const {
+index_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
 	switch (dim) {
 		case 0:
 		return shape[0]*shape[1]*shape[2];
@@ -98,46 +98,47 @@ index_t CubicalGridComplex::getNumberOfCubes(uint8_t dim) const {
 	return -1;
 }
 
-value_t CubicalGridComplex::getBirth(index_t x, index_t y, index_t z) const {
+value_t CubicalGridComplex::getBirth(const index_t& x, const index_t&  y, const index_t& z) const {
 	return grid[x+1][y+1][z+1];
 }
 
-value_t CubicalGridComplex::getBirth(index_t x, index_t y, index_t z, uint8_t type, uint8_t dim) const {
+value_t CubicalGridComplex::getBirth(const index_t& x, const index_t& y, const index_t& z, 
+										const uint8_t& type, const uint8_t& dim) const {
 	switch (dim) {
 		case 0:
-			return grid[x+1][y+1][z+1];
+			return getBirth(x, y, z);
 
 		case 1:
 			switch (type) {
 				case 0:
-					return max(grid[x+1][y+1][z+1],grid[x+2][y+1][z+1]);
+					return max(getBirth(x, y, z), getBirth(x+1, y, z));
 
 				case 1:
-					return max(grid[x+1][y+1][z+1],grid[x+1][y+2][z+1]);
+					return max(getBirth(x, y, z), getBirth(x, y+1, z));
 
 				case 2:
-					return max(grid[x+1][y+1][z+1],grid[x+1][y+1][z+2]);
+					return max(getBirth(x, y, z), getBirth(x, y, z+1));
 			}
 		case 2:
 			switch (type) {
 				case 0:
-					return max({grid[x+1][y+1][z+1],grid[x+1][y+2][z+1],grid[x+1][y+1][z+2],grid[x+1][y+2][z+2]});
+					return max({getBirth(x, y, z),getBirth(x, y, z+1),getBirth(x, y+1, z),getBirth(x, y+1, z+1)});
 
 				case 1:
-					return max({grid[x+1][y+1][z+1],grid[x+2][y+1][z+1],grid[x+1][y+1][z+2],grid[x+2][y+1][z+2]});
+					return max({getBirth(x, y, z),getBirth(x, y, z+1),getBirth(x+1, y, z),getBirth(x+1, y, z+1)});
 
 				case 2:
-					return max({grid[x+1][y+1][z+1],grid[x+2][y+1][z+1],grid[x+1][y+2][z+1],grid[x+2][y+2][z+1]});
+					return max({getBirth(x, y, z),getBirth(x, y+1, z),getBirth(x+1, y, z),getBirth(x+1, y+1, z)});
 			}	
 		case 3:
-			return max({grid[x+1][y+1][z+1], grid[x+2][y+1][z+1], grid[x+1][y+2][z+1], grid[x+1][y+1][z+2],
-						grid[x+2][y+2][z+1], grid[x+2][y+1][z+2], grid[x+1][y+2][z+2], grid[x+2][y+2][z+2] });
+			return max({getBirth(x, y, z),getBirth(x, y, z+1),getBirth(x, y+1, z),getBirth(x, y+1, z+1),
+						getBirth(x+1, y, z),getBirth(x+1, y, z+1),getBirth(x+1, y+1, z),getBirth(x+1, y+1, z+1)});
 	}
 	cerr << "birth not found!" << endl;
 	return INFTY;
 }
 
-vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, uint8_t dim) const {
+vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8_t& dim) const {
 	index_t x = cube.x();
 	index_t y = cube.y();
 	index_t z = cube.z();
@@ -148,46 +149,46 @@ vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, uint8_t dim
 		case 1:
 		switch (cube.type()) {
 			case 0:
-				if (cube.birth == grid[x+2][y+1][z+1]) { return {x+1,y,z}; }
-				else { return {x,y,z}; }
+				if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; }
+				else { return {x+1,y,z}; }
 
 			case 1:
-				if (cube.birth == grid[x+1][y+2][z+1]) { return {x,y+1,z}; }
-				else { return {x,y,z}; }
+				if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; }
+				else { return {x,y+1,z}; }
 
 			case 2:
-				if (cube.birth == grid[x+1][y+1][z+2]) { return {x,y,z+1}; }
-				else { return {x,y,z}; }
+				if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; }
+				else { return {x,y,z+1}; }
 		}
 		case 2:
 		switch(cube.type()) {
 			case 0:
-				if (cube.birth == grid[x+1][y+2][z+2]) { return {x,y+1,z+1}; }
-				else if (cube.birth == grid[x+1][y+2][z+1]) { return {x,y+1,z}; }
-				else if(cube.birth == grid[x+1][y+1][z+2]) { return {x,y,z+1}; }
-				else { return {x,y,z}; }
+				if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; }
+				else if (cube.birth == getBirth(x, y, z+1)) { return {x,y,z+1}; }
+				else if (cube.birth == getBirth(x, y+1, z)) { return {x,y+1,z}; }
+				else { return {x,y+1,z+1}; }
 
 			case 1:
-				if (cube.birth == grid[x+2][y+1][z+2]) { return {x+1,y,z+1}; }
-				else if(cube.birth == grid[x+2][y+1][z+1]) { return {x+1,y,z}; }
-				else if(cube.birth == grid[x+1][y+1][z+2]) { return {x,y,z+1}; }
-				else { return {x,y,z}; }
+				if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; }
+				else if (cube.birth == getBirth(x, y, z+1)) { return {x,y,z+1}; }
+				else if (cube.birth == getBirth(x+1, y, z)) { return {x+1,y,z}; }
+				else { return {x+1,y,z+1}; }
 
 			case 2:
-				if (cube.birth == grid[x+2][y+2][z+1]) { return {x+1,y+1,z}; } 
-				else if (cube.birth == grid[x+2][y+1][z+1]) { return {x+1,y,z}; }
-				else if (cube.birth == grid[x+1][y+2][z+1]) { return {x,y+1,z}; } 
-				else { return {x,y,z}; }
+				if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; } 
+				else if (cube.birth == getBirth(x, y+1, z)) { return {x,y+1,z}; }
+				else if (cube.birth == getBirth(x+1, y, z)) { return {x+1,y,z}; } 
+				else { return {x+1,y+1,z}; }
 		}
 		case 3:
-			if (cube.birth == grid[x+2][y+2][z+2]){ return {x+1,y+1,z+1}; }
-			else if (cube.birth == grid[x+2][y+2][z+1]) { return {x+1,y+1,z}; }
-			else if (cube.birth == grid[x+2][y+1][z+2]) { return {x+1,y,z+1}; }
-			else if (cube.birth == grid[x+2][y+1][z+1]) { return {x+1,y,z}; }
-			else if (cube.birth == grid[x+1][y+2][z+2]) { return {x,y+1,z+1}; }
-			else if (cube.birth == grid[x+1][y+2][z+1]) { return {x,y+1,z}; }
-			else if(cube.birth == grid[x+1][y+1][z+2]) { return {x,y,z+1}; } 
-			else { return {x,y,z}; }	
+			if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; }
+			else if (cube.birth == getBirth(x, y, z+1)) { return {x,y,z+1}; }
+			else if (cube.birth == getBirth(x, y+1, z)) { return {x,y+1,z}; }
+			else if (cube.birth == getBirth(x, y+1, z+1)) { return {x,y+1,z+1}; }
+			else if (cube.birth == getBirth(x+1, y, z)) { return {x+1,y,z}; }
+			else if (cube.birth == getBirth(x+1, y, z+1)) { return {x+1,y,z+1}; }
+			else if (cube.birth == getBirth(x+1, y+1, z)) { return {x+1,y+1,z}; } 
+			else { return {x+1,y+1,z+1}; }	
 	}
 	cerr << "parent voxel not found!" << endl;
 	return {0,0,0};

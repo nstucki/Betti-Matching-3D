@@ -7,6 +7,7 @@
 using namespace std;
 
 #define RUNTIME
+//#define COMPUTE_COMPARISON
 #define USE_CLEARING_DIM_0
 
 #define INFTY numeric_limits<value_t>::infinity()

@@ -124,7 +124,7 @@ void printResult(const CubicalGridComplex* const cgc0, const CubicalGridComplex*
                     const vector<vector<VoxelPair>>& unmatched0, const vector<vector<VoxelPair>>& unmatched1) {
     index_t count;
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Input 0:" << endl;
+    cout << "Input 0:" << endl << endl;
     if (cgc0->shape[0] < 10 && cgc0->shape[1] < 10 && cgc0->shape[2] < 10) { cgc0->printImage(); }
     for (uint8_t d = 0; d < 3; d++) {
         cout << "dim " << unsigned(d) << ": ";
@@ -135,7 +135,7 @@ void printResult(const CubicalGridComplex* const cgc0, const CubicalGridComplex*
         } else { cout << count << endl; }
     }
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Input 1" << endl; 
+    cout << "Input 1" << endl << endl; 
     if (cgc1->shape[0] < 10 && cgc1->shape[1] < 10 && cgc1->shape[2] < 10) { cgc1->printImage(); }
     for (uint8_t d = 0; d < 3; d++) {
         cout << "dim " << unsigned(d) << ": ";
@@ -145,8 +145,9 @@ void printResult(const CubicalGridComplex* const cgc0, const CubicalGridComplex*
             for (auto &pair : pairs1[d]) { pair.print(); cout << endl; }
         } else { cout << count << endl; }
     }
+    #ifdef COMPUTE_COMPARISON
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Comparison" << endl; 
+    cout << "Comparison" << endl << endl; 
     if (cgcComp->shape[0] < 10 && cgcComp->shape[1] < 10 && cgcComp->shape[2] < 10) { cgcComp->printImage(); }
     for (uint8_t d = 0; d < 3; d++) {
         cout << "dim " << unsigned(d) << ": ";
@@ -156,10 +157,9 @@ void printResult(const CubicalGridComplex* const cgc0, const CubicalGridComplex*
             for (auto &pair : pairsComp[d]) { pair.print(); cout << endl; }
         } else { cout << "number of pairs: " << count << endl; }
     }
+    #endif
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-
-    cout << "Betti Matching:" << endl;
-    cout << endl;
+    cout << "Betti Matching:" << endl << endl;
     cout << "matched cubes: " << endl;
     for (uint8_t d = 0; d < 3; d++) {
         cout << "dim " << unsigned(d) << ": ";
@@ -179,7 +179,6 @@ void printResult(const CubicalGridComplex* const cgc0, const CubicalGridComplex*
         } else { cout << count << endl; }
     }
     cout << endl;
-
     cout << "unmatched cubes in Input 0" << endl;
     for (uint8_t d = 0; d < 3; d++) {
         cout << "dim " << unsigned(d) << ": ";
@@ -199,7 +198,6 @@ void printResult(const CubicalGridComplex* const cgc0, const CubicalGridComplex*
             for (auto& pair : unmatched0[d]) { pair.print(); cout << endl; }
         } else { cout << count << endl; }
     }
-
     cout << endl;
     cout << "unmatched cubes in Input 1" << endl;
     for (uint8_t d = 0; d < 3; d++) {

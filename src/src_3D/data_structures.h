@@ -84,10 +84,10 @@ class CubicalGridComplex {
 
 	CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& shape);
 	~CubicalGridComplex();
-	index_t getNumberOfCubes(uint8_t dim) const;
-	value_t getBirth(index_t x, index_t y, index_t z) const;
-	value_t getBirth(index_t x, index_t y, index_t z, uint8_t type, uint8_t dim) const;
-	vector<index_t> getParentVoxel(const Cube& c, uint8_t dim) const;
+	index_t getNumberOfCubes(const uint8_t& dim) const;
+	value_t getBirth(const index_t& x, const index_t& y, const index_t& z) const;
+	value_t getBirth(const index_t& x, const index_t& y, const index_t& z, const uint8_t& type, const uint8_t& dim) const;
+	vector<index_t> getParentVoxel(const Cube& c, const uint8_t& dim) const;
 	void printImage() const;
 
 	private:

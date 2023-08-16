@@ -184,7 +184,9 @@ int main(int argc, char** argv) {
     stop = high_resolution_clock::now();
     duration = duration_cast<milliseconds>(stop - start);
     cout << duration.count() << " ms" << endl << endl;
-    
+    #endif
+
+    #ifdef RUNTIME
     stop = high_resolution_clock::now();
     duration = duration_cast<milliseconds>(stop - startTotal);
     cout << "Betti Matching runtime: " << duration.count() << " ms" << endl << endl;

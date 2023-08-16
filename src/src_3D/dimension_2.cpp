@@ -44,7 +44,6 @@ void Dimension2::enumerateDualEdges(const CubicalGridComplex* const cgc, vector<
 	cout << "enumeration: ";
 	auto start = high_resolution_clock::now();
 	#endif 
-
 	dualEdges.clear();
 	dualEdges.reserve(cgc->getNumberOfCubes(2));
 	value_t birth;
@@ -59,7 +58,6 @@ void Dimension2::enumerateDualEdges(const CubicalGridComplex* const cgc, vector<
 		}
 	}
 	sort(dualEdges.begin(), dualEdges.end(), CubeComparator());
-
 	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
@@ -72,7 +70,6 @@ void Dimension2::computeImagePairs(vector<Cube>& dualEdges, uint8_t k) {
 	cout << "barcodes: ";
 	auto start = high_resolution_clock::now();
 	#endif
-
 	const CubicalGridComplex* const cgc = (k == 0) ? cgc0 : cgc1;
 	UnionFindDual& uf = (k == 0) ? uf0 : uf1; 
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
@@ -105,7 +102,6 @@ void Dimension2::computeImagePairs(vector<Cube>& dualEdges, uint8_t k) {
 	}
 	auto new_end = remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& cube){ return cube.index == NONE; });
 	dualEdges.erase(new_end, dualEdges.end());
-
 	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
@@ -133,8 +129,10 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges) {
 			birthIdx = ufComp.link(parentIdx0, parentIdx1);
 			birth = ufComp.getBirth(birthIdx);
 			if (edge->birth != birth) {
+				#ifdef COMPUTE_COMPARISON
 				birthCoordinates = ufComp.getCoordinates(birthIdx);
 				pairsComp.push_back(Pair(*edge, Cube(birth, birthCoordinates[0], birthCoordinates[1], birthCoordinates[2], 0)));
+				#endif
 				auto find0 = matchMap0.find(birthIdx);
 				auto find1 = matchMap1.find(birthIdx);
 				if (find0 != matchMap0.end() && find1 != matchMap1.end()) {

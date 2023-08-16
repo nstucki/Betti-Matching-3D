@@ -52,7 +52,6 @@ void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 	cout <<"barcode: ";
 	auto start = high_resolution_clock::now();
 	#endif
-
 	const CubicalGridComplex* const cgc = (k == 0) ? cgc0 : cgc1;
 	UnionFind& uf = (k == 0) ? uf0 : uf1; 
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
@@ -78,7 +77,6 @@ void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 			}
 		}
 	}
-
 	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
@@ -91,7 +89,6 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 	cout << "barcodes & matching: ";
 	auto start = high_resolution_clock::now();
 	#endif
-	
 	vector<index_t> boundaryIndices(2);
 	index_t parentIdx0;
 	index_t parentIdx1;
@@ -115,7 +112,9 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 			birthIdx1 = uf1.link(parentIdx0, parentIdx1);
 			if (birth != edge->birth) {
 				birthCoordinates = ufComp.getCoordinates(birthIdxComp);
+				#ifdef COMPUTE_COMPARISON
 				pairsComp.push_back(Pair(Cube(birth, birthCoordinates[0], birthCoordinates[1], birthCoordinates[2], 0), *edge));
+				#endif
 				auto find0 = matchMap0.find(birthIdx0);
 				auto find1 = matchMap1.find(birthIdx1);
 				if (find0 != matchMap0.end() && find1 != matchMap1.end()) {
@@ -126,7 +125,6 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 			} 
 		}
 	}
-
 	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
@@ -139,7 +137,6 @@ void Dimension0::enumerateEdges(const CubicalGridComplex* const cgc, vector<Cube
 	cout << "enumeration: ";
 	auto start = high_resolution_clock::now();
 	#endif
-
 	edges.reserve(cgc->getNumberOfCubes(1));
 	value_t birth;
 	for (index_t x = 0; x < cgc->shape[0]; x++) {
@@ -153,7 +150,6 @@ void Dimension0::enumerateEdges(const CubicalGridComplex* const cgc, vector<Cube
 		}
 	}
 	sort(edges.begin(), edges.end(), CubeComparator());
-
 	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
