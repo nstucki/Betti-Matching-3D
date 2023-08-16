@@ -8,6 +8,8 @@ using namespace std;
 
 #define RUNTIME
 //#define COMPUTE_COMPARISON
+
+#define USE_EMERGENT_PAIRS
 #define USE_CLEARING_DIM_0
 
 #define INFTY numeric_limits<value_t>::infinity()
@@ -30,7 +32,7 @@ struct Config {
 
 	value_t threshold = numeric_limits<value_t>::infinity();
 
-	size_t minRecursionToCache = 0;
+	size_t minRecursionToCache = 1;
 	size_t cacheSize = 1 << 31;
 
 	bool verbose = false;
