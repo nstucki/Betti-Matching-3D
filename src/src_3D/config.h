@@ -30,8 +30,8 @@ struct Config {
 
 	value_t threshold = numeric_limits<value_t>::infinity();
 
-	index_t minRecursionToCache = 0;
-	index_t cacheSize = 1 << 31;
+	size_t minRecursionToCache = 0;
+	size_t cacheSize = 1 << 31;
 
 	bool verbose = false;
 };

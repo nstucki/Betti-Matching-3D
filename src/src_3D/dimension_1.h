@@ -35,9 +35,9 @@ class Dimension1 {
 	unordered_map<uint64_t, uint64_t> pivotColumnIndex;
 	unordered_map<uint64_t, CubeQueue> cache;
 
-	void computePairsComp(vector<Cube>& ctr);
 	void computePairs(const vector<Cube>& ctr, uint8_t k);
-	void computeImagePairs(const vector<Cube>& ctr, uint8_t k);
+	void computePairsComp(vector<Cube>& ctr);
+	void computeImagePairs(vector<Cube>& ctr, uint8_t k);
 	void computeMatching();
 	void enumerateEdges(const CubicalGridComplex* const cgc, vector<Cube>& edges) const;
 	Cube popPivot(CubeQueue& column) const;
