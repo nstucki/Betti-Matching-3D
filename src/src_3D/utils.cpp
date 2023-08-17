@@ -21,12 +21,12 @@ void readImage(const string& filename, const fileFormat& format, vector<double>&
             fin.read((char *) &d, sizeof(int64_t));
             shape.push_back(d);
             n = d;
-            if (dim>1) {
+            if (dim > 1) {
                 fin.read((char *) &d, sizeof(int64_t));
                 shape.push_back(d);
                 n *= d;
             }
-            if (dim>2) {
+            if (dim > 2) {
                 fin.read((char *)&d, sizeof(int64_t));
                 shape.push_back(d);
                 n *= d;
@@ -47,17 +47,16 @@ void readImage(const string& filename, const fileFormat& format, vector<double>&
             string reading_line_buffer; 
             getline(reading_file, reading_line_buffer); 
             uint8_t dim = atoi(reading_line_buffer.c_str());
-            assert(dim < 4);
             uint64_t n;
             getline(reading_file, reading_line_buffer);
             shape.push_back(atoi(reading_line_buffer.c_str()));
             n = shape[0];
-            if (dim>1) {
+            if (dim > 1) {
                 getline(reading_file, reading_line_buffer); 
                 shape.push_back(atoi(reading_line_buffer.c_str()));
                 n *= shape[1];
             }
-            if (dim>2) {
+            if (dim > 2) {
                 getline(reading_file, reading_line_buffer);
                 shape.push_back(atoi(reading_line_buffer.c_str()));
                 n *= shape[2];
@@ -82,7 +81,6 @@ void readImage(const string& filename, const fileFormat& format, vector<double>&
                 exit(-2);
             }
             uint8_t dim = shape.size();
-            assert (dim < 4);
             for (uint32_t i : _shape) { shape.push_back(i); }
             return;
         }

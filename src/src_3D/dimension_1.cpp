@@ -17,7 +17,7 @@ Dimension1::Dimension1(const CubicalGridComplex* const _cgc0, const CubicalGridC
 
 void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
 	#ifdef RUNTIME
-	cout << "input 0:" << endl;
+	cout << endl << "input 0: ";
 	#endif
 	computePairs(ctr0, 0);
 	#ifdef USE_CLEARING_DIM_0
@@ -26,7 +26,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	#endif
 
 	#ifdef RUNTIME
-	cout << "input 1:" << endl;
+	cout << endl << "input 1: ";
 	#endif
 	pivotColumnIndex.clear();
 	cache.clear();
@@ -37,7 +37,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	#endif
 
 	#ifdef RUNTIME
-	cout << "comparison image:" << endl;
+	cout << endl << "comparison: ";
 	#endif
 	pivotColumnIndex.clear();
 	cache.clear();
@@ -49,7 +49,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	#endif
 
 	#ifdef RUNTIME
-	cout << "image 0:" << endl;
+	cout << endl << "image 0: ";
 	#endif
 	pivotColumnIndex.clear();
 	cache.clear();
@@ -60,7 +60,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	#endif
 
 	#ifdef RUNTIME
-	cout << "image 1:" << endl;
+	cout << endl << "image 1: ";
 	#endif
 	pivotColumnIndex.clear();
 	cache.clear();
@@ -78,7 +78,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 
 void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	#ifdef RUNTIME
-	cout << "barcode: ";
+	cout << "barcode ";
 	auto start = high_resolution_clock::now();
 	#endif
 	const CubicalGridComplex* const cgc = (k == 0) ? cgc0 : cgc1;
@@ -179,13 +179,13 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms with " << numEmergentPairs << " emergent pairs" << endl;
+	cout << duration.count() << " ms with " << numEmergentPairs << " emergent pairs";
 	#endif
 }
 
 void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	#ifdef RUNTIME
-	cout << "barcode: ";
+	cout << "barcode ";
 	auto start = high_resolution_clock::now();
 	#endif
 	size_t ctrSize = ctr.size();
@@ -291,13 +291,13 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms with " << numEmergentPairs << " emergent pairs" << endl;
+	cout << duration.count() << " ms with " << numEmergentPairs << " emergent pairs";
 	#endif
 }
 
 void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 	#ifdef RUNTIME
-	cout << "barcode: ";
+	cout << "barcode ";
 	auto start = high_resolution_clock::now();
 	#endif
 	const CubicalGridComplex* const cgc = (k == 0) ? cgc0 : cgc1;
@@ -409,7 +409,7 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms with " << numEmergentPairs << " emergent pairs" << endl;
+	cout << duration.count() << " ms with " << numEmergentPairs << " emergent pairs";
 	#endif
 }
 
@@ -438,13 +438,13 @@ void Dimension1::computeMatching() {
 	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
+	cout << duration.count() << " ms";
 	#endif
 }
 
 void Dimension1::enumerateEdges(const CubicalGridComplex* const cgc, vector<Cube>& edges) const {
 	#ifdef RUNTIME
-	cout << "enumeration: ";
+	cout << ", enumeration ";
 	auto start = high_resolution_clock::now();
 	#endif
 	edges.reserve(cgc->getNumberOfCubes(1));
@@ -468,7 +468,7 @@ void Dimension1::enumerateEdges(const CubicalGridComplex* const cgc, vector<Cube
 	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
+	cout << duration.count() << " ms";
 	#endif
 }
 

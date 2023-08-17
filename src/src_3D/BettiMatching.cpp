@@ -83,7 +83,6 @@ int main(int argc, char** argv) {
 		cerr << "couldn't open file " << config.filename1 << endl;
 		exit(-1);
 	}
-
     vector<value_t> image0;
     vector<value_t> image1;
     vector<value_t> imageComp;
@@ -95,14 +94,18 @@ int main(int argc, char** argv) {
         readImage(config.filename1, config.format1, image1, shape1);
         assert (shape0 == shape1);
         shape = shape0;
-        transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](value_t a, value_t b) 
-        { return min(a, b); });
+        transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), 
+                    [](value_t a, value_t b) { return min(a, b); });
     }
     #ifdef RUNTIME
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
     auto duration_total = duration;
-    cout << "of shape (" << shape[0] << "," << shape[1] << "," << shape[2] << ") ... ";
+    cout << "of shape (" << shape[0];
+    for (uint8_t i = 1; i < shape.size(); i++) {
+        cout << "," << shape[i];
+    }
+    cout << ") ... ";
     cout << duration.count() << " ms" << endl << endl;
     #endif
 
@@ -113,14 +116,12 @@ int main(int argc, char** argv) {
     CubicalGridComplex* cgc0 = new CubicalGridComplex(std::move(image0), shape);
     CubicalGridComplex* cgc1 = new CubicalGridComplex(std::move(image1), shape);
     CubicalGridComplex* cgcComp = new CubicalGridComplex(std::move(imageComp), shape);
-
     vector<vector<Pair>> pairs0(3);
     vector<vector<Pair>> pairs1(3);
     vector<vector<Pair>> pairsComp(3);
     vector<vector<Match>> matches(3);
     vector<unordered_map<uint64_t, bool>> isMatched0(3);
 	vector<unordered_map<uint64_t, bool>> isMatched1(3);
-
     vector<Cube> ctr0;
     vector<Cube> ctr1;
     vector<Cube> ctrComp;
@@ -132,7 +133,7 @@ int main(int argc, char** argv) {
 
     {   
         #ifdef RUNTIME
-        cout << "computing dimension 2 ... " << endl;
+        cout << "computing dimension 2 ... ";
         start = high_resolution_clock::now();
         #endif
         Dimension2 dim2(cgc0, cgc1, cgcComp,  config, pairs0[2], pairs1[2], pairsComp[2], matches[2], isMatched0[2], isMatched1[2]);       
@@ -140,13 +141,12 @@ int main(int argc, char** argv) {
         #ifdef RUNTIME
         stop = high_resolution_clock::now();
         duration = duration_cast<milliseconds>(stop - start);
-        cout << "total: " << duration.count() << " ms" << endl << endl;
+        cout << endl << "total: " << duration.count() << " ms" << endl << endl;
         #endif
     }
-
     {   
         #ifdef RUNTIME
-        cout << "computing dimension 1 ... " << endl;
+        cout << "computing dimension 1 ... ";
         start = high_resolution_clock::now();
         #endif
         Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);       
@@ -154,13 +154,12 @@ int main(int argc, char** argv) {
         #ifdef RUNTIME
         stop = high_resolution_clock::now();
         duration = duration_cast<milliseconds>(stop - start);
-        cout << "total: " << duration.count() << " ms" << endl << endl;
+        cout << endl << "total: " << duration.count() << " ms" << endl << endl;
         #endif
     }
-    
     {   
         #ifdef RUNTIME
-        cout << "computing dimension 0 ... " << endl;
+        cout << "computing dimension 0 ... ";
         start = high_resolution_clock::now();
         #endif
         Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);       
@@ -168,12 +167,12 @@ int main(int argc, char** argv) {
         #ifdef RUNTIME
         stop = high_resolution_clock::now();
         duration = duration_cast<milliseconds>(stop - start);
-        cout << "total: " << duration.count() << " ms" << endl << endl;
+        cout << endl << "total: " << duration.count() << " ms" << endl << endl;
         #endif
     }
 
     #ifdef RUNTIME
-    cout << "computing voxels ... " << endl;
+    cout << "computing voxels ... ";
     start = high_resolution_clock::now();
     #endif
     vector<vector<VoxelPair>> unmatched0(3);

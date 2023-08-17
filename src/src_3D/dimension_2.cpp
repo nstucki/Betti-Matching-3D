@@ -19,20 +19,20 @@ Dimension2::Dimension2(const CubicalGridComplex* const _cgc0, const CubicalGridC
 
 void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
 	#ifdef RUNTIME
-	cout << "input & image 0:" << endl;
+	cout << endl << "input & image 0: ";
 	#endif
 	enumerateDualEdges(cgc0, ctr0);
     computeImagePairs(ctr0, 0);
 
 	#ifdef RUNTIME
-	cout << "input & image 1:" << endl;
+	cout << endl << "input & image 1: ";
 	#endif
 	enumerateDualEdges(cgc1, ctr1);
 	ufComp.reset();
     computeImagePairs(ctr1, 1);
     
 	#ifdef RUNTIME
-	cout << "comparison image & matching:" << endl;
+	cout << endl << "comparison & matching: ";
 	#endif
 	enumerateDualEdges(cgcComp, ctrComp);
 	ufComp.reset();
@@ -41,7 +41,7 @@ void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 
 void Dimension2::enumerateDualEdges(const CubicalGridComplex* const cgc, vector<Cube>& dualEdges) const {
 	#ifdef RUNTIME
-	cout << "enumeration: ";
+	cout << "enumeration ";
 	auto start = high_resolution_clock::now();
 	#endif 
 	dualEdges.clear();
@@ -61,13 +61,13 @@ void Dimension2::enumerateDualEdges(const CubicalGridComplex* const cgc, vector<
 	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
+	cout << duration.count() << " ms, ";
 	#endif
 }
 
 void Dimension2::computeImagePairs(vector<Cube>& dualEdges, uint8_t k) {
 	#ifdef RUNTIME
-	cout << "barcodes: ";
+	cout << "barcodes ";
 	auto start = high_resolution_clock::now();
 	#endif
 	const CubicalGridComplex* const cgc = (k == 0) ? cgc0 : cgc1;
@@ -105,13 +105,13 @@ void Dimension2::computeImagePairs(vector<Cube>& dualEdges, uint8_t k) {
 	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
+	cout << duration.count() << " ms";
 	#endif
 }
 
 void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges) {
 	#ifdef RUNTIME
-	cout << "barcode and matching: ";
+	cout << "barcode and matching ";
 	auto start = high_resolution_clock::now();
 	#endif 
 
@@ -150,6 +150,6 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges) {
 	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms" << endl;
+	cout << duration.count() << " ms";
 	#endif
 }
