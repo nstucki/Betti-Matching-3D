@@ -5,10 +5,7 @@
 using namespace std;
 
 
-Cube::Cube() {
-    birth = 0;
-    index = NONE;
-}
+Cube::Cube() : birth(0), index(NONE) {}
 
 Cube::Cube(const Cube& cube) : birth(cube.birth), index(cube.index) {}
 

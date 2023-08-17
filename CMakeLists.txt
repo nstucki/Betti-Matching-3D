@@ -31,12 +31,12 @@ add_executable(BettiMatchingND
 
 add_executable(BettiMatching
     src/BettiMatching.cpp
+    src/utils.cpp
     src/src_3D/dimension_0.cpp
     src/src_3D/dimension_1.cpp
     src/src_3D/dimension_2.cpp
     src/src_3D/data_structures.cpp
     src/src_3D/enumerators.cpp
-    src/src_3D/utils.cpp
 )
 
 set_target_properties(BettiMatchingND BettiMatching betti_matching

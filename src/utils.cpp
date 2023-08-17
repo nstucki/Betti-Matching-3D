@@ -87,11 +87,11 @@ void readImage(const string& filename, const fileFormat& format, vector<double>&
     }
 }
 
-void tokenize(const string& str, const char delim, vector<string>& out) { 
-    stringstream ss(str); 
-    string s; 
-    while (getline(ss, s, delim)) { out.push_back(s); } 
-}
+// void tokenize(const string& str, const char delim, vector<string>& out) { 
+//     stringstream ss(str); 
+//     string s; 
+//     while (getline(ss, s, delim)) { out.push_back(s); } 
+// }
 
 void computeVoxels(const CubicalGridComplex* const cgc0, const CubicalGridComplex* const cgc1, 
                     const vector<vector<Pair>>& pairs0, const vector<vector<Pair>>& pairs1, const vector<vector<Match>>& matches, 

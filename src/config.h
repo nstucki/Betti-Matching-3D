@@ -6,17 +6,16 @@
 
 using namespace std;
 
-#define RUNTIME
 //#define COMPUTE_COMPARISON
-
+#define RUNTIME
 #define USE_EMERGENT_PAIRS
 #define USE_CLEARING_DIM_0
 
-#define INFTY numeric_limits<value_t>::infinity()
-#define NONE numeric_limits<index_t>::max()
-
 typedef uint32_t index_t;
 typedef double value_t;
+
+#define INFTY numeric_limits<value_t>::infinity()
+#define NONE numeric_limits<index_t>::max()
 
 enum fileFormat { DIPHA, PERSEUS, NUMPY };
 

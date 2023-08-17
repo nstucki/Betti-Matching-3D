@@ -1,7 +1,7 @@
 #pragma once
 
 #include "data_structures.h"
-#include "config.h"
+#include "../config.h"
 
 #include <unordered_map>
 
