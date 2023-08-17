@@ -24,9 +24,9 @@ enum fileFormat { DIPHA, PERSEUS, NUMPY };
 struct Config {
 	string filename0 = "";
 	string filename1 = "";
-	string matchedFilename = "../matched.csv";
-	string unmatched0Filename = "../unmatched_0.csv";
-	string unmatched1Filename = "../unmatched_1.csv";
+	string matchedFilename = "matched.csv";
+	string unmatched0Filename = "unmatched_0.csv";
+	string unmatched1Filename = "unmatched_1.csv";
 	fileFormat format0;
 	fileFormat format1;
 
@@ -36,4 +36,5 @@ struct Config {
 	size_t cacheSize = 1 << 31;
 
 	bool verbose = false;
+	bool saveResult = false;
 };

@@ -1,7 +1,7 @@
-#include "utils.h"
-#include "dimension_0.h"
-#include "dimension_1.h"
-#include "dimension_2.h"
+#include "src_3D/utils.h"
+#include "src_3D/dimension_0.h"
+#include "src_3D/dimension_1.h"
+#include "src_3D/dimension_2.h"
 
 #include <iostream>
 #include <sstream> 
@@ -26,11 +26,12 @@ void print_usage_and_exit(int exit_code) {
          << "  --help, -h                      print this screen" << endl
          << "  --threshold, -t                 compute persistent homology of up to threshold" << endl
          << "  --verbose, -v                   print result in console" << endl
+         << "  --save, -s                      save result in .txt files" << endl
          << "  --min_recursion_to_cache, -mc   minimum number of recursion for a reduced column to be cached" << endl
          << "  --cache_size, -c	          maximum number of reduced columns to be cached" << endl
-         << "  --matched, -m                   name of the file containing matched pairs" << endl
-         << "  --unmatchedmatched_0, -u0       name of the file containing unmatched pairs of input 0" << endl
-         << "  --unmatchedmatched_1, -u1       name of the file containing unmatched pairs of input 1" << endl                
+         << "  --matched, -m                   name of the .txt file containing matched pairs" << endl
+         << "  --unmatchedmatched_0, -u0       name of the .txt file containing unmatched pairs of input 0" << endl
+         << "  --unmatchedmatched_1, -u1       name of the .txt file containing unmatched pairs of input 1" << endl                
          << endl;
 	exit(exit_code);
 }
@@ -45,7 +46,9 @@ int main(int argc, char** argv) {
     Config config;
     for (int i = 1; i < argc; ++i) {
 		const string arg(argv[i]);
-		if (arg == "--help" || arg == "-h") { print_usage_and_exit(0); } 
+		if (arg == "--help" || arg == "-h") { print_usage_and_exit(0); }
+        else if (arg == "--threshold" || arg == "-t") { config.threshold = stoi(argv[++i]); }
+        else if (arg == "--save" || arg == "-s") { config.minRecursionToCache = stoi(argv[++i]); } 
         else if (arg == "--verbose" || arg == "-v") { config.verbose = true; } 
         else if (arg == "--matched" || arg == "-m") { config.matchedFilename = string(argv[++i]); } 
         else if (arg == "--unmatched_0" || arg == "-u0") { config.unmatched0Filename = string(argv[++i]); } 
@@ -193,4 +196,6 @@ int main(int argc, char** argv) {
 
     if (config.verbose) { printResult(cgc0, cgc1, cgcComp, pairs0, pairs1, pairsComp, isMatched0, isMatched1, matches, matched, 
                                         unmatched0, unmatched1); }
+
+    if (config.saveResult) {}
 }

@@ -29,8 +29,8 @@ add_executable(BettiMatchingND
     src/src_nD/betti_matching_nD.cpp
 )
 
-add_executable(BettiMatching3D
-    src/src_3D/BettiMatching.cpp
+add_executable(BettiMatching
+    src/BettiMatching.cpp
     src/src_3D/dimension_0.cpp
     src/src_3D/dimension_1.cpp
     src/src_3D/dimension_2.cpp
@@ -39,7 +39,7 @@ add_executable(BettiMatching3D
     src/src_3D/utils.cpp
 )
 
-set_target_properties(BettiMatchingND BettiMatching3D betti_matching
+set_target_properties(BettiMatchingND BettiMatching betti_matching
 PROPERTIES
 CXX_STANDARD 17
 CXX_EXTENSIONS OFF
