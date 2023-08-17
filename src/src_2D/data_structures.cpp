@@ -199,7 +199,7 @@ index_t UnionFind::link(index_t x, index_t y) {
 	}
 }
 
-value_t UnionFind::getBirth(index_t idx) const { return birthtime[idx]; }
+value_t UnionFind::getBirth(const index_t& idx) const { return birthtime[idx]; }
 
 vector<index_t> UnionFind::getCoordinates(index_t idx) const { 
 	return {idx/cgc.shape[1],idx%cgc.shape[1]};
@@ -274,7 +274,7 @@ index_t UnionFindDual::link(index_t x, index_t y){
 	}
 }
 
-value_t UnionFindDual::getBirth(index_t x) const { return birthtime[x]; }
+value_t UnionFindDual::getBirth(const index_t& x) const { return birthtime[x]; }
 
 vector<index_t> UnionFindDual::getCoordinates(index_t x) const { 
 	return {x/(cgc.n_yz),x/(cgc.n_z)%(cgc.n_y),x%(cgc.n_z)};

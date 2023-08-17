@@ -100,7 +100,7 @@ namespace D2 {
 		UnionFind(const CubicalGridComplex& cgc);
 		index_t find(index_t x);
 		index_t link(index_t x, index_t y);
-		value_t getBirth(index_t x) const;
+		value_t getBirth(const index_t& x) const;
 		vector<index_t> getCoordinates(index_t x) const;
 		vector<index_t> getBoundaryIndices(const Cube& edge) const;
 		void reset();
@@ -116,7 +116,7 @@ namespace D2 {
 		UnionFindDual(const CubicalGridComplex& cgc);
 		index_t find(index_t x);
 		index_t link(index_t x, index_t y);
-		value_t getBirth(index_t x) const;
+		value_t getBirth(const index_t& x) const;
 		vector<index_t> getCoordinates(index_t x) const;
 		vector<index_t> getBoundaryIndices(const Cube& edge) const;
 		void reset();

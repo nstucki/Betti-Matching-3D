@@ -82,7 +82,7 @@ index_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
 			return m_x*shape[1]*shape[2] + shape[0]*m_y*shape[2] + shape[0]*shape[1]*m_z;
 
 		case 2:
-			return m_x*m_y*shape[2] + m_x*shape[1]*m_z + shape[0]*m_y*m_z;
+			return m_x*m_y*shape[2] + m_x*shape[1]*m_z + shape[0]*m_yz;
 
 		case 3:
 			return m_x*m_y*m_z;
