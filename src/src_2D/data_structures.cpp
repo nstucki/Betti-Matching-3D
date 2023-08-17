@@ -234,16 +234,16 @@ void CubicalGridComplex::getGridFromVector(const vector<value_t> vec) {
 }
 
 
-UnionFind::UnionFind(const CubicalGridComplex& _cgc) : cgc(_cgc) {
-	index_t n = cgc.getNumberOfCubes(0);
+UnionFind::UnionFind(const CubicalGridComplex* const _cgc) : cgc(_cgc) {
+	index_t n = cgc->getNumberOfCubes(0);
 	parent.reserve(n);
 	birthtime.reserve(n);
 	index_t i = 0;
-	for (index_t x = 0; x < _cgc.shape[0]; x++) {
-		for (index_t y = 0; y < _cgc.shape[1]; y++) {
-			for(index_t z = 0; z < _cgc.shape[2]; z++){
+	for (index_t x = 0; x < _cgc->shape[0]; x++) {
+		for (index_t y = 0; y < _cgc->shape[1]; y++) {
+			for(index_t z = 0; z < _cgc->shape[2]; z++){
 				parent.push_back(i++);
-				birthtime.push_back(cgc.getBirth(x, y, z));
+				birthtime.push_back(cgc->getBirth(x, y, z));
 			}
 		}
 	}
@@ -285,25 +285,25 @@ index_t UnionFind::link(index_t x, index_t y) {
 value_t UnionFind::getBirth(index_t x) const { return birthtime[x]; }
 
 vector<index_t> UnionFind::getCoordinates(index_t x) const { 
-	return {x/(cgc.m_yz),x/(cgc.shape[2])%(cgc.shape[1]),x%(cgc.shape[2])};
+	return {x/(cgc->m_yz),x/(cgc->shape[2])%(cgc->shape[1]),x%(cgc->shape[2])};
 }
 
 vector<index_t> UnionFind::getBoundaryIndices(const Cube& edge) const {
 	vector<index_t> boundaryIndices(2);
 	switch (edge.type()) {
 		case 0:
-			boundaryIndices[0] = (edge.x())*(cgc.m_yz) + (edge.y())*(cgc.shape[2]) + (edge.z());
-			boundaryIndices[1] = (edge.x()+1)*(cgc.m_yz) + (edge.y())*(cgc.shape[2]) + (edge.z());
+			boundaryIndices[0] = (edge.x())*(cgc->m_yz) + (edge.y())*(cgc->shape[2]) + (edge.z());
+			boundaryIndices[1] = (edge.x()+1)*(cgc->m_yz) + (edge.y())*(cgc->shape[2]) + (edge.z());
 			return boundaryIndices;
 
 		case 1:
-			boundaryIndices[0] = (edge.x())*(cgc.m_yz) + (edge.y())*(cgc.shape[2]) + (edge.z());
-			boundaryIndices[1] = (edge.x())*(cgc.m_yz) + (edge.y()+1)*(cgc.shape[2]) + (edge.z());
+			boundaryIndices[0] = (edge.x())*(cgc->m_yz) + (edge.y())*(cgc->shape[2]) + (edge.z());
+			boundaryIndices[1] = (edge.x())*(cgc->m_yz) + (edge.y()+1)*(cgc->shape[2]) + (edge.z());
 			return boundaryIndices;
 
 		case 2:
-			boundaryIndices[0] = (edge.x())*(cgc.m_yz) + (edge.y())*(cgc.shape[2]) + (edge.z());
-			boundaryIndices[1] = (edge.x())*(cgc.m_yz) + (edge.y())*(cgc.shape[2]) + (edge.z()+1);
+			boundaryIndices[0] = (edge.x())*(cgc->m_yz) + (edge.y())*(cgc->shape[2]) + (edge.z());
+			boundaryIndices[1] = (edge.x())*(cgc->m_yz) + (edge.y())*(cgc->shape[2]) + (edge.z()+1);
 			return boundaryIndices;
 	}
 	return boundaryIndices;
@@ -312,16 +312,16 @@ vector<index_t> UnionFind::getBoundaryIndices(const Cube& edge) const {
 void UnionFind::reset() { for (size_t i = 0; i < parent.size(); i++) { parent[i] = i; } }
 
 
-UnionFindDual::UnionFindDual(const CubicalGridComplex& _cgc) : cgc(_cgc) {
-	index_t n = cgc.getNumberOfCubes(3) + 1;
+UnionFindDual::UnionFindDual(const CubicalGridComplex* const _cgc) : cgc(_cgc) {
+	index_t n = cgc->getNumberOfCubes(3) + 1;
 	parent.reserve(n);
 	birthtime.reserve(n);
 	index_t i = 0;
-	for (index_t x = 0; x < _cgc.n_x; x++) {
-		for (index_t y = 0; y < _cgc.n_y; y++) {
-			for(index_t z = 0; z < _cgc.n_z; z++) {
+	for (index_t x = 0; x < _cgc->n_x; x++) {
+		for (index_t y = 0; y < _cgc->n_y; y++) {
+			for(index_t z = 0; z < _cgc->n_z; z++) {
 				parent.push_back(i++);
-				birthtime.push_back(cgc.getBirth(x, y, z, 0, 3));
+				birthtime.push_back(cgc->getBirth(x, y, z, 0, 3));
 			}
 		}
 	}
@@ -365,31 +365,31 @@ index_t UnionFindDual::link(index_t x, index_t y){
 value_t UnionFindDual::getBirth(index_t x) const { return birthtime[x]; }
 
 vector<index_t> UnionFindDual::getCoordinates(index_t x) const { 
-	return {x/(cgc.n_yz),x/(cgc.n_z)%(cgc.n_y),x%(cgc.n_z)};
+	return {x/(cgc->n_yz),x/(cgc->n_z)%(cgc->n_y),x%(cgc->n_z)};
 }
 
 vector<index_t> UnionFindDual::getBoundaryIndices(const Cube& edge) const {
 	vector<index_t> boundaryIndices(2);
 	switch (edge.type()) {
 		case 0:
-			if (edge.x() == 0) { boundaryIndices[0] = (cgc.n_xyz); }
-			else { boundaryIndices[0] = (edge.x()-1)*(cgc.n_yz) + (edge.y())*(cgc.n_z) + (edge.z()); }
-			if (edge.x() == cgc.n_x) { boundaryIndices[1] = (cgc.n_xyz); }
-			else { boundaryIndices[1] = (edge.x())*(cgc.n_yz) + (edge.y())*(cgc.n_z) + (edge.z()); }
+			if (edge.x() == 0) { boundaryIndices[0] = (cgc->n_xyz); }
+			else { boundaryIndices[0] = (edge.x()-1)*(cgc->n_yz) + (edge.y())*(cgc->n_z) + (edge.z()); }
+			if (edge.x() == cgc->n_x) { boundaryIndices[1] = (cgc->n_xyz); }
+			else { boundaryIndices[1] = (edge.x())*(cgc->n_yz) + (edge.y())*(cgc->n_z) + (edge.z()); }
 			return boundaryIndices;
 
 		case 1:
-			if (edge.y() == 0) { boundaryIndices[0] = (cgc.n_xyz); }
-			else { boundaryIndices[0] = (edge.x())*(cgc.n_yz) + (edge.y()-1)*(cgc.n_z) + (edge.z()); }
-			if (edge.y() == cgc.n_y) { boundaryIndices[1] = (cgc.n_xyz); }
-			else { boundaryIndices[1] = (edge.x())*(cgc.n_yz) + (edge.y())*(cgc.n_z) + (edge.z()); }	
+			if (edge.y() == 0) { boundaryIndices[0] = (cgc->n_xyz); }
+			else { boundaryIndices[0] = (edge.x())*(cgc->n_yz) + (edge.y()-1)*(cgc->n_z) + (edge.z()); }
+			if (edge.y() == cgc->n_y) { boundaryIndices[1] = (cgc->n_xyz); }
+			else { boundaryIndices[1] = (edge.x())*(cgc->n_yz) + (edge.y())*(cgc->n_z) + (edge.z()); }	
 			return boundaryIndices;
 
 		case 2:
-			if (edge.z() == 0) { boundaryIndices[0] = (cgc.n_xyz); }
-			else { boundaryIndices[0] = (edge.x())*(cgc.n_yz) + (edge.y())*(cgc.n_z) + (edge.z()-1); }
-			if (edge.z() == cgc.n_z) { boundaryIndices[1] = (cgc.n_xyz); }
-			else { boundaryIndices[1] = (edge.x())*(cgc.n_yz) + (edge.y())*(cgc.n_z) + (edge.z()); }
+			if (edge.z() == 0) { boundaryIndices[0] = (cgc->n_xyz); }
+			else { boundaryIndices[0] = (edge.x())*(cgc->n_yz) + (edge.y())*(cgc->n_z) + (edge.z()-1); }
+			if (edge.z() == cgc->n_z) { boundaryIndices[1] = (cgc->n_xyz); }
+			else { boundaryIndices[1] = (edge.x())*(cgc->n_yz) + (edge.y())*(cgc->n_z) + (edge.z()); }
 			return boundaryIndices;
 	}
 	return boundaryIndices;

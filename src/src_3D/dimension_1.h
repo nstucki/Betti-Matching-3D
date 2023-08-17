@@ -11,15 +11,15 @@ typedef priority_queue<Cube, vector<Cube>, CubeComparator> CubeQueue;
 
 class Dimension1 {
 	public:
-	Dimension1(const CubicalGridComplex* const cgc0, const CubicalGridComplex* const cgc1, const CubicalGridComplex* const cgcComp, 
+	Dimension1(const CubicalGridComplex& cgc0, const CubicalGridComplex& cgc1, const CubicalGridComplex& cgcComp, 
 				const Config& config, vector<Pair>& pairs0, vector<Pair>& pairs1, vector<Pair>& pairsComp,
 				vector<Match>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1);
 	void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp);
 
 	private:
-	const CubicalGridComplex* const cgc0;
-	const CubicalGridComplex* const cgc1;
-	const CubicalGridComplex* const cgcComp;
+	const CubicalGridComplex& cgc0;
+	const CubicalGridComplex& cgc1;
+	const CubicalGridComplex& cgcComp;
 	const Config& config;
 	vector<Pair>& pairs0;
 	vector<Pair>& pairs1;
@@ -39,7 +39,7 @@ class Dimension1 {
 	void computePairsComp(vector<Cube>& ctr);
 	void computeImagePairs(vector<Cube>& ctr, uint8_t k);
 	void computeMatching();
-	void enumerateEdges(const CubicalGridComplex* const cgc, vector<Cube>& edges) const;
+	void enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const;
 	Cube popPivot(CubeQueue& column) const;
 	Cube getPivot(CubeQueue& column) const;
 	void addCache(index_t i, CubeQueue &working_boundary);

@@ -8,8 +8,8 @@
 using namespace std::chrono;
 
 
-Dimension1::Dimension1(const CubicalGridComplex* const _cgc0, const CubicalGridComplex* const _cgc1, 
-						const CubicalGridComplex* const _cgcComp, const Config& _config, 
+Dimension1::Dimension1(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, 
+						const CubicalGridComplex& _cgcComp, const Config& _config, 
 						vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, vector<Match>& _matches, 
 						unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1) : 
 						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), pairs0(_pairs0), pairs1(_pairs1),
@@ -81,14 +81,14 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	cout << "barcode ";
 	auto start = high_resolution_clock::now();
 	#endif
-	const CubicalGridComplex* const cgc = (k == 0) ? cgc0 : cgc1;
+	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<uint64_t, Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
 
 	size_t ctrSize = ctr.size();
 	pivotColumnIndex.reserve(ctrSize);
 	cache.reserve(min(config.cacheSize, ctrSize));
-	BoundaryEnumerator enumerator = BoundaryEnumerator(cgc);
+	BoundaryEnumerator enumerator(cgc);
 	#ifdef USE_EMERGENT_PAIRS
 	vector<Cube> faces;
 	#endif
@@ -112,7 +112,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
                 auto findCb = cache.find(j);
                 if (findCb != cache.end()) {
                     cacheHit = true;
-                    auto cachedBoundary = findCb -> second;
+                    auto cachedBoundary = findCb->second;
                     while (!cachedBoundary.empty()) {
                         workingBoundary.push(cachedBoundary.top());
                         cachedBoundary.pop();
@@ -153,7 +153,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 			if (pivot.index != NONE) {
 				auto pair = pivotColumnIndex.find(pivot.index);
 				if (pair != pivotColumnIndex.end()) {
-					j = pair -> second;
+					j = pair->second;
 					++numRecurse;
 					continue;
 				} else {
@@ -216,7 +216,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
                 auto findCb = cache.find(j);
                 if (findCb != cache.end()) {
                     cacheHit = true;
-                    auto cachedBoundary = findCb -> second;
+                    auto cachedBoundary = findCb->second;
                     while (!cachedBoundary.empty()) {
                         workingBoundary.push(cachedBoundary.top());
                         cachedBoundary.pop();
@@ -257,7 +257,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 			if (pivot.index != NONE) {
 				auto pair = pivotColumnIndex.find(pivot.index);
 				if (pair != pivotColumnIndex.end()) {
-					j = pair -> second;
+					j = pair->second;
 					++numRecurse;
 					continue;
 				} else {
@@ -300,7 +300,7 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 	cout << "barcode ";
 	auto start = high_resolution_clock::now();
 	#endif
-	const CubicalGridComplex* const cgc = (k == 0) ? cgc0 : cgc1;
+	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	unordered_map<uint64_t, uint64_t>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
 
 	size_t ctrSize = ctr.size();
@@ -333,7 +333,7 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
                 auto findCb = cache.find(j);
                 if (findCb != cache.end()) {
                     cacheHit = true;
-                    auto cachedBoundary = findCb -> second;
+                    auto cachedBoundary = findCb->second;
                     while (!cachedBoundary.empty()) {
                         workingBoundary.push(cachedBoundary.top());
                         cachedBoundary.pop();
@@ -348,7 +348,7 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 				while (enumerator.hasNextFace()) {
 					#ifdef USE_EMERGENT_PAIRS
 					if (checkEmergentPair) {
-						birth = cgc->getBirth(ctr[j].x(), ctr[j].y(), ctr[j].z(), ctr[j].type(), 2);
+						birth = cgc.getBirth(ctr[j].x(), ctr[j].y(), ctr[j].z(), ctr[j].type(), 2);
 						if (birth == enumerator.nextFace.birth) {
 							if (pivotColumnIndex.find(enumerator.nextFace.index) == pivotColumnIndex.end()) {
 								pivot = enumerator.nextFace;
@@ -442,19 +442,19 @@ void Dimension1::computeMatching() {
 	#endif
 }
 
-void Dimension1::enumerateEdges(const CubicalGridComplex* const cgc, vector<Cube>& edges) const {
+void Dimension1::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
 	#ifdef RUNTIME
 	cout << ", enumeration ";
 	auto start = high_resolution_clock::now();
 	#endif
-	edges.reserve(cgc->getNumberOfCubes(1));
+	edges.reserve(cgc.getNumberOfCubes(1));
 	value_t birth;
 	Cube cube;
-	for (index_t x = 0; x < cgc->shape[0]; x++) {
-		for (index_t y = 0; y < cgc->shape[1]; y++) {
-			for (index_t z = 0; z < cgc->shape[2]; z++) {
+	for (index_t x = 0; x < cgc.shape[0]; x++) {
+		for (index_t y = 0; y < cgc.shape[1]; y++) {
+			for (index_t z = 0; z < cgc.shape[2]; z++) {
 				for (uint8_t type = 0; type < 3; type++) {
-					birth = cgc->getBirth(x, y, z, type, 1);
+					birth = cgc.getBirth(x, y, z, type, 1);
 					if (birth < config.threshold) {
 						cube = Cube(birth, x, y, z, type);
 						auto find = pivotColumnIndex.find(cube.index);

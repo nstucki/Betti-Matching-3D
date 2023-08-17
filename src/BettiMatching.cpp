@@ -1,15 +1,8 @@
 #include "utils.h"
-#include "src_3D/dimension_0.h"
-#include "src_3D/dimension_1.h"
-#include "src_3D/dimension_2.h"
+#include "src_3D/BettiMatching3D.h"
 
 #include <iostream>
-#include <sstream> 
 #include <fstream>
-#include <cfloat>
-#include <chrono>
-#include <algorithm>
-#include <cassert>
 
 using namespace std;
 using namespace std::chrono;
@@ -25,7 +18,7 @@ void print_usage_and_exit(int exit_code) {
          << endl
          << "  --help, -h                      print this screen" << endl
          << "  --threshold, -t                 compute persistent homology of up to threshold" << endl
-         << "  --verbose, -v                   print result in console" << endl
+         << "  --print, -p                     print result to console" << endl
          << "  --save, -s                      save result in .txt files" << endl
          << "  --min_recursion_to_cache, -mc   minimum number of recursion for a reduced column to be cached" << endl
          << "  --cache_size, -c	          maximum number of reduced columns to be cached" << endl
@@ -49,7 +42,7 @@ int main(int argc, char** argv) {
 		if (arg == "--help" || arg == "-h") { print_usage_and_exit(0); }
         else if (arg == "--threshold" || arg == "-t") { config.threshold = stoi(argv[++i]); }
         else if (arg == "--save" || arg == "-s") { config.minRecursionToCache = stoi(argv[++i]); } 
-        else if (arg == "--verbose" || arg == "-v") { config.verbose = true; } 
+        else if (arg == "--print" || arg == "-p") { config.print = true; } 
         else if (arg == "--matched" || arg == "-m") { config.matchedFilename = string(argv[++i]); } 
         else if (arg == "--unmatched_0" || arg == "-u0") { config.unmatched0Filename = string(argv[++i]); } 
         else if (arg == "--unmatched_1" || arg == "-u1") { config.unmatched1Filename = string(argv[++i]); } 
@@ -86,18 +79,20 @@ int main(int argc, char** argv) {
 		cerr << "couldn't open file " << config.filename1 << endl;
 		exit(-1);
 	}
-    vector<value_t> image0;
-    vector<value_t> image1;
-    vector<value_t> imageComp;
+    vector<value_t> input0;
+    vector<value_t> input1;
+    vector<value_t> comparison;
     vector<index_t> shape;
+    size_t dim;
     {   
         vector<index_t> shape0;
         vector<index_t> shape1;
-        readImage(config.filename0, config.format0, image0, shape0);
-        readImage(config.filename1, config.format1, image1, shape1);
+        readImage(config.filename0, config.format0, input0, shape0);
+        readImage(config.filename1, config.format1, input1, shape1);
         assert (shape0 == shape1);
         shape = shape0;
-        transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), 
+        dim = shape.size();
+        transform(input0.begin(), input0.end(), input1.begin(), back_inserter(comparison), 
                     [](value_t a, value_t b) { return min(a, b); });
     }
     #ifdef RUNTIME
@@ -112,81 +107,9 @@ int main(int argc, char** argv) {
     cout << duration.count() << " ms" << endl << endl;
     #endif
 
-    #ifdef RUNTIME
-    cout << "initializing CubicalGridComplex and results ... ";
-    start = start = high_resolution_clock::now();
-    #endif
-    CubicalGridComplex* cgc0 = new CubicalGridComplex(std::move(image0), shape);
-    CubicalGridComplex* cgc1 = new CubicalGridComplex(std::move(image1), shape);
-    CubicalGridComplex* cgcComp = new CubicalGridComplex(std::move(imageComp), shape);
-    vector<vector<Pair>> pairs0(3);
-    vector<vector<Pair>> pairs1(3);
-    vector<vector<Pair>> pairsComp(3);
-    vector<vector<Match>> matches(3);
-    vector<unordered_map<uint64_t, bool>> isMatched0(3);
-	vector<unordered_map<uint64_t, bool>> isMatched1(3);
-    vector<Cube> ctr0;
-    vector<Cube> ctr1;
-    vector<Cube> ctrComp;
-    #ifdef RUNTIME
-    stop = high_resolution_clock::now();
-    duration = duration_cast<milliseconds>(stop - start);
-    cout << duration.count() << " ms" << endl << endl;
-    #endif
-
-    {   
-        #ifdef RUNTIME
-        cout << "computing dimension 2 ... ";
-        start = high_resolution_clock::now();
-        #endif
-        Dimension2 dim2(cgc0, cgc1, cgcComp,  config, pairs0[2], pairs1[2], pairsComp[2], matches[2], isMatched0[2], isMatched1[2]);       
-        dim2.computePairsAndMatch(ctr0, ctr1, ctrComp);
-        #ifdef RUNTIME
-        stop = high_resolution_clock::now();
-        duration = duration_cast<milliseconds>(stop - start);
-        cout << endl << "total: " << duration.count() << " ms" << endl << endl;
-        #endif
-    }
-    {   
-        #ifdef RUNTIME
-        cout << "computing dimension 1 ... ";
-        start = high_resolution_clock::now();
-        #endif
-        Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);       
-        dim1.computePairsAndMatch(ctr0, ctr1, ctrComp);
-        #ifdef RUNTIME
-        stop = high_resolution_clock::now();
-        duration = duration_cast<milliseconds>(stop - start);
-        cout << endl << "total: " << duration.count() << " ms" << endl << endl;
-        #endif
-    }
-    {   
-        #ifdef RUNTIME
-        cout << "computing dimension 0 ... ";
-        start = high_resolution_clock::now();
-        #endif
-        Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);       
-        dim0.computePairsAndMatch(ctr0, ctr1, ctrComp);
-        #ifdef RUNTIME
-        stop = high_resolution_clock::now();
-        duration = duration_cast<milliseconds>(stop - start);
-        cout << endl << "total: " << duration.count() << " ms" << endl << endl;
-        #endif
-    }
-
-    #ifdef RUNTIME
-    cout << "computing voxels ... ";
-    start = high_resolution_clock::now();
-    #endif
-    vector<vector<VoxelPair>> unmatched0(3);
-    vector<vector<VoxelPair>> unmatched1(3);
-    vector<vector<VoxelMatch>> matched(3);
-    computeVoxels(cgc0, cgc1, pairs0, pairs1, matches, isMatched0, isMatched1, unmatched0, unmatched1, matched);
-    #ifdef RUNTIME
-    stop = high_resolution_clock::now();
-    duration = duration_cast<milliseconds>(stop - start);
-    cout << duration.count() << " ms" << endl << endl;
-    #endif
+    BettiMatching3D BM(std::move(input0), std::move(input1), std::move(comparison), std::move(shape), config);
+    BM.computeMatching();
+    BM.computeVoxels();
 
     #ifdef RUNTIME
     stop = high_resolution_clock::now();
@@ -194,8 +117,6 @@ int main(int argc, char** argv) {
     cout << "Betti Matching runtime: " << duration.count() << " ms" << endl << endl;
     #endif
 
-    if (config.verbose) { printResult(cgc0, cgc1, cgcComp, pairs0, pairs1, pairsComp, isMatched0, isMatched1, matches, matched, 
-                                        unmatched0, unmatched1); }
-
+    if (config.print) { BM.printResult(); }
     if (config.saveResult) {}
 }

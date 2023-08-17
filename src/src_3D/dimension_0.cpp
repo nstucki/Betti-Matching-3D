@@ -7,8 +7,8 @@
 using namespace std::chrono;
 
 
-Dimension0::Dimension0(const CubicalGridComplex* const _cgc0, const CubicalGridComplex* const _cgc1, 
-						const CubicalGridComplex* const _cgcComp, const Config& _config, 
+Dimension0::Dimension0(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, 
+						const CubicalGridComplex& _cgcComp, const Config& _config, 
 						vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, vector<Match>& _matches, 
 						unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1) : 
 						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), 
@@ -52,7 +52,7 @@ void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 	cout << "barcode ";
 	auto start = high_resolution_clock::now();
 	#endif
-	const CubicalGridComplex* const cgc = (k == 0) ? cgc0 : cgc1;
+	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	UnionFind& uf = (k == 0) ? uf0 : uf1; 
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<index_t, Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
@@ -132,18 +132,18 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 	#endif
 }
 
-void Dimension0::enumerateEdges(const CubicalGridComplex* const cgc, vector<Cube>& edges) const {
+void Dimension0::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
 	#ifdef RUNTIME
 	cout << "enumeration ";
 	auto start = high_resolution_clock::now();
 	#endif
-	edges.reserve(cgc->getNumberOfCubes(1));
+	edges.reserve(cgc.getNumberOfCubes(1));
 	value_t birth;
-	for (index_t x = 0; x < cgc->shape[0]; x++) {
-		for (index_t y = 0; y < cgc->shape[1]; y++) {
-			for (index_t z = 0; z < cgc->shape[2]; z++) {
+	for (index_t x = 0; x < cgc.shape[0]; x++) {
+		for (index_t y = 0; y < cgc.shape[1]; y++) {
+			for (index_t z = 0; z < cgc.shape[2]; z++) {
 				for (uint8_t type = 0; type < 3; type++) {
-					birth = cgc->getBirth(x, y, z, type, 1);
+					birth = cgc.getBirth(x, y, z, type, 1);
 					if (birth < config.threshold) { edges.push_back(Cube(birth, x, y, z, type)); }	
 				}				
 			}

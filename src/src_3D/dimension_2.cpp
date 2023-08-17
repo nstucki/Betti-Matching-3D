@@ -8,8 +8,8 @@ using namespace std;
 using namespace std::chrono;
 
 
-Dimension2::Dimension2(const CubicalGridComplex* const _cgc0, const CubicalGridComplex* const _cgc1, 
-						const CubicalGridComplex* const _cgcComp, const Config& _config, 
+Dimension2::Dimension2(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, 
+						const CubicalGridComplex& _cgcComp, const Config& _config, 
 						vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, vector<Match>& _matches, 
 						unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1) :
 						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), 
@@ -39,19 +39,19 @@ void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	computeCompPairsAndMatch(ctrComp);
 }
 
-void Dimension2::enumerateDualEdges(const CubicalGridComplex* const cgc, vector<Cube>& dualEdges) const {
+void Dimension2::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& dualEdges) const {
 	#ifdef RUNTIME
 	cout << "enumeration ";
 	auto start = high_resolution_clock::now();
 	#endif 
 	dualEdges.clear();
-	dualEdges.reserve(cgc->getNumberOfCubes(2));
+	dualEdges.reserve(cgc.getNumberOfCubes(2));
 	value_t birth;
-	for (index_t x = 0; x < cgc->shape[0]; x++) {
-		for (index_t y = 0; y < cgc->shape[1]; y++) {
-			for (index_t z = 0; z < cgc->shape[2]; z++) {
+	for (index_t x = 0; x < cgc.shape[0]; x++) {
+		for (index_t y = 0; y < cgc.shape[1]; y++) {
+			for (index_t z = 0; z < cgc.shape[2]; z++) {
 				for (uint8_t type = 0; type < 3; type++) {
-					birth = cgc->getBirth(x, y, z, type, 2);
+					birth = cgc.getBirth(x, y, z, type, 2);
 					if (birth < config.threshold) { dualEdges.push_back(Cube(birth, x, y, z, type)); }
 				}
 			}
@@ -65,12 +65,12 @@ void Dimension2::enumerateDualEdges(const CubicalGridComplex* const cgc, vector<
 	#endif
 }
 
-void Dimension2::computeImagePairs(vector<Cube>& dualEdges, uint8_t k) {
+void Dimension2::computeImagePairs(vector<Cube>& dualEdges, const uint8_t& k) {
 	#ifdef RUNTIME
 	cout << "barcodes ";
 	auto start = high_resolution_clock::now();
 	#endif
-	const CubicalGridComplex* const cgc = (k == 0) ? cgc0 : cgc1;
+	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	UnionFindDual& uf = (k == 0) ? uf0 : uf1; 
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<index_t, Pair>& matchMap = (k==0) ? matchMap0 : matchMap1;

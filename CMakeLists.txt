@@ -32,6 +32,7 @@ add_executable(BettiMatchingND
 add_executable(BettiMatching
     src/BettiMatching.cpp
     src/utils.cpp
+    src/src_3D/BettiMatching3D.cpp
     src/src_3D/dimension_0.cpp
     src/src_3D/dimension_1.cpp
     src/src_3D/dimension_2.cpp

@@ -6,12 +6,12 @@ class BoundaryEnumerator {
 	public:
 	Cube nextFace;
 	
-	BoundaryEnumerator(const CubicalGridComplex* const _cgc);
+	BoundaryEnumerator(const CubicalGridComplex& cgc);
 	void setBoundaryEnumerator(const Cube& cube);
 	bool hasNextFace();
 
 	private:
-	const CubicalGridComplex* const cgc;
+	const CubicalGridComplex& cgc;
 	Cube cube;
 	uint8_t position;
 };

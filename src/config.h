@@ -34,6 +34,6 @@ struct Config {
 	size_t minRecursionToCache = 1;
 	size_t cacheSize = 1 << 31;
 
-	bool verbose = false;
+	bool print = false;
 	bool saveResult = false;
 };

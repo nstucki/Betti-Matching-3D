@@ -8,14 +8,14 @@
 using namespace std;
 
 
-class Cube {
+class Cube_2D {
     public:
 	value_t birth;
 	uint64_t index;
 
-	Cube();
-    Cube(value_t birth, index_t x, index_t y, index_t z, uint8_t type);
-	Cube(const Cube& cube);
+	Cube_2D();
+    Cube_2D(value_t birth, index_t x, index_t y, index_t z, uint8_t type);
+	Cube_2D(const Cube& cube);
 	index_t x() const;
 	index_t y() const;
 	index_t z() const;
@@ -25,53 +25,53 @@ class Cube {
 };
 
 
-struct CubeComparator{ bool operator()(const Cube& Cube1, const Cube& Cube2) const; };
+struct CubeComparator_2D { bool operator()(const Cube& Cube1, const Cube& Cube2) const; };
 
 
-class Pair {
+class Pair_2D {
     public:
 	const Cube birth;
 	const Cube death;
 
-	Pair();
-    Pair(const Cube& birth, const Cube& death);
-	Pair(const Pair& pair);
+	Pair_2D();
+    Pair_2D(const Cube& birth, const Cube& death);
+	Pair_2D(const Pair& pair);
 	bool operator==(const Pair &rhs) const;
 	void print() const;
 };
 
 
-class Match {
+class Match_2D {
 	public:
 	Pair pair0;
 	Pair pair1;
 
-	Match(Pair pair0, Pair pair1);
+	Match_2D(Pair pair0, Pair pair1);
 	void print() const;
 };
 
 
-class VoxelPair {
+class VoxelPair_2D {
 	public:
 	const vector<index_t> birth;
 	const vector<index_t> death;
 
-	VoxelPair(const vector<index_t>& birth, const vector<index_t>& death);
+	VoxelPair_2D(const vector<index_t>& birth, const vector<index_t>& death);
 	void print() const;
 };
 
 
-class VoxelMatch {
+class VoxelMatch_2D {
 	public:
 	const VoxelPair pair0;
 	const VoxelPair pair1;
 
-	VoxelMatch(const VoxelPair& pair0, const VoxelPair& pair1);
+	VoxelMatch_2D(const VoxelPair& pair0, const VoxelPair& pair1);
 	void print() const;
 };
 
 
-class CubicalGridComplex {
+class CubicalGridComplex_2D {
     public:
 	const vector<index_t> shape;
 	const index_t n_x;
@@ -82,8 +82,8 @@ class CubicalGridComplex {
 	const index_t m_yz;
 	const index_t m_xyz;
 
-	CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& shape);
-	~CubicalGridComplex();
+	CubicalGridComplex_2D(const vector<value_t>& image, const vector<index_t>& shape);
+	~CubicalGridComplex_2D();
 	index_t getNumberOfCubes(const uint8_t& dim) const;
 	value_t getBirth(const index_t& x, const index_t& y, const index_t& z) const;
 	value_t getBirth(const index_t& x, const index_t& y, const index_t& z, const uint8_t& type, const uint8_t& dim) const;
@@ -98,9 +98,9 @@ class CubicalGridComplex {
 };
 
 
-class UnionFind {
+class UnionFind_2D {
     public:
-	UnionFind(const CubicalGridComplex& cgc);
+	UnionFind_2D(const CubicalGridComplex_2D* const cgc);
 	index_t find(index_t x);
 	index_t link(index_t x, index_t y);
 	value_t getBirth(index_t x) const;
@@ -111,12 +111,12 @@ class UnionFind {
     private:
 	vector<index_t> parent;
 	vector<value_t> birthtime;
-	const CubicalGridComplex& cgc;
+	const CubicalGridComplex_2D* const cgc;
 };
 
-class UnionFindDual {
+class UnionFindDual_2D {
     public:
-	UnionFindDual(const CubicalGridComplex& cgc);
+	UnionFindDual_2D(const CubicalGridComplex_2D* const cgc);
 	index_t find(index_t x);
 	index_t link(index_t x, index_t y);
 	value_t getBirth(index_t x) const;
@@ -127,5 +127,5 @@ class UnionFindDual {
     private:
 	vector<index_t> parent;
 	vector<value_t> birthtime;
-	const CubicalGridComplex& cgc;
+	const CubicalGridComplex_2D* const cgc;
 };
