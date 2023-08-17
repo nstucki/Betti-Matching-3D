@@ -75,13 +75,13 @@ namespace dim3 {
 	class CubicalGridComplex {
 		public:
 		const vector<index_t> shape;
-		const index_t n_x;
-		const index_t n_y;
-		const index_t n_z;
-		const index_t n_yz;
-		const index_t n_xyz;
+		const index_t m_x;
+		const index_t m_y;
+		const index_t m_z;
 		const index_t m_yz;
 		const index_t m_xyz;
+		const index_t n_yz;
+		const index_t n_xyz;
 
 		CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& shape);
 		~CubicalGridComplex();
@@ -95,7 +95,7 @@ namespace dim3 {
 		value_t*** grid;
 
 		value_t*** allocateMemory() const;
-		void getGridFromVector(const vector<value_t> vector);
+		void getGridFromVector(const vector<value_t>& vector);
 	};
 
 
@@ -104,8 +104,8 @@ namespace dim3 {
 		UnionFind(const CubicalGridComplex& cgc);
 		index_t find(index_t x);
 		index_t link(index_t x, index_t y);
-		value_t getBirth(index_t x) const;
-		vector<index_t> getCoordinates(index_t x) const;
+		value_t getBirth(const index_t& idx) const;
+		vector<index_t> getCoordinates(index_t idx) const;
 		vector<index_t> getBoundaryIndices(const Cube& edge) const;
 		void reset();
 
@@ -120,7 +120,7 @@ namespace dim3 {
 		UnionFindDual(const CubicalGridComplex& cgc);
 		index_t find(index_t x);
 		index_t link(index_t x, index_t y);
-		value_t getBirth(index_t x) const;
+		value_t getBirth(const index_t& x) const;
 		vector<index_t> getCoordinates(index_t x) const;
 		vector<index_t> getBoundaryIndices(const Cube& edge) const;
 		void reset();

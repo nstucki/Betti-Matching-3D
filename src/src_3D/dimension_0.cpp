@@ -113,9 +113,9 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 			birthIdx1 = uf1.link(parentIdx0, parentIdx1);
 			if (birth != edge->birth) {
 				birthCoordinates = ufComp.getCoordinates(birthIdxComp);
-				#ifdef COMPUTE_COMPARISON
+#ifdef COMPUTE_COMPARISON
 				pairsComp.push_back(Pair(Cube(birth, birthCoordinates[0], birthCoordinates[1], birthCoordinates[2], 0), *edge));
-				#endif
+#endif
 				auto find0 = matchMap0.find(birthIdx0);
 				auto find1 = matchMap1.find(birthIdx1);
 				if (find0 != matchMap0.end() && find1 != matchMap1.end()) {

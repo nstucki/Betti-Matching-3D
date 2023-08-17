@@ -36,9 +36,9 @@ void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	#endif
     computePairs(ctr1, 1);
 
-	#ifdef RUNTIME
+#ifdef RUNTIME
 	cout << endl << "comparison & image 0 & image 1 & matching: ";
-	#endif
+#endif
 	#ifndef USE_CLEARING_DIM_0
 	ctrComp.clear();
 	enumerateEdges(cgcComp, ctrComp);
@@ -113,9 +113,9 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 			birthIdx1 = uf1.link(parentIdx0, parentIdx1);
 			if (birth != edge->birth) {
 				birthCoordinates = ufComp.getCoordinates(birthIdxComp);
-				#ifdef COMPUTE_COMPARISON
+#ifdef COMPUTE_COMPARISON
 				pairsComp.push_back(Pair(Cube(birth, birthCoordinates[0], birthCoordinates[1], birthCoordinates[2], 0), *edge));
-				#endif
+#endif
 				auto find0 = matchMap0.find(birthIdx0);
 				auto find1 = matchMap1.find(birthIdx1);
 				if (find0 != matchMap0.end() && find1 != matchMap1.end()) {

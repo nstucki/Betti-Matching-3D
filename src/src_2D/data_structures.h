@@ -91,7 +91,7 @@ namespace D2 {
 		value_t*** grid;
 
 		value_t*** allocateMemory() const;
-		void getGridFromVector(const vector<value_t> vector);
+		void getGridFromVector(const vector<value_t>& vector);
 	};
 
 
