@@ -1,5 +1,7 @@
 #include "utils.h"
-#include "src_3D/BettiMatching3D.h"
+#include "src_3D/BettiMatching.h"
+//#include "src_2D/BettiMatching.h"
+
 
 #include <iostream>
 #include <fstream>
@@ -31,11 +33,10 @@ void print_usage_and_exit(int exit_code) {
 
 
 int main(int argc, char** argv) {
-    #ifdef RUNTIME
+#ifdef RUNTIME
     cout << endl << "reading config & images ... ";
     auto startTotal = high_resolution_clock::now();
-    auto start = high_resolution_clock::now();
-    #endif 
+#endif 
     Config config;
     for (int i = 1; i < argc; ++i) {
 		const string arg(argv[i]);
@@ -95,27 +96,33 @@ int main(int argc, char** argv) {
         transform(input0.begin(), input0.end(), input1.begin(), back_inserter(comparison), 
                     [](value_t a, value_t b) { return min(a, b); });
     }
-    #ifdef RUNTIME
+#ifdef RUNTIME
     auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - start);
-    auto duration_total = duration;
+    auto duration = duration_cast<milliseconds>(stop - startTotal);
     cout << "of shape (" << shape[0];
-    for (uint8_t i = 1; i < shape.size(); i++) {
-        cout << "," << shape[i];
-    }
-    cout << ") ... ";
-    cout << duration.count() << " ms" << endl << endl;
-    #endif
+    for (uint8_t i = 1; i < shape.size(); i++) { cout << "," << shape[i]; }
+    cout << ") ... " << duration.count() << " ms" << endl << endl;
+#endif
 
-    BettiMatching3D BM(std::move(input0), std::move(input1), std::move(comparison), std::move(shape), config);
+#ifdef RUNTIME
+    cout << "initializing BettiMatching ... ";
+    auto start = high_resolution_clock::now();
+#endif
+    dim3::BettiMatching BM{std::move(input0), std::move(input1), std::move(comparison), std::move(shape), config};
+#ifdef RUNTIME
+    stop = high_resolution_clock::now();
+    duration = duration_cast<milliseconds>(stop - startTotal);
+    cout << duration.count() << " ms" << endl << endl;
+#endif
+
     BM.computeMatching();
     BM.computeVoxels();
 
-    #ifdef RUNTIME
+#ifdef RUNTIME
     stop = high_resolution_clock::now();
     duration = duration_cast<milliseconds>(stop - startTotal);
     cout << "Betti Matching runtime: " << duration.count() << " ms" << endl << endl;
-    #endif
+#endif
 
     if (config.print) { BM.printResult(); }
     if (config.saveResult) {}

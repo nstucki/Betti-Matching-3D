@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 
-namespace dim3 {
+namespace D2 {
 	class Dimension0 {
 		public:
 		Dimension0(const CubicalGridComplex& cgc0, const CubicalGridComplex& cgc1, const CubicalGridComplex& cgcComp, 

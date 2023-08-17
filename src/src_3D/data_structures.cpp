@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 
+using namespace dim3;
 using namespace std;
 
 
@@ -23,9 +24,7 @@ uint8_t Cube::type() const { return( index & 0xf); }
 
 bool Cube::operator==(const Cube& rhs) const{ return (index == rhs.index); }
 
-void Cube::print() const {
-    cout << "(" << birth << "," << x() << "," << y() << "," << z() << "," << unsigned(type()) << ")";
-}
+void Cube::print() const { cout << "(" << birth << "," << x() << "," << y() << "," << z() << "," << unsigned(type()) << ")"; }
 
 
 bool CubeComparator::operator()(const Cube& cube1, const Cube& cube2) const{
@@ -62,17 +61,13 @@ VoxelMatch::VoxelMatch(const VoxelPair& _pair0, const VoxelPair& _pair1) : pair0
 void VoxelMatch::print() const { pair0.print(); cout << " <-> "; pair1.print(); cout << endl; }
 
 
-CubicalGridComplex::CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& _shape) : shape(_shape), 
-										n_x(shape[0]-1), n_y(shape[1]-1), n_z(shape[2]-1), n_yz(n_y*n_z), n_xyz(n_x*n_yz), 
-										m_yz(shape[1]*shape[2]), m_xyz(shape[0]*m_yz) {
-	getGridFromVector(image);
-}
+CubicalGridComplex::CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& _shape) : 
+	shape(_shape), n_x(shape[0]-1), n_y(shape[1]-1), n_z(shape[2]-1), n_yz(n_y*n_z), n_xyz(n_x*n_yz), 
+	m_yz(shape[1]*shape[2]), m_xyz(shape[0]*m_yz) { getGridFromVector(image); }
 
 CubicalGridComplex::~CubicalGridComplex() {
 	for (index_t i = 0; i < shape[0]+2; i++) {
-        for (index_t j = 0; j < shape[1]+2; j++) {
-            delete[] grid[i][j];
-        }
+        for (index_t j = 0; j < shape[1]+2; j++) { delete[] grid[i][j]; }
         delete[] grid[i];
     }
     delete[] grid;
@@ -81,23 +76,21 @@ CubicalGridComplex::~CubicalGridComplex() {
 index_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
 	switch (dim) {
 		case 0:
-		return shape[0]*shape[1]*shape[2];
+			return shape[0]*shape[1]*shape[2];
 
 		case 1:
-		return n_x*shape[1]*shape[2] + shape[0]*n_y*shape[2] + shape[0]*shape[1]*n_z;
+			return n_x*shape[1]*shape[2] + shape[0]*n_y*shape[2] + shape[0]*shape[1]*n_z;
 
 		case 2:
-		return n_x*n_y*shape[2] + n_x*shape[1]*n_z + shape[0]*n_y*n_z;
+			return n_x*n_y*shape[2] + n_x*shape[1]*n_z + shape[0]*n_y*n_z;
 
 		case 3:
-		return n_x*n_y*n_z;
+			return n_x*n_y*n_z;
 	}
 	return -1;
 }
 
-value_t CubicalGridComplex::getBirth(const index_t& x, const index_t&  y, const index_t& z) const {
-	return grid[x+1][y+1][z+1];
-}
+value_t CubicalGridComplex::getBirth(const index_t& x, const index_t&  y, const index_t& z) const { return grid[x+1][y+1][z+1]; }
 
 value_t CubicalGridComplex::getBirth(const index_t& x, const index_t& y, const index_t& z, 
 										const uint8_t& type, const uint8_t& dim) const {
@@ -210,13 +203,9 @@ value_t*** CubicalGridComplex::allocateMemory() const {
 	value_t*** g = new value_t**[shape[0]+2];
     for (index_t i = 0; i < shape[0]+2; i++) {
         g[i] = new value_t*[shape[1]+2];
-        for (index_t j = 0; j < shape[1]+2; j++) {
-            g[i][j] = new value_t[shape[2]+2];
-        }
+        for (index_t j = 0; j < shape[1]+2; j++) { g[i][j] = new value_t[shape[2]+2]; }
     }
-	if (g == NULL) {
-		cerr << "Out of memory!" << endl;
-	}
+	if (g == NULL) { cerr << "Out of memory!" << endl; }
 	return g;
 }
 
@@ -284,9 +273,7 @@ index_t UnionFind::link(index_t x, index_t y) {
 
 value_t UnionFind::getBirth(index_t x) const { return birthtime[x]; }
 
-vector<index_t> UnionFind::getCoordinates(index_t x) const { 
-	return {x/(cgc.m_yz),x/(cgc.shape[2])%(cgc.shape[1]),x%(cgc.shape[2])};
-}
+vector<index_t> UnionFind::getCoordinates(index_t x) const { return {x/(cgc.m_yz),x/(cgc.shape[2])%(cgc.shape[1]),x%(cgc.shape[2])}; }
 
 vector<index_t> UnionFind::getBoundaryIndices(const Cube& edge) const {
 	vector<index_t> boundaryIndices(2);
@@ -364,9 +351,7 @@ index_t UnionFindDual::link(index_t x, index_t y){
 
 value_t UnionFindDual::getBirth(index_t x) const { return birthtime[x]; }
 
-vector<index_t> UnionFindDual::getCoordinates(index_t x) const { 
-	return {x/(cgc.n_yz),x/(cgc.n_z)%(cgc.n_y),x%(cgc.n_z)};
-}
+vector<index_t> UnionFindDual::getCoordinates(index_t x) const { return {x/(cgc.n_yz),x/(cgc.n_z)%(cgc.n_y),x%(cgc.n_z)}; }
 
 vector<index_t> UnionFindDual::getBoundaryIndices(const Cube& edge) const {
 	vector<index_t> boundaryIndices(2);

@@ -4,7 +4,7 @@
 #include <chrono>
 #include <algorithm>
 
-using namespace dim3;
+using namespace D2;
 using namespace std::chrono;
 
 
@@ -18,41 +18,41 @@ Dimension0::Dimension0(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						uf0(UnionFind(cgc0)), uf1(UnionFind(cgc1)), ufComp(UnionFind(cgcComp)) {}
 
 void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
-#ifdef RUNTIME
+	#ifdef RUNTIME
 	cout << endl << "input 0: ";
-#endif
-#ifndef USE_CLEARING_DIM_0
+	#endif
+	#ifndef USE_CLEARING_DIM_0
 	ctr0.clear();
 	enumerateEdges(cgc0, ctr0);
-#endif
+	#endif
 	computePairs(ctr0, 0);
 
-#ifdef RUNTIME
+    #ifdef RUNTIME
 	cout << endl << "input 1: ";
-#endif
-#ifndef USE_CLEARING_DIM_0
+	#endif
+	#ifndef USE_CLEARING_DIM_0
 	ctr1.clear();
 	enumerateEdges(cgc1, ctr1);
-#endif
+	#endif
     computePairs(ctr1, 1);
 
-#ifdef RUNTIME
+	#ifdef RUNTIME
 	cout << endl << "comparison & image 0 & image 1 & matching: ";
-#endif
-#ifndef USE_CLEARING_DIM_0
+	#endif
+	#ifndef USE_CLEARING_DIM_0
 	ctrComp.clear();
 	enumerateEdges(cgcComp, ctrComp);
-#endif
+	#endif
 	uf0.reset();
 	uf1.reset();
 	computeImagePairsAndMatch(ctrComp);
 }
 
 void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
-#ifdef RUNTIME
+	#ifdef RUNTIME
 	cout << "barcode ";
 	auto start = high_resolution_clock::now();
-#endif
+	#endif
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	UnionFind& uf = (k == 0) ? uf0 : uf1; 
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
@@ -78,18 +78,18 @@ void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 			}
 		}
 	}
-#ifdef RUNTIME
+	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << duration.count() << " ms";
-#endif
+	#endif
 }
 
 void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
-#ifdef RUNTIME
+	#ifdef RUNTIME
 	cout << "barcodes & matching ";
 	auto start = high_resolution_clock::now();
-#endif
+	#endif
 	vector<index_t> boundaryIndices(2);
 	index_t parentIdx0;
 	index_t parentIdx1;
@@ -126,18 +126,18 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 			} 
 		}
 	}
-#ifdef RUNTIME
+	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << duration.count() << " ms";
-#endif
+	#endif
 }
 
 void Dimension0::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
-#ifdef RUNTIME
+	#ifdef RUNTIME
 	cout << "enumeration ";
 	auto start = high_resolution_clock::now();
-#endif
+	#endif
 	edges.reserve(cgc.getNumberOfCubes(1));
 	value_t birth;
 	for (index_t x = 0; x < cgc.shape[0]; x++) {
@@ -151,9 +151,9 @@ void Dimension0::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edg
 		}
 	}
 	sort(edges.begin(), edges.end(), CubeComparator());
-#ifdef RUNTIME
+	#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << duration.count() << " ms";
-#endif
+	#endif
 }

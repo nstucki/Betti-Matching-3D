@@ -8,7 +8,7 @@ using namespace std;
 
 //#define COMPUTE_COMPARISON
 #define RUNTIME
-#define USE_EMERGENT_PAIRS
+//#define USE_EMERGENT_PAIRS
 #define USE_CLEARING_DIM_0
 
 typedef uint32_t index_t;

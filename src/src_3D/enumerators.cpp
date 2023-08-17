@@ -1,5 +1,8 @@
 #include "enumerators.h"
 
+using namespace dim3;
+
+
 BoundaryEnumerator::BoundaryEnumerator(const CubicalGridComplex& _cgc) : cgc(_cgc) { nextFace = Cube(); }
 
 void BoundaryEnumerator::setBoundaryEnumerator(const Cube& _cube) {
@@ -17,7 +20,7 @@ bool BoundaryEnumerator::hasNextFace() {
 		switch(cube.type()) {
 			case 0:
 			switch (position) {
-				#ifdef USE_EMERGENT_PAIRS
+#ifdef USE_EMERGENT_PAIRS
 				case 0:
 				birth = cgc.getBirth(x, y+1, z, 2, 1);
 				nextFace = Cube(birth, x, y+1, z, 2);
@@ -37,7 +40,7 @@ bool BoundaryEnumerator::hasNextFace() {
 				birth = cgc.getBirth(x, y, z, 1, 1);
 				nextFace = Cube(birth, x, y, z, 1);
 				break;
-				#else
+#else
 				case 0:
 				birth = cgc.getBirth(x, y, z, 1, 1);
 				nextFace = Cube(birth, x, y, z, 1);
@@ -57,13 +60,13 @@ bool BoundaryEnumerator::hasNextFace() {
 				birth = cgc.getBirth(x, y+1, z, 2, 1);
 				nextFace = Cube(birth, x, y+1, z, 2);
 				break;
-				#endif
+#endif
 			}
 			break;
 
 			case 1:
 			switch (position) {
-				#ifdef USE_EMERGENT_PAIRS
+#ifdef USE_EMERGENT_PAIRS
 				case 0:
 				birth = cgc.getBirth(x+1, y, z, 2, 1);
 				nextFace = Cube(birth, x+1, y, z, 2);
@@ -83,7 +86,7 @@ bool BoundaryEnumerator::hasNextFace() {
 				birth = cgc.getBirth(x, y, z, 0, 1);
 				nextFace = Cube(birth, x, y, z, 0);
 				break;
-				#else
+#else
 				case 0:
 				birth = cgc.getBirth(x, y, z, 0, 1);
 				nextFace = Cube(birth, x, y, z, 0);
@@ -103,13 +106,13 @@ bool BoundaryEnumerator::hasNextFace() {
 				birth = cgc.getBirth(x+1, y, z, 2, 1);
 				nextFace = Cube(birth, x+1, y, z, 2);
 				break;
-				#endif
+#endif
 			}
 			break;
 			
 			case 2:
 			switch (position) {
-				#ifdef USE_EMERGENT_PAIRS
+#ifdef USE_EMERGENT_PAIRS
 				case 0:
 				birth = cgc.getBirth(x+1, y, z, 1, 1);
 				nextFace = Cube(birth, x+1, y, z, 1);
@@ -129,7 +132,7 @@ bool BoundaryEnumerator::hasNextFace() {
 				birth = cgc.getBirth(x, y, z, 0, 1);
 				nextFace = Cube(birth, x, y, z, 0);
 				break;
-				#else
+#else
 				case 0:
 				birth = cgc.getBirth(x, y, z, 0, 1);
 				nextFace = Cube(birth, x, y, z, 0);
@@ -149,7 +152,7 @@ bool BoundaryEnumerator::hasNextFace() {
 				birth = cgc.getBirth(x+1, y, z, 1, 1);
 				nextFace = Cube(birth, x+1, y, z, 1);
 				break;
-				#endif
+#endif
 			}
 			break;
 		}
