@@ -57,7 +57,7 @@ void BettiMatching::computeVoxels() {
     cout << "computing voxels ... ";
     auto start = high_resolution_clock::now();
 #endif
-    for (uint8_t d = 0; d < 3; ++d) {
+    for (uint8_t d = 0; d < 2; ++d) {
         for (auto& pair : pairs0[d]) {
             if (!isMatched0[d][pair.birth.index]) {
                 unmatched0[d].push_back(VoxelPair(cgc0.getParentVoxel(pair.birth, d), cgc0.getParentVoxel(pair.death, d+1)));
