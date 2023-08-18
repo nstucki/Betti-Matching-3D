@@ -88,9 +88,9 @@ namespace dim2 {
 		void printImage() const;
 
 		private:
-		value_t*** grid;
+		value_t** grid;
 
-		value_t*** allocateMemory() const;
+		value_t** allocateMemory() const;
 		void getGridFromVector(const vector<value_t>& vector);
 	};
 

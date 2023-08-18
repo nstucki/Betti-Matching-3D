@@ -30,7 +30,7 @@ project(bettiMatching)
 #)
 
 add_executable(BettiMatching
-    src/BettiMatching.cpp
+    src/main.cpp
     src/utils.cpp
     src/src_3D/BettiMatching.cpp
     src/src_3D/dimension_0.cpp
@@ -38,10 +38,10 @@ add_executable(BettiMatching
     src/src_3D/dimension_2.cpp
     src/src_3D/data_structures.cpp
     src/src_3D/enumerators.cpp
-#    src/src_2D/BettiMatching.cpp
-#    src/src_2D/dimension_0.cpp
-#    src/src_2D/dimension_1.cpp
-#    src/src_2D/data_structures.cpp
+    src/src_2D/BettiMatching.cpp
+    src/src_2D/dimension_0.cpp
+    src/src_2D/dimension_1.cpp
+    src/src_2D/data_structures.cpp
 )
 
 set_target_properties(BettiMatching

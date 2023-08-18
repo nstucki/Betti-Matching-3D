@@ -1,7 +1,6 @@
 #include "utils.h"
 #include "src_3D/BettiMatching.h"
-//#include "src_2D/BettiMatching.h"
-
+#include "src_2D/BettiMatching.h"
 
 #include <iostream>
 #include <fstream>
@@ -104,26 +103,59 @@ int main(int argc, char** argv) {
     cout << ") ... " << duration.count() << " ms" << endl << endl;
 #endif
 
+    if (dim == 2) {
 #ifdef RUNTIME
-    cout << "initializing BettiMatching ... ";
-    auto start = high_resolution_clock::now();
+        cout << "initializing BettiMatching ... ";
+        auto start = high_resolution_clock::now();
 #endif
-    dim3::BettiMatching BM{std::move(input0), std::move(input1), std::move(comparison), std::move(shape), config};
+        dim2::BettiMatching BM{std::move(input0), std::move(input1), std::move(comparison), std::move(shape), config};
 #ifdef RUNTIME
-    stop = high_resolution_clock::now();
-    duration = duration_cast<milliseconds>(stop - startTotal);
-    cout << duration.count() << " ms" << endl << endl;
-#endif
-
-    BM.computeMatching();
-    BM.computeVoxels();
-
-#ifdef RUNTIME
-    stop = high_resolution_clock::now();
-    duration = duration_cast<milliseconds>(stop - startTotal);
-    cout << "Betti Matching runtime: " << duration.count() << " ms" << endl << endl;
+        stop = high_resolution_clock::now();
+        duration = duration_cast<milliseconds>(stop - startTotal);
+        cout << duration.count() << " ms" << endl << endl;
 #endif
 
-    if (config.print) { BM.printResult(); }
-    if (config.saveResult) {}
+#ifdef RUNTIME
+        cout << "computing Betti Matching ..." << endl;
+#endif
+        BM.computeMatching();
+        BM.computeVoxels();
+        
+#ifdef RUNTIME
+        stop = high_resolution_clock::now();
+        duration = duration_cast<milliseconds>(stop - startTotal);
+        cout << "total runtime: " << duration.count() << " ms" << endl << endl;
+#endif
+
+        if (config.print) { BM.printResult(); }
+        if (config.saveResult) {}
+    } 
+
+    else if (dim == 3) {
+#ifdef RUNTIME
+        cout << "initializing BettiMatching ... ";
+        auto start = high_resolution_clock::now();
+#endif
+        dim3::BettiMatching BM{std::move(input0), std::move(input1), std::move(comparison), std::move(shape), config};
+#ifdef RUNTIME
+        stop = high_resolution_clock::now();
+        duration = duration_cast<milliseconds>(stop - startTotal);
+        cout << duration.count() << " ms" << endl << endl;
+#endif
+
+#ifdef RUNTIME
+        cout << "computing Betti Matching ..." << endl;
+#endif
+        BM.computeMatching();
+        BM.computeVoxels();
+
+#ifdef RUNTIME
+        stop = high_resolution_clock::now();
+        duration = duration_cast<milliseconds>(stop - startTotal);
+        cout << "Betti Matching runtime: " << duration.count() << " ms" << endl << endl;
+#endif
+
+        if (config.print) { BM.printResult(); }
+        if (config.saveResult) {}
+    }
 }

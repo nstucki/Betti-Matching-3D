@@ -71,7 +71,7 @@ index_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
 			return n_xy;
 
 		case 1:
-			return m_x*shape[1] + shape[0]*m_y
+			return m_x*shape[1] + shape[0]*m_y;
 
 		case 2:
 			return m_xy;
@@ -80,14 +80,12 @@ index_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
 	return -1;
 }
 
-value_t CubicalGridComplex::getBirth(const index_t& x, const index_t&  y) const {
-	return grid[x+1][y+1];
-}
+value_t CubicalGridComplex::getBirth(const index_t& x, const index_t&  y) const { return grid[x+1][y+1]; }
 
 value_t CubicalGridComplex::getBirth(const index_t& x, const index_t& y, const uint8_t& type, const uint8_t& dim) const {
 	switch (dim) {
 		case 0:
-			return getBirth(x, y, z);
+			return getBirth(x, y);
 
 		case 1:
 			switch (type) {
@@ -142,6 +140,7 @@ void CubicalGridComplex::printImage() const {
         }
         cout << endl;
     }
+	cout << endl;
 }
 
 value_t** CubicalGridComplex::allocateMemory() const {
@@ -282,7 +281,7 @@ index_t UnionFindDual::link(index_t x, index_t y) {
 	}
 }
 
-value_t UnionFindDual::getBirth(const index_t& idx) const { return birthtime[idxx]; }
+value_t UnionFindDual::getBirth(const index_t& idx) const { return birthtime[idx]; }
 
 vector<index_t> UnionFindDual::getCoordinates(index_t idx) const { 
 	return {idx/cgc.m_y,idx % cgc.m_y};
