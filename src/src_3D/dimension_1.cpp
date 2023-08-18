@@ -509,7 +509,7 @@ Cube Dimension1::getPivot(CubeQueue& column) const {
 	return result;
 }
 
-void Dimension1::addCache(index_t i, CubeQueue& workingBoundary) {
+void Dimension1::addCache(const index_t& i, CubeQueue& workingBoundary) {
 	CubeQueue cleanWb;
 	while (!workingBoundary.empty()) {
 		Cube c = workingBoundary.top();

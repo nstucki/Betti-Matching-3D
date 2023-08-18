@@ -45,6 +45,6 @@ namespace dimN {
 		void assembleColumnsToReduce(const CubicalGridComplex& cgc, vector<Cube>& ctr) const;
 		Cube popPivot(CubeQueue& column) const;
 		Cube getPivot(CubeQueue& column) const;
-		void addCache(index_t i, CubeQueue &working_boundary);
+		void addCache(const index_t& i, CubeQueue& working_boundary);
 	};
 }

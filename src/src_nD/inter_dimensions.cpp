@@ -13,10 +13,8 @@ InterDimensions::InterDimensions(const CubicalGridComplex& _cgc0, const CubicalG
 									const Config& _config, vector<vector<Pair>>& _pairs0, vector<vector<Pair>>& _pairs1, 
 									vector<vector<Pair>>& _pairsComp, vector<vector<Match>>& _matches, 
 									unordered_map<index_t, bool>& _isMatched0, unordered_map<index_t, bool>& _isMatched1) : 
-									cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), pairs0(_pairs0), pairs1(_pairs1),
-									pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1) {
-	computeDim = cgc0.dim-2;
-}
+	cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), pairs0(_pairs0), pairs1(_pairs1), pairsComp(_pairsComp), 
+	matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1) { computeDim = cgc0.dim-2; }
 
 void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
 	vector<Cube> ctrImage;
@@ -315,7 +313,7 @@ Cube InterDimensions::getPivot(CubeQueue& column) const {
 	return result;
 }
 
-void InterDimensions::addCache(index_t i, CubeQueue& workingBoundary) {
+void InterDimensions::addCache(const index_t& i, CubeQueue& workingBoundary) {
 	CubeQueue cleanWb;
 	while (!workingBoundary.empty()) {
 		Cube c = workingBoundary.top();
