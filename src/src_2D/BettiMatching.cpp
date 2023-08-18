@@ -26,7 +26,7 @@ BettiMatching::BettiMatching(vector<value_t> input0, vector<value_t> input1, vec
 void BettiMatching::computeMatching() {
     {
 #ifdef RUNTIME
-        cout << "computing dimension 1 ... ";
+        cout << "dimension 1:";
         auto start = high_resolution_clock::now();
 #endif
         Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);       
@@ -39,7 +39,7 @@ void BettiMatching::computeMatching() {
     }
     { 
 #ifdef RUNTIME
-        cout << "computing dimension 0 ... ";
+        cout << "dimension 0:";
         auto start = high_resolution_clock::now();
 #endif
         Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);       

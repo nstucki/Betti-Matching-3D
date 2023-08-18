@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
 #endif
         BM.computeMatching();
         BM.computeVoxels();
-        
+
 #ifdef RUNTIME
         stop = high_resolution_clock::now();
         duration = duration_cast<milliseconds>(stop - startTotal);
@@ -130,7 +130,6 @@ int main(int argc, char** argv) {
         if (config.print) { BM.printResult(); }
         if (config.saveResult) {}
     } 
-
     else if (dim == 3) {
 #ifdef RUNTIME
         cout << "initializing BettiMatching ... ";
