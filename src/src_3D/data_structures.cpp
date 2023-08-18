@@ -211,7 +211,7 @@ value_t*** CubicalGridComplex::allocateMemory() const {
 }
 
 void CubicalGridComplex::getGridFromVector(const vector<value_t>& vec) {
-	index_t counter = 0;
+	size_t counter = 0;
 	grid = allocateMemory();
 	for (index_t x = 0; x < shape[0]+2; ++x) {
 		for (index_t y = 0; y < shape[1]+2; ++y) {

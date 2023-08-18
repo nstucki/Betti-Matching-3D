@@ -14,7 +14,7 @@ Cube::Cube(value_t _birth, index_t _x, index_t _y, uint8_t _type) : birth(_birth
 	index = ((uint64_t)_x << 34) | ((uint64_t)_y<<4) | (uint64_t)_type;
 }
 
-index_t Cube::x() const { return ((index >> 43) & 0xfffff); }
+index_t Cube::x() const { return ((index >> 34) & 0xfffff); }
 
 index_t Cube::y() const { return ((index >> 4) & 0xfffff); }
 
@@ -151,7 +151,7 @@ value_t** CubicalGridComplex::allocateMemory() const {
 }
 
 void CubicalGridComplex::getGridFromVector(const vector<value_t>& vec) {
-	index_t counter = 0;
+	size_t counter = 0;
 	grid = allocateMemory();
 	for (index_t x = 0; x < shape[0]+2; ++x) {
 		for (index_t y = 0; y < shape[1]+2; ++y) {
