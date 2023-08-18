@@ -143,12 +143,10 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 				}
 #ifdef USE_EMERGENT_PAIRS
 				if (foundPair) {
-                    //pivotColumnIndex.emplace(pivot.index, i);
-                    pivotColumnIndex[pivot.index] = i;
+                    pivotColumnIndex.emplace(pivot.index, i);
                     ++numEmergentPairs;
                     break;
                 }
-				//for (Cube& f : faces) { workingBoundary.push(f); }
 				for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
 #endif
 			}
@@ -168,8 +166,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 							cachedColumnIdx.pop();
 						}
                     }
-					// pivotColumnIndex.emplace(pivot.index, i);
-					pivotColumnIndex[pivot.index] = i;
+					pivotColumnIndex.emplace(pivot.index, i);
 					if (pivot.birth != ctr[i].birth) {
 						pairs.push_back(Pair(pivot, ctr[i]));
 						matchMap.emplace(pivot.index, pairs.back());
@@ -252,12 +249,10 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 				}
 #ifdef USE_EMERGENT_PAIRS
 				if (foundPair) {
-                    //pivotColumnIndex.emplace(pivot.index, i);
-                    pivotColumnIndex[pivot.index] = i;
+                    pivotColumnIndex.emplace(pivot.index, i);
                     ++numEmergentPairs;
                     break;
                 }
-				//for (Cube& f : faces) { workingBoundary.push(f); }
 				for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
 #endif
 			}
@@ -277,8 +272,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 							cachedColumnIdx.pop();
 						}
                     }
-					// pivotColumnIndex.emplace(pivot.index, i);
-					pivotColumnIndex[pivot.index] = i;
+					pivotColumnIndex.emplace(pivot.index, i);
 					if (pivot.birth != ctr[i].birth) {
 						pairsComp.push_back(Pair(pivot, ctr[i]));
 						isMatchedComp.emplace(ctr[i].index, true);
@@ -377,13 +371,11 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 				}
 #ifdef USE_EMERGENT_PAIRS
 				if (foundPair) {
-                    //pivotColumnIndex.emplace(pivot.index, i);
-                    pivotColumnIndex[pivot.index] = i;
+                    pivotColumnIndex.emplace(pivot.index, i);
 					if (isMatchedComp[ctr[i].index]) { matchMapIm.emplace(ctr[i].index, pivot.index); }
                     ++numEmergentPairs;
                     break;
                 }
-				//for (Cube& f : faces) { workingBoundary.push(f); }
 				for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
 #endif
 			}
@@ -403,8 +395,7 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 							cachedColumnIdx.pop();
 						}
                     }
-					// pivotColumnIndex.emplace(pivot.index, i);
-					pivotColumnIndex[pivot.index] = i;
+					pivotColumnIndex.emplace(pivot.index, i);
 					if (isMatchedComp[ctr[i].index]) { matchMapIm.emplace(ctr[i].index, pivot.index); }
 					break;
 				}
