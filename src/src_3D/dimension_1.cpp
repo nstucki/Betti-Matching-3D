@@ -101,7 +101,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	bool checkEmergentPair;
 	bool foundPair;
 #endif
-	for (size_t i = 0; i < ctrSize; i++) {
+	for (size_t i = 0; i < ctrSize; ++i) {
 #ifdef USE_EMERGENT_PAIRS
 		checkEmergentPair = true;
 		foundPair = false;
@@ -210,7 +210,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	bool checkEmergentPair;
 	bool foundPair;
 #endif
-	for(size_t i = 0; i < ctrSize; i++) {
+	for(size_t i = 0; i < ctrSize; ++i) {
 #ifdef USE_EMERGENT_PAIRS
 		checkEmergentPair = true;
 		foundPair = false;
@@ -332,7 +332,7 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 	bool checkEmergentPair;
 	bool foundPair;
 #endif
-	for (size_t i = 0; i < ctrSize; i++) {
+	for (size_t i = 0; i < ctrSize; ++i) {
 #ifdef USE_EMERGENT_PAIRS
 		checkEmergentPair = true;
 		foundPair = false;
@@ -465,10 +465,10 @@ void Dimension1::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edg
 	edges.reserve(cgc.getNumberOfCubes(1));
 	value_t birth;
 	Cube cube;
-	for (index_t x = 0; x < cgc.shape[0]; x++) {
-		for (index_t y = 0; y < cgc.shape[1]; y++) {
-			for (index_t z = 0; z < cgc.shape[2]; z++) {
-				for (uint8_t type = 0; type < 3; type++) {
+	for (index_t x = 0; x < cgc.shape[0]; ++x) {
+		for (index_t y = 0; y < cgc.shape[1]; ++y) {
+			for (index_t z = 0; z < cgc.shape[2]; ++z) {
+				for (uint8_t type = 0; type < 3; ++type) {
 					birth = cgc.getBirth(x, y, z, type, 1);
 					if (birth < config.threshold) {
 						cube = Cube(birth, x, y, z, type);

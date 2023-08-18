@@ -48,10 +48,10 @@ void Dimension2::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>&
 	dualEdges.clear();
 	dualEdges.reserve(cgc.getNumberOfCubes(2));
 	value_t birth;
-	for (index_t x = 0; x < cgc.shape[0]; x++) {
-		for (index_t y = 0; y < cgc.shape[1]; y++) {
-			for (index_t z = 0; z < cgc.shape[2]; z++) {
-				for (uint8_t type = 0; type < 3; type++) {
+	for (index_t x = 0; x < cgc.shape[0]; ++x) {
+		for (index_t y = 0; y < cgc.shape[1]; ++y) {
+			for (index_t z = 0; z < cgc.shape[2]; ++z) {
+				for (uint8_t type = 0; type < 3; ++type) {
 					birth = cgc.getBirth(x, y, z, type, 2);
 					if (birth < config.threshold) { dualEdges.push_back(Cube(birth, x, y, z, type)); }
 				}

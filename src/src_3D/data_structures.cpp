@@ -66,8 +66,8 @@ CubicalGridComplex::CubicalGridComplex(const vector<value_t>& image, const vecto
 	n_yz(shape[1]*shape[2]), n_xyz(shape[0]*n_yz) { getGridFromVector(image); }
 
 CubicalGridComplex::~CubicalGridComplex() {
-	for (index_t i = 0; i < shape[0]+2; i++) {
-        for (index_t j = 0; j < shape[1]+2; j++) { delete[] grid[i][j]; }
+	for (index_t i = 0; i < shape[0]+2; ++i) {
+        for (index_t j = 0; j < shape[1]+2; ++j) { delete[] grid[i][j]; }
         delete[] grid[i];
     }
     delete[] grid;
@@ -87,6 +87,7 @@ index_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
 		case 3:
 			return m_x*m_y*m_z;
 	}
+	cerr << "no cubes in dim " << unsigned(dim) << endl;
 	return -1;
 }
 
@@ -186,9 +187,9 @@ vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8
 
 void CubicalGridComplex::printImage() const {
     value_t birth;
-    for (index_t x = 0; x < shape[0]; x++) {
-        for (index_t y = 0; y < shape[1]; y++) {
-            for (index_t z = 0; z < shape[2]; z++) {
+    for (index_t x = 0; x < shape[0]; ++x) {
+        for (index_t y = 0; y < shape[1]; ++y) {
+            for (index_t z = 0; z < shape[2]; ++z) {
                 birth = getBirth(x, y, z);
                 if (birth < 10) { cout << ' ' << birth << ' '; }
 				else { cout << birth << ' '; }            
@@ -201,22 +202,22 @@ void CubicalGridComplex::printImage() const {
 
 value_t*** CubicalGridComplex::allocateMemory() const {
 	value_t*** g = new value_t**[shape[0]+2];
-    for (index_t i = 0; i < shape[0]+2; i++) {
+    for (index_t i = 0; i < shape[0]+2; ++i) {
         g[i] = new value_t*[shape[1]+2];
-        for (index_t j = 0; j < shape[1]+2; j++) { g[i][j] = new value_t[shape[2]+2]; }
+        for (index_t j = 0; j < shape[1]+2; ++j) { g[i][j] = new value_t[shape[2]+2]; }
     }
 	if (g == NULL) { cerr << "Out of memory!" << endl; }
 	return g;
 }
 
 void CubicalGridComplex::getGridFromVector(const vector<value_t>& vec) {
-	index_t i = 0;
+	index_t counter = 0;
 	grid = allocateMemory();
-	for (index_t x = 0; x < shape[0]+2; x++) {
-		for (index_t y = 0; y < shape[1]+2; y++) {
-			for (index_t z = 0; z < shape[2]+2; z++) {
+	for (index_t x = 0; x < shape[0]+2; ++x) {
+		for (index_t y = 0; y < shape[1]+2; ++y) {
+			for (index_t z = 0; z < shape[2]+2; ++z) {
 				if (x == 0 || x == shape[0]+1 || y == 0 || y == shape[1]+1 || z == 0 || z == shape[2]+1) { grid[x][y][z] = INFTY; }
-				else { grid[x][y][z] = vec[i++]; }
+				else { grid[x][y][z] = vec[counter++]; }
 			}
 		}
 	}
@@ -298,7 +299,7 @@ vector<index_t> UnionFind::getBoundaryIndices(const Cube& edge) const {
 	return boundaryIndices;
 }
 
-void UnionFind::reset() { for (size_t i = 0; i < parent.size(); i++) { parent[i] = i; } }
+void UnionFind::reset() { for (size_t i = 0; i < parent.size(); ++i) { parent[i] = i; } }
 
 
 UnionFindDual::UnionFindDual(const CubicalGridComplex& _cgc) : cgc(_cgc) {
@@ -318,7 +319,7 @@ UnionFindDual::UnionFindDual(const CubicalGridComplex& _cgc) : cgc(_cgc) {
 	birthtime.push_back(INFTY);
 }
 
-index_t UnionFindDual::find(index_t x){
+index_t UnionFindDual::find(index_t x) {
 	index_t y = x, z = parent[y];
 	while (z != y) {
 		y = z;
@@ -333,7 +334,7 @@ index_t UnionFindDual::find(index_t x){
 	return z;
 }
 
-index_t UnionFindDual::link(index_t x, index_t y){
+index_t UnionFindDual::link(index_t x, index_t y) {
 	if (birthtime[x] < birthtime[y]) {
 		parent[x] = y; 
 		return x;
@@ -382,4 +383,4 @@ vector<index_t> UnionFindDual::getBoundaryIndices(const Cube& edge) const {
 	return boundaryIndices;
 }
 
-void UnionFindDual::reset() { for (size_t i = 0; i < parent.size(); i++) { parent[i] = i; } }
+void UnionFindDual::reset() { for (size_t i = 0; i < parent.size(); ++i) { parent[i] = i; } }

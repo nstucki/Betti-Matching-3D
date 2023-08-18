@@ -99,7 +99,7 @@ void BettiMatching::printResult() {
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
     cout << "Input 0:" << endl << endl;
     if (cgc0.shape[0] < 10 && cgc0.shape[1] < 10 && cgc0.shape[2] < 10) { cgc0.printImage(); }
-    for (uint8_t d = 0; d < 3; d++) {
+    for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = pairs0[d].size();
         if (0 < count && count < 10) {
@@ -110,7 +110,7 @@ void BettiMatching::printResult() {
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
     cout << "Input 1" << endl << endl; 
     if (cgc1.shape[0] < 10 && cgc1.shape[1] < 10 && cgc1.shape[2] < 10) { cgc1.printImage(); }
-    for (uint8_t d = 0; d < 3; d++) {
+    for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = pairs1[d].size();
         if (0 < count && count < 10) {
@@ -122,7 +122,7 @@ void BettiMatching::printResult() {
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
     cout << "Comparison" << endl << endl; 
     if (cgcComp.shape[0] < 10 && cgcComp.shape[1] < 10 && cgcComp.shape[2] < 10) { cgcComp.printImage(); }
-    for (uint8_t d = 0; d < 3; d++) {
+    for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = pairsComp[d].size();
         if (0 < count && count < 10) {
@@ -134,7 +134,7 @@ void BettiMatching::printResult() {
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
     cout << "Betti Matching:" << endl << endl;
     cout << "matched cubes: " << endl;
-    for (uint8_t d = 0; d < 3; d++) {
+    for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = matches[d].size();
         if (0 < count && count < 10) {
@@ -144,7 +144,7 @@ void BettiMatching::printResult() {
     }
     cout << endl;
     cout << "unmatched cubes in Input 0" << endl;
-    for (uint8_t d = 0; d < 3; d++) {
+    for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = 0;
         for (auto &pair : pairs0[d]) { if (!isMatched0[d][pair.birth.index]) { ++count; } }
@@ -155,7 +155,7 @@ void BettiMatching::printResult() {
     }
     cout << endl;
     cout << "unmatched cubes in Input 1" << endl;
-    for (uint8_t d = 0; d < 3; d++) {
+    for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = 0;
         for (auto &pair : pairs1[d]) {if (!isMatched1[d][pair.birth.index]) { ++count; } }

@@ -156,7 +156,7 @@ bool BoundaryEnumerator::hasNextFace() {
 			}
 			break;
 		}
-		position ++;
+		++position;
 		return true;
 	}	
 }
