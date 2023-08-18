@@ -14,18 +14,15 @@ namespace dim1 {
         const CubicalGridComplex cgc0;
         const CubicalGridComplex cgc1;
         const CubicalGridComplex cgcComp;
-        vector<vector<Pair>> pairs0;
-        vector<vector<Pair>> pairs1;
-        vector<vector<Pair>> pairsComp;
-        vector<vector<Match>> matches;
-        vector<unordered_map<uint64_t, bool>> isMatched0;
-        vector<unordered_map<uint64_t, bool>> isMatched1;
-        vector<vector<VoxelMatch>> matched;
-        vector<vector<VoxelPair>> unmatched0;
-        vector<vector<VoxelPair>> unmatched1;
-        vector<Cube> ctr0;
-        vector<Cube> ctr1;
-        vector<Cube> ctrComp;
+        vector<Pair> pairs0;
+        vector<Pair> pairs1;
+        vector<Pair> pairsComp;
+        vector<Match> matches;
+        unordered_map<uint64_t, bool> isMatched0;
+        unordered_map<uint64_t, bool> isMatched1;
+        vector<VoxelMatch> matched;
+        vector<VoxelPair> unmatched0;
+        vector<VoxelPair> unmatched1;
         Config& config;
     };
 }

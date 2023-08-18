@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstdint>
 
+using namespace dimN;
 using namespace std;
 using namespace std::chrono;
 
@@ -18,9 +19,10 @@ Dimension0::Dimension0(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						uf0(UnionFind(cgc0)), uf1(UnionFind(cgc1)), ufComp(UnionFind(cgcComp)) {}
 
 void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
-	if (config.verbose) { cout << "computing dimension 0 ... "; }
+#ifdef RUNTIME
+	cout << "computing dimension 0 ... ";
     auto start = high_resolution_clock::now();
-
+#endif
 	enumerateEdges(cgc0, ctr0);
 	computePairs(ctr0, 0);
 	
@@ -29,10 +31,11 @@ void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 
 	enumerateEdges(cgcComp, ctrComp);
     computeImagePairsAndMatch(ctrComp);
-
+#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
-    if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
+    cout << "took " << duration.count() << " ms" << endl;
+#endif
 }
 
 void Dimension0::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {

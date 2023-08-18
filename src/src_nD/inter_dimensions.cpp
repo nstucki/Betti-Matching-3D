@@ -5,6 +5,7 @@
 #include <chrono>
 #include <algorithm>
 
+using namespace dimN;
 using namespace std::chrono;
 
 
@@ -19,11 +20,11 @@ InterDimensions::InterDimensions(const CubicalGridComplex& _cgc0, const CubicalG
 
 void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
 	vector<Cube> ctrImage;
-
 	while (computeDim > 0) {
-		if (config.verbose) { cout << "comoputing dimension " << computeDim << " ... "; }
+#ifdef RUNTIME
+		cout << "comoputing dimension " << computeDim << " ... ";
         auto start = high_resolution_clock::now();
-		
+#endif
 		computePairsComp(ctrComp);
 		if (computeDim > 1) { 
 			ctrImage = ctrComp;
@@ -43,19 +44,19 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
 			computeImagePairs(ctrComp, 0); 
 			computeImagePairs(ctrComp, 1); 
 		}
-		
+
 		computeMatching();
-		
+#ifdef RUNTIME
 		auto stop = high_resolution_clock::now();
         auto duration = duration_cast<milliseconds>(stop - start);
-        if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
-
+        cout << "took " << duration.count() << " ms" << endl;
+#endif
 		--computeDim;
 	}
 }
 
 void InterDimensions::computePairsComp(vector<Cube>& ctr) {
-	index_t ctrSize = ctr.size();
+	size_t ctrSize = ctr.size();
 	pivotColumnIndex.clear();
 	pivotColumnIndex.reserve(ctrSize);	
 	cache.clear();
@@ -63,7 +64,7 @@ void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 	matchMapComp.clear();
 	BoundaryEnumerator faces = BoundaryEnumerator(cgcComp);
 	queue<index_t> cachedColumnIdx;
-	index_t numRecurse;
+	size_t numRecurse;
 	index_t j;
 	bool shouldClear = false;
 	for(index_t i = 0; i < ctrSize; i++) {
@@ -128,7 +129,7 @@ void InterDimensions::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	vector<vector<Pair>>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<index_t, Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
 
-	index_t ctrSize = ctr.size();
+	size_t ctrSize = ctr.size();
 	pivotColumnIndex.clear();
 	pivotColumnIndex.reserve(ctrSize);
 	cache.clear();
@@ -136,7 +137,7 @@ void InterDimensions::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	matchMap.clear();
 	BoundaryEnumerator faces = BoundaryEnumerator(cgc);
 	queue<index_t> cachedColumnIdx;
-	index_t numRecurse;
+	size_t numRecurse;
 	index_t j;	
 	for(index_t i = 0; i < ctrSize; i++) {
 		CubeQueue workingBoundary;
@@ -191,7 +192,7 @@ void InterDimensions::computeImagePairs(const vector<Cube>& ctr, uint8_t k) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	unordered_map<index_t, Cube>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
 
-	index_t ctrSize = ctr.size();
+	size_t ctrSize = ctr.size();
 	pivotColumnIndex.clear();
 	pivotColumnIndex.reserve(ctrSize);
 	cache.clear();
@@ -200,7 +201,7 @@ void InterDimensions::computeImagePairs(const vector<Cube>& ctr, uint8_t k) {
 	matchMapIm.reserve(pairsComp[computeDim].size());
 	BoundaryEnumerator faces = BoundaryEnumerator(cgc);
 	queue<index_t> cachedColumnIdx;
-	index_t numRecurse;
+	size_t numRecurse;
 	index_t j;
 	for (index_t i = 0; i < ctrSize; i++) {
 		CubeQueue workingBoundary;

@@ -41,7 +41,7 @@ Pair::Pair(const Pair& pair) : birth(pair.birth), death(pair.death) {}
 
 bool Pair::operator==(const Pair &rhs) const { return (birth == rhs.birth && death == rhs.death); }
 
-void Pair::print() const { cout << "("; birth.print(); cout << ","; death.print(); cout << ")"; }
+void Pair::print() const { cout << "("; birth.print(); cout << ";"; death.print(); cout << ")"; }
 
 
 Match::Match(Pair _pair0, Pair _pair1) : pair0(_pair0), pair1(_pair1) {}
@@ -52,7 +52,7 @@ void Match::print() const { pair0.print(); cout << " <-> "; pair1.print(); cout 
 VoxelPair::VoxelPair(const vector<index_t>& _birth, const vector<index_t>& _death) : birth(_birth), death(_death) {}
 
 void VoxelPair::print() const {
-	cout << "(" << birth[0] << "," << birth[1] << "," << birth[2] << " ; " << death[0] << "," << death[1] << "," << death[2] << ")";
+	cout << "((" << birth[0] << "," << birth[1] << "," << birth[2] << ");(" << death[0] << "," << death[1] << "," << death[2] << "))";
 }
 
 
@@ -73,7 +73,7 @@ CubicalGridComplex::~CubicalGridComplex() {
     delete[] grid;
 }
 
-index_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
+size_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
 	switch (dim) {
 		case 0:
 			return shape[0]*shape[1]*shape[2];
@@ -110,6 +110,7 @@ value_t CubicalGridComplex::getBirth(const index_t& x, const index_t& y, const i
 				case 2:
 					return max(getBirth(x, y, z), getBirth(x, y, z+1));
 			}
+
 		case 2:
 			switch (type) {
 				case 0:
@@ -120,7 +121,8 @@ value_t CubicalGridComplex::getBirth(const index_t& x, const index_t& y, const i
 
 				case 2:
 					return max({getBirth(x, y, z),getBirth(x, y+1, z),getBirth(x+1, y, z),getBirth(x+1, y+1, z)});
-			}	
+			}
+			
 		case 3:
 			return max({getBirth(x, y, z),getBirth(x, y, z+1),getBirth(x, y+1, z),getBirth(x, y+1, z+1),
 						getBirth(x+1, y, z),getBirth(x+1, y, z+1),getBirth(x+1, y+1, z),getBirth(x+1, y+1, z+1)});
@@ -151,6 +153,7 @@ vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8
 				if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; }
 				else { return {x,y,z+1}; }
 		}
+
 		case 2:
 		switch(cube.type()) {
 			case 0:
@@ -171,6 +174,7 @@ vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8
 				else if (cube.birth == getBirth(x+1, y, z)) { return {x+1,y,z}; } 
 				else { return {x+1,y+1,z}; }
 		}
+		
 		case 3:
 			if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; }
 			else if (cube.birth == getBirth(x, y, z+1)) { return {x,y,z+1}; }
@@ -306,7 +310,7 @@ UnionFindDual::UnionFindDual(const CubicalGridComplex& _cgc) : cgc(_cgc) {
 	index_t n = cgc.getNumberOfCubes(3) + 1;
 	parent.reserve(n);
 	birthtime.reserve(n);
-	size_t counter = 0;
+	index_t counter = 0;
 	for (index_t x = 0; x < _cgc.m_x; ++x) {
 		for (index_t y = 0; y < _cgc.m_y; ++y) {
 			for(index_t z = 0; z < _cgc.m_z; ++z) {

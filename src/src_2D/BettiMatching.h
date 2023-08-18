@@ -23,9 +23,6 @@ namespace dim2 {
         vector<vector<VoxelMatch>> matched;
         vector<vector<VoxelPair>> unmatched0;
         vector<vector<VoxelPair>> unmatched1;
-        vector<Cube> ctr0;
-        vector<Cube> ctr1;
-        vector<Cube> ctrComp;
         Config& config;
     };
 }

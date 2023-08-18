@@ -24,6 +24,9 @@ BettiMatching::BettiMatching(vector<value_t> input0, vector<value_t> input1, vec
 }
 
 void BettiMatching::computeMatching() {
+    vector<Cube> ctr0;
+    vector<Cube> ctr1;
+    vector<Cube> ctrComp;
     {
 #ifdef RUNTIME
         cout << "dimension 1:";

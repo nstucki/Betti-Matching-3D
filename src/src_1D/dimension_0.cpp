@@ -48,7 +48,7 @@ void Dimension0::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edg
 	value_t birth;
 	for (index_t x = 0; x < cgc.m_x; ++x) {
 		birth = cgc.getBirth(x, 1);
-		if (birth < config.threshold) { dualEdges.push_back(Cube(birth, x, y, type)); }
+		if (birth < config.threshold) { edges.push_back(Cube(birth, x)); }
 	}
 	sort(edges.begin(), edges.end(), CubeComparator());
 #ifdef RUNTIME
@@ -82,7 +82,7 @@ void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 			birthIdx = uf.link(parentIdx0, parentIdx1);
 			birth = uf.getBirth(birthIdx);
 			if (birth != edge->birth) {
-				birthCoordinate = uf.getCoordinates(birthIdx);
+				birthCoordinate = uf.getCoordinate(birthIdx);
 				pairs.push_back(Pair(Cube(birth, birthCoordinate), *edge));
 				matchMap.emplace(birthIdx, pairs.back());
 			}
@@ -122,7 +122,7 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 			parentIdx1 = uf1.find(boundaryIndices[1]);
 			birthIdx1 = uf1.link(parentIdx0, parentIdx1);
 			if (birth != edge->birth) {
-				birthCoordinate = ufComp.getCoordinates(birthIdxComp);
+				birthCoordinate = ufComp.getCoordinate(birthIdxComp);
 #ifdef COMPUTE_COMPARISON
 				pairsComp.push_back(Pair(Cube(birth, birthCoordinate), *edge));
 #endif

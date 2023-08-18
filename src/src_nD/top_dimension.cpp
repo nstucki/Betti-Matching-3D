@@ -7,8 +7,10 @@
 #include <algorithm>
 #include <cstdint>
 
+using namespace dimN;
 using namespace std;
 using namespace std::chrono;
+
 
 TopDimension::TopDimension(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, const CubicalGridComplex& _cgcComp,
 					const Config& _config, vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp,
@@ -19,8 +21,10 @@ TopDimension::TopDimension(const CubicalGridComplex& _cgc0, const CubicalGridCom
 					uf0(UnionFindDual(cgc0)), uf1(UnionFindDual(cgc1)), ufComp(UnionFindDual(cgcComp)) {}
 
 void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
-	if (config.verbose) { cout << "computing top dimension ... "; }
+#ifdef RUNTIME
+	cout << "computing top dimension ... ";
     auto start = high_resolution_clock::now();
+#endif
 
 	enumerateDualEdges(cgcComp, ctrComp);
 	computePairsComp(ctrComp);
@@ -35,7 +39,10 @@ void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, 
 
 	auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
-    if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
+
+#ifdef RUNTIME
+	cout << "took " << duration.count() << " ms" << endl;
+#endif
 }
 
 void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& dualEdges) const {

@@ -86,3 +86,27 @@ void readImage(const string& filename, const fileFormat& format, vector<double>&
         }
     }
 }
+
+
+vector<vector<bool>> getSubsets(index_t n, index_t k) {
+    if (k == 0) {
+        vector<vector<bool>> subsets(1, vector<bool>(n, false));
+        return subsets;
+    } else {
+        vector<vector<bool>> subsets;
+        vector<vector<bool>> prevSubsets = getSubsets(n, k-1);
+        vector<bool> subset;
+        for (auto& prevSubset : prevSubsets) {
+            for (index_t i = 0; i < n; i++) {
+                if (prevSubset[i]) {
+                    break;
+                } else {
+                    subset = prevSubset;
+                    subset[i] = true;
+                    subsets.push_back(subset);
+                }
+            }
+        }
+        return subsets;
+    }
+}

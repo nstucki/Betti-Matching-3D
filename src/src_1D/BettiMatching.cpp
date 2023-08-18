@@ -10,19 +10,12 @@ using namespace std::chrono;
 
 BettiMatching::BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<value_t> comparison, vector<index_t> shape,
                                 Config& _config) : 
-    cgc0(input0, shape), cgc1(input1, shape), cgcComp(comparison, shape), config(_config) {
-    pairs0 = vector<Pair>;
-    pairs1 = vector<Pair>;
-    pairsComp = vector<Pair>;
-    matches = vector<Match>;
-    isMatched0 = unordered_map<uint64_t, bool>;
-    isMatched1 = unordered_map<uint64_t, bool>;
-    matched = vector<VoxelMatch>;
-    unmatched0 = vector<VoxelPair>;
-    unmatched1 = vector<VoxelPair>;
-}
+    cgc0(input0, shape), cgc1(input1, shape), cgcComp(comparison, shape), config(_config) {}
 
 void BettiMatching::computeMatching() {
+    vector<Cube> ctr0;
+    vector<Cube> ctr1;
+    vector<Cube> ctrComp;
 #ifdef RUNTIME
         cout << "dimension 0:";
         auto start = high_resolution_clock::now();
@@ -52,8 +45,10 @@ void BettiMatching::computeVoxels() {
         }
     }
     for (auto& match : matches) {
-        matched.push_back(VoxelMatch(VoxelPair(cgc0.getParentVoxel(match.pair0.birth, 0), cgc0.getParentVoxel(match.pair0.death, 1)), 
-                                        VoxelPair(cgc1.getParentVoxel(match.pair1.birth, 0), cgc1.getParentVoxel(match.pair1.death, 1))));
+        matched.push_back(VoxelMatch(VoxelPair(cgc0.getParentVoxel(match.pair0.birth, 0), 
+                                                cgc0.getParentVoxel(match.pair0.death, 1)), 
+                                        VoxelPair(cgc1.getParentVoxel(match.pair1.birth, 0), 
+                                                    cgc1.getParentVoxel(match.pair1.death, 1))));
     }
 #ifdef RUNTIME
     auto stop = high_resolution_clock::now();

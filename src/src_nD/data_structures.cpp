@@ -1,6 +1,6 @@
 #include "data_structures.h"
-#include "utils.h"
 #include "template_functions.h"
+#include "../utils.h"
 
 #include <iostream>
 #include <functional>
@@ -8,6 +8,7 @@
 #include <limits>
 #include <vector>
 
+using namespace dimN;
 using namespace std;
 
 
@@ -50,6 +51,7 @@ bool CubeComparator::operator()(const Cube& cube1, const Cube& cube2) const {
     } else { return cube1.birth < cube2.birth; }
 }
 
+
 Pair::Pair() {}
 
 Pair::Pair(const Cube& _birth, const Cube& _death) : birth(_birth), death(_death) {}
@@ -63,13 +65,28 @@ void Pair::print() const { cout << "("; birth.print(); cout << ","; death.print(
 
 Match::Match(const Pair &_pair0, const Pair &_pair1) : pair0(_pair0), pair1(_pair1) {}
 
-void Match::print() const {
-    cout << "matched "; pair0.print(); cout << " with "; pair1.print(); cout << endl;
+void Match::print() const { cout << "matched "; pair0.print(); cout << " with "; pair1.print(); cout << endl; }
+
+
+VoxelPair::VoxelPair(const vector<index_t>& _birth, const vector<index_t>& _death) : birth(_birth), death(_death) {}
+
+void VoxelPair::print() const {
+	size_t dim = birth.size();
+	cout << "((";
+	for (size_t i = 0; i < dim-1; ++i) { cout << birth[i] << ","; }
+	cout << birth[dim-1] << ");(";
+	for (size_t i = 0; i < dim-1; ++i) { cout << death[i] << ","; }
+	cout << death[dim-1] << "))";
 }
 
 
+VoxelMatch::VoxelMatch(const VoxelPair& _pair0, const VoxelPair& _pair1) : pair0(_pair0), pair1(_pair1) {}
+
+void VoxelMatch::print() const { pair0.print(); cout << " <-> "; pair1.print(); cout << endl; }
+
+
 CubicalGridComplex::CubicalGridComplex(vector<value_t> _image, const vector<index_t>& _shape) : 
-image(_image), shape(_shape), dim(_shape.size()) {
+	image(_image), shape(_shape), dim(_shape.size()) {
 	pixelCoordFactor = multiplyFromRightExclusively(_shape);
 	vector<index_t> cubeGridShape = addToContainerElementwise(multiplyContainerElementwise(_shape, 2), -1);
 	cubeCoordFactor = multiplyFromRightExclusively(cubeGridShape);
@@ -91,17 +108,13 @@ index_t CubicalGridComplex::getNumberOfCubes(index_t _dim) const {
 
 index_t CubicalGridComplex::getCubeIndex(const Cube& cube) const {
 	index_t idx = 0;
-	for (index_t i = dim; i-- > 0;) {
-		idx += cube.coordinates[i]*cubeCoordFactor[i];
-	}
+	for (index_t i = dim; i-- > 0;) { idx += cube.coordinates[i]*cubeCoordFactor[i]; }
 	return idx;
 }
 
 index_t CubicalGridComplex::getCubeIndex(const vector<index_t>& coordinates) const {
 	index_t idx = 0;
-	for (index_t i = dim; i-- > 0;) {
-		idx += coordinates[i]*cubeCoordFactor[i];
-	}
+	for (index_t i = dim; i-- > 0;) { idx += coordinates[i]*cubeCoordFactor[i]; }
 	return idx;
 }
 
@@ -137,7 +150,7 @@ value_t CubicalGridComplex::getBirth(const vector<index_t>& coordinatesCube) con
 	return birth;
 }
 
-vector<index_t> CubicalGridComplex::getParentVoxel(const Cube &c) const
+vector<index_t> CubicalGridComplex::getParentVoxel(const Cube &c) const 
 {
 	auto workingCoordinates(c.coordinates);
 	auto birth = this->getBirth(c.coordinates);

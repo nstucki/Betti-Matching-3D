@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+using namespace dimN;
+
 
 CubeEnumerator::CubeEnumerator(const CubicalGridComplex& _cgc, const index_t _dim) : cgc(_cgc) {
     degenMax = cgc.dim-_dim-1;

@@ -1,168 +1,197 @@
-#include "template_functions.h"
-
-#include "utils.h"
-#include "top_dimension.h"
-#include "inter_dimensions.h"
+#include "BettiMatching.h"
 #include "dimension_0.h"
+#include "inter_dimensions.h"
+#include "top_dimension.h"
 
 #include <iostream>
-#include <fstream>
-#include <chrono>
-#include <cassert>
 
+using namespace dimN;
 using namespace std;
 using namespace std::chrono;
 
 
-void print_usage_and_exit(int exit_code) {
-    cout << endl;
-    cerr << "Usage: "
-         << "Betti Matching "
-         << "[options] [input_0_filename] [input_1_filename]" << endl
-         << endl
-         << "Options:" << endl
-         << endl
-         << "  --help, -h                      print this screen" << endl
-         << "  --threshold, -t                 compute persistent homology of up to threshold" << endl
-         << "  --verbose, -v                   display detailed processing information" << endl
-         << "  --min_recursion_to_cache, -mc   minimum number of recursion for a reduced column to be cached" << endl
-         << "  --cache_size, -c	          maximum number of reduced columns to be cached" << endl
-         << "  --matched, -m                   name of the file containing matched pairs" << endl
-         << "  --unmatchedmatched_0, -u0       name of the file containing unmatched pairs of input 0" << endl
-         << "  --unmatchedmatched_1, -u1       name of the file containing unmatched pairs of input 1" << endl
-         << "  --print, -p                     print result in console" << endl
-         << endl;
-	exit(exit_code);
+BettiMatching::BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<value_t> comparison, vector<index_t> shape,
+                                Config& _config) : 
+    cgc0(input0, shape), cgc1(input1, shape), cgcComp(comparison, shape), config(_config) {
+    dim = shape.size();
+    pairs0 = vector<vector<Pair>>(dim);
+    pairs1 = vector<vector<Pair>>(dim);
+    pairsComp = vector<vector<Pair>>(dim);
+    matches = vector<vector<Match>>(dim);
+    matched = vector<vector<VoxelMatch>>(dim);
+    unmatched0 = vector<vector<VoxelPair>>(dim);
+    unmatched1 = vector<vector<VoxelPair>>(dim);
 }
 
-
-int main(int argc, char** argv) {
-    Config config;
-    
-    for (int i = 1; i < argc; ++i) {
-		const string arg(argv[i]);
-		if (arg == "--help" || arg == "-h") {
-			print_usage_and_exit(0);
-        } else if (arg == "--threshold" || arg == "-t") {
-            string parameter = string(argv[++i]);
-			size_t next_pos;
-			config.threshold = stod(parameter, &next_pos);
-			if (next_pos != parameter.size()) print_usage_and_exit(-1);
-		} else if (arg == "--verbose" || arg == "-v") {
-			config.verbose = true;
-		} else if (arg == "--matched" || arg == "-m") {
-			config.matched_filename = string(argv[++i]);
-        } else if (arg == "--unmatched_0" || arg == "-u0") {
-			config.unmatched_0_filename = string(argv[++i]);
-        } else if (arg == "--unmatched_1" || arg == "-u1") {
-			config.unmatched_1_filename = string(argv[++i]);
-		} else if (arg == "--min_recursion_to_cache" || arg == "-mc") {
-            config.minRecursionToCache = stoi(argv[++i]);
-		} else if (arg == "--cache_size" || arg == "-c") {
-            config.cacheSize = stoi(argv[++i]);
-		} else if (arg == "--print" || arg == "-p") {
-			config.print = true;
-		} else {
-            if (config.filename_0.empty()) {
-                config.filename_0 = argv[i];
-            } else {
-                config.filename_1 = argv[i];
-            }
-		}
-	}
-    if (config.filename_0.empty()) { print_usage_and_exit(-1); } 
-    if (config.filename_0.find(".txt") != string::npos) {
-		config.format_0 = PERSEUS;
-	} else if (config.filename_0.find(".npy")!= string::npos) {
-		config.format_0 = NUMPY;
-	} else if (config.filename_0.find(".complex")!= string::npos) {
-		config.format_0 = DIPHA;
-	} else {
-		cerr << "unknown input file format! (the filename extension should be .txt/.npy/.complex): " << config.filename_0 << endl;
-		exit(-1);
-	}
-    ifstream file_stream_0(config.filename_0);
-	if (!config.filename_0.empty() && file_stream_0.fail()) {
-		cerr << "couldn't open file " << config.filename_0 << endl;
-		exit(-1);
-	}
-    if (config.filename_1.empty()) { print_usage_and_exit(-1); }
-    if(config.filename_1.find(".txt")!= string::npos) {
-		config.format_1 = PERSEUS;
-	} else if (config.filename_1.find(".npy")!= string::npos) {
-		config.format_1 = NUMPY;
-	} else if (config.filename_1.find(".complex")!= string::npos) {
-		config.format_1 = DIPHA;
-	} else {
-		cerr << "unknown input file format! (the filename extension should be .txt/.npy/.complex): " << config.filename_1 << endl;
-		exit(-1);
-	}
-    ifstream file_stream_1(config.filename_1);
-	if (!config.filename_1.empty() && file_stream_1.fail()) {
-		cerr << "couldn't open file " << config.filename_1 << endl;
-		exit(-1);
-	}
-
-    if (config.verbose) { cout << "reading images ... "; }
-    auto start = high_resolution_clock::now();
-
-    vector<double> readImage0;
-    vector<double> readImage1;
-    vector<index_t> shape0;
-    vector<index_t> shape1;
-    readImage(config.filename_0, config.format_0, readImage0, shape0);
-    readImage(config.filename_1, config.format_1, readImage1, shape1);
-    #ifdef USE_DOUBLE
-    vector<value_t>& image0 = readImage0;
-    vector<value_t>& image1 = readImage1;
-    #else
-    vector<value_t> image0(readImage0.begin(), readImage0.end());
-    vector<value_t> image1(readImage1.begin(), readImage1.end());
-    #endif
-
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - start);
-    if (config.verbose) { cout << "took " << duration.count() << " ms" << endl; }
-    
-    assert (shape0 == shape1);
-    index_t dim = shape0.size();
-    
-    vector<value_t> imageComp;
-    transform(image0.begin(), image0.end(), image1.begin(), back_inserter(imageComp), [](value_t a, value_t b) { return min(a,b); });
-
-    CubicalGridComplex cgc0(std::move(image0), shape0);
-    CubicalGridComplex cgc1(std::move(image1), shape1);
-    CubicalGridComplex cgcComp(std::move(imageComp), shape0);
-
-    vector<vector<Pair>> pairs0(dim);
-	vector<vector<Pair>> pairs1(dim);
-	vector<vector<Pair>> pairsComp(dim);
-	vector<vector<Match>> matches(dim);
-	unordered_map<index_t, bool> isMatched0;
-	unordered_map<index_t, bool> isMatched1;
-
- 	vector<Cube> ctr0;
- 	vector<Cube> ctr1;
+void BettiMatching::computeMatching() {
+    vector<Cube> ctr0;
+    vector<Cube> ctr1;
     vector<Cube> ctrComp;
-
-    if (dim > 1) {
+    {
+#ifdef RUNTIME
+        cout << "dimension " << dim-1 << ":";
+        auto start = high_resolution_clock::now();
+#endif
         TopDimension topDim(cgc0, cgc1, cgcComp,  config, pairs0[dim-1], pairs1[dim-1], pairsComp[dim-1], matches[dim-1],
                             isMatched0, isMatched1);       
         topDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
+#ifdef RUNTIME
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>(stop - start);
+        cout << endl << "total: " << duration.count() << " ms" << endl << endl;
+#endif
     }
-
-    if (dim > 2) {
+    {
+#ifdef RUNTIME
+        auto start = high_resolution_clock::now();
+#endif
         InterDimensions interDim(cgc0, cgc1, cgcComp, config, pairs0, pairs1, pairsComp, matches, isMatched0, isMatched1);
         interDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
+#ifdef RUNTIME
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>(stop - start);
+        cout << endl << "total: " << duration.count() << " ms" << endl << endl;
+#endif
     }
-
-    {
+    { 
+#ifdef RUNTIME
+        cout << "dimension 0:";
+        auto start = high_resolution_clock::now();
+#endif
         Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0, isMatched1);       
         dim0.computePairsAndMatch(ctr0, ctr1, ctrComp);
-    }
-
-    if (config.print) {
-        printResult(dim, cgc0, cgc1, cgcComp, pairs0, pairs1, pairsComp, matches, isMatched0, isMatched1);
+#ifdef RUNTIME
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>(stop - start);
+        cout << endl << "total: " << duration.count() << " ms" << endl << endl;
+#endif
     }
 }
-    
+
+void BettiMatching::computeVoxels() {
+#ifdef RUNTIME
+    cout << "computing voxels ... ";
+    auto start = high_resolution_clock::now();
+#endif
+    for (uint8_t d = 0; d < dim; ++d) {
+        for (auto& pair : pairs0[d]) {
+            if (!isMatched0[cgc0.getCubeIndex(pair.birth)]) {
+                unmatched0[d].push_back(VoxelPair(cgc0.getParentVoxel(pair.birth), cgc0.getParentVoxel(pair.death)));
+            }
+        }
+        for (auto& pair : pairs1[d]) {
+            if (!isMatched1[cgc1.getCubeIndex(pair.birth)]) {
+                unmatched1[d].push_back(VoxelPair(cgc1.getParentVoxel(pair.birth), cgc1.getParentVoxel(pair.death)));
+            }
+        }
+        for (auto& match : matches[d]) {
+            matched[d].push_back(VoxelMatch(VoxelPair(cgc0.getParentVoxel(match.pair0.birth), cgc0.getParentVoxel(match.pair0.death)), 
+                                            VoxelPair(cgc1.getParentVoxel(match.pair1.birth), cgc1.getParentVoxel(match.pair1.death))));
+        }
+    }
+#ifdef RUNTIME
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+    cout << duration.count() << " ms" << endl << endl;
+#endif
+}
+
+void BettiMatching::printResult() {
+    index_t count;
+    cout << "---------------------------------------------------------------------------------------------------------------" << endl;
+    cout << "Input 0:" << endl << endl;
+    for (uint8_t d = 0; d < dim; ++d) {
+        cout << "dim " << unsigned(d) << ": ";
+        count = pairs0[d].size();
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto &pair : pairs0[d]) { pair.print(); cout << endl; }
+        } else { cout << count << endl; }
+    }
+    cout << "---------------------------------------------------------------------------------------------------------------" << endl;
+    cout << "Input 1" << endl << endl; 
+    for (uint8_t d = 0; d < dim; ++d) {
+        cout << "dim " << unsigned(d) << ": ";
+        count = pairs1[d].size();
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto &pair : pairs1[d]) { pair.print(); cout << endl; }
+        } else { cout << count << endl; }
+    }
+#ifdef COMPUTE_COMPARISON
+    cout << "---------------------------------------------------------------------------------------------------------------" << endl;
+    cout << "Comparison" << endl << endl; 
+    for (uint8_t d = 0; d < dim; ++d) {
+        cout << "dim " << unsigned(d) << ": ";
+        count = pairsComp[d].size();
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto &pair : pairsComp[d]) { pair.print(); cout << endl; }
+        } else { cout << "number of pairs: " << count << endl; }
+    }
+#endif
+    cout << "---------------------------------------------------------------------------------------------------------------" << endl;
+    cout << "Betti Matching:" << endl << endl;
+    cout << "matched cubes: " << endl;
+    for (uint8_t d = 0; d < dim; ++d) {
+        cout << "dim " << unsigned(d) << ": ";
+        count = matches[d].size();
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto &match : matches[d]) { match.print(); }
+        } else { cout << count << endl; }
+    }
+    cout << endl;
+    cout << "unmatched cubes in Input 0" << endl;
+    for (uint8_t d = 0; d < dim; ++d) {
+        cout << "dim " << unsigned(d) << ": ";
+        count = 0;
+        for (auto &pair : pairs0[d]) { if (!isMatched0[cgc0.getCubeIndex(pair.birth)]) { ++count; } }
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto &pair : pairs0[d]) { if (!isMatched0[cgc0.getCubeIndex(pair.birth)]) { pair.print(); cout << endl; } }
+        } else { cout << count << endl; }
+    }
+    cout << endl;
+    cout << "unmatched cubes in Input 1" << endl;
+    for (uint8_t d = 0; d < dim; ++d) {
+        cout << "dim " << unsigned(d) << ": ";
+        count = 0;
+        for (auto &pair : pairs1[d]) {if (!isMatched1[cgc1.getCubeIndex(pair.birth)]) { ++count; } }
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto &pair : pairs1[d]) { if (!isMatched1[cgc1.getCubeIndex(pair.birth)]) { pair.print(); cout << endl; } }
+        } else { cout << count << endl; }
+    }
+    cout << endl;
+    cout << "matched voxels: " << endl;
+    for (uint8_t d = 0; d < dim; ++d) {
+        cout << "dim " << unsigned(d) << ": ";
+        count = matched[d].size();
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto& match : matched[d]) { match.print(); }
+        } else { cout << count << endl; }
+    }
+    cout << endl;
+    cout << "unmatched voxels in Input 0" << endl;
+    for (uint8_t d = 0; d < dim; ++d) {
+        cout << "dim " << unsigned(d) << ": ";
+        count = unmatched0[d].size();
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto& pair : unmatched0[d]) { pair.print(); cout << endl; }
+        } else { cout << count << endl; }
+    }
+    cout << endl;
+    cout << "unmatched voxels in Input 1" << endl;
+    for (uint8_t d = 0; d < dim; ++d) {
+        cout << "dim " << unsigned(d) << ": ";
+        count = unmatched1[d].size();
+        if (0 < count && count < 10) {
+            cout << endl;
+            for (auto& pair : unmatched1[d]) { pair.print(); cout << endl; }
+        } else { cout << count << endl; }
+    }
+    cout << endl;
+}

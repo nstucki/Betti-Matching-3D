@@ -39,7 +39,7 @@ Pair::Pair(const Pair& pair) : birth(pair.birth), death(pair.death) {}
 
 bool Pair::operator==(const Pair &rhs) const { return (birth == rhs.birth && death == rhs.death); }
 
-void Pair::print() const { cout << "("; birth.print(); cout << ","; death.print(); cout << ")"; }
+void Pair::print() const { cout << "("; birth.print(); cout << ";"; death.print(); cout << ")"; }
 
 
 Match::Match(Pair _pair0, Pair _pair1) : pair0(_pair0), pair1(_pair1) {}
@@ -49,7 +49,7 @@ void Match::print() const { pair0.print(); cout << " <-> "; pair1.print(); cout 
 
 VoxelPair::VoxelPair(const vector<index_t>& _birth, const vector<index_t>& _death) : birth(_birth), death(_death) {}
 
-void VoxelPair::print() const { cout << "(" << birth[0] << "," << birth[1] << " ; " << death[0] << "," << death[1] << ")"; }
+void VoxelPair::print() const { cout << "((" << birth[0] << "," << birth[1] << ");(" << death[0] << "," << death[1] << "))"; }
 
 
 VoxelMatch::VoxelMatch(const VoxelPair& _pair0, const VoxelPair& _pair1) : pair0(_pair0), pair1(_pair1) {}
@@ -65,7 +65,7 @@ CubicalGridComplex::~CubicalGridComplex() {
     delete[] grid;
 }
 
-index_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
+size_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
 	switch (dim) {
 		case 0:
 			return n_xy;
@@ -120,6 +120,7 @@ vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8
 					if (cube.birth == getBirth(x, y)) { return {x,y}; }
 					else { return {x,y+1}; }
 			}
+			
 		case 2:
 			if (cube.birth == getBirth(x, y)) { return {x,y}; }
 			else if (cube.birth == getBirth(x, y+1)) { return {x,y+1}; }
@@ -127,7 +128,7 @@ vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8
 			else { return {x+1,y+1}; }
 	}
 	cerr << "parent voxel not found!" << endl;
-	return {0,0,0};
+	return {0,0};
 }
 
 void CubicalGridComplex::printImage() const {
@@ -166,7 +167,7 @@ UnionFind::UnionFind(const CubicalGridComplex& _cgc) : cgc(_cgc) {
 	size_t n = cgc.getNumberOfCubes(0);
 	parent.reserve(n);
 	birthtime.reserve(n);
-	size_t counter = 0;
+	index_t counter = 0;
 	for (index_t x = 0; x < _cgc.shape[0]; ++x) {
 		for (index_t y = 0; y < _cgc.shape[1]; ++y) {
 			parent.push_back(counter++);
