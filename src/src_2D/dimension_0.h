@@ -30,7 +30,6 @@ namespace dim2 {
 		UnionFind uf1;
 		UnionFind ufComp;
 
-		void enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const;
 		void computePairs(vector<Cube>& ctr, uint8_t k);
 		void computeImagePairsAndMatch(vector<Cube>& ctr);
 	};

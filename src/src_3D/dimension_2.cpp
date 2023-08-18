@@ -81,7 +81,7 @@ void Dimension2::computeImagePairs(vector<Cube>& dualEdges, const uint8_t& k) {
 	index_t birthIdx;
 	index_t birthIdxComp;
 	value_t birth;
-	vector<index_t> birthCoordinates;
+	vector<index_t> birthCoordinates(3);
 	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge) {
 		boundaryIndices = uf.getBoundaryIndices(*edge);
 		parentIdx0 = uf.find(boundaryIndices[0]);
@@ -120,7 +120,7 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges) {
 	index_t parentIdx1;
 	index_t birthIdx;
 	value_t birth;
-	vector<index_t> birthCoordinates;
+	vector<index_t> birthCoordinates(3);
 	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge){
 		boundaryIndices = ufComp.getBoundaryIndices(*edge);
 		parentIdx0 = ufComp.find(boundaryIndices[0]);
