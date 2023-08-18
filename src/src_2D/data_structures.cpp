@@ -2,7 +2,7 @@
 #include <iostream>
 #include <algorithm>
 
-using namespace D2;
+using namespace dim2;
 using namespace std;
 
 
@@ -212,7 +212,7 @@ index_t UnionFind::link(index_t x, index_t y) {
 value_t UnionFind::getBirth(const index_t& idx) const { return birthtime[idx]; }
 
 vector<index_t> UnionFind::getCoordinates(index_t idx) const { 
-	return {idx/cgc.shape[1],idx%cgc.shape[1]};
+	return {idx/cgc.shape[1],idx % cgc.shape[1]};
 }
 
 vector<index_t> UnionFind::getBoundaryIndices(const Cube& edge) const {
@@ -285,7 +285,7 @@ index_t UnionFindDual::link(index_t x, index_t y) {
 value_t UnionFindDual::getBirth(const index_t& idx) const { return birthtime[idxx]; }
 
 vector<index_t> UnionFindDual::getCoordinates(index_t idx) const { 
-	return {idx/(cgc.n_yz),idx/(cgc.n_z)%(cgc.n_y),idx%(cgc.n_z)};
+	return {idx/cgc.m_y,idx % cgc.m_y};
 }
 
 vector<index_t> UnionFindDual::getBoundaryIndices(const Cube& edge) const {

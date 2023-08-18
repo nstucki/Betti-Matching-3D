@@ -1,7 +1,7 @@
 #include "data_structures.h"
 
 
-namespace D2 {
+namespace dim2 {
     class BettiMatching {
         public:
         BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<value_t> comparison, vector<index_t> shape,

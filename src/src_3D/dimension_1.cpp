@@ -21,7 +21,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	cout << endl << "input 0: ";
 #endif
 	computePairs(ctr0, 0);
-#ifdef USE_CLEARING_DIM_0
+#ifdef USE_CLEARING_DIM0
 	ctr0.clear();
 	enumerateEdges(cgc0, ctr0);
 #endif
@@ -32,7 +32,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	pivotColumnIndex.clear();
 	cache.clear();
 	computePairs(ctr1, 1);
-#ifdef USE_CLEARING_DIM_0
+#ifdef USE_CLEARING_DIM0
 	ctr1.clear();
 	enumerateEdges(cgc1, ctr1);
 #endif
@@ -43,7 +43,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	pivotColumnIndex.clear();
 	cache.clear();
 	computePairsComp(ctrComp);
-#ifdef USE_CLEARING_DIM_0
+#ifdef USE_CLEARING_DIM0
 	vector<Cube> ctrImage = ctrComp;
 	ctrComp.clear();
 	enumerateEdges(cgcComp, ctrComp);
@@ -54,7 +54,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #endif
 	pivotColumnIndex.clear();
 	cache.clear();
-#ifdef USE_CLEARING_DIM_0
+#ifdef USE_CLEARING_DIM0
 	computeImagePairs(ctrImage, 0);
 #else
 	computeImagePairs(ctrComp, 0); 
@@ -65,7 +65,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #endif
 	pivotColumnIndex.clear();
 	cache.clear();
-#ifdef USE_CLEARING_DIM_0
+#ifdef USE_CLEARING_DIM0
 	computeImagePairs(ctrImage, 1);
 #else
 	computeImagePairs(ctrComp, 1); 

@@ -8,7 +8,7 @@
 using namespace std;
 
 
-namespace D2 {
+namespace dim2 {
 	class Cube {
 		public:
 		value_t birth;

@@ -21,7 +21,7 @@ void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #ifdef RUNTIME
 	cout << endl << "input 0: ";
 #endif
-#ifndef USE_CLEARING_DIM_0
+#ifndef USE_CLEARING_DIM0
 	ctr0.clear();
 	enumerateEdges(cgc0, ctr0);
 #endif
@@ -30,7 +30,7 @@ void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #ifdef RUNTIME
 	cout << endl << "input 1: ";
 #endif
-#ifndef USE_CLEARING_DIM_0
+#ifndef USE_CLEARING_DIM0
 	ctr1.clear();
 	enumerateEdges(cgc1, ctr1);
 #endif
@@ -39,7 +39,7 @@ void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #ifdef RUNTIME
 	cout << endl << "comparison & image 0 & image 1 & matching: ";
 #endif
-#ifndef USE_CLEARING_DIM_0
+#ifndef USE_CLEARING_DIM0
 	ctrComp.clear();
 	enumerateEdges(cgcComp, ctrComp);
 #endif

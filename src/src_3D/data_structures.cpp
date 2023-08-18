@@ -275,7 +275,7 @@ index_t UnionFind::link(index_t x, index_t y) {
 value_t UnionFind::getBirth(const index_t& idx) const { return birthtime[idx]; }
 
 vector<index_t> UnionFind::getCoordinates(index_t idx) const { 
-	return {idx/cgc.n_yz,idx/cgc.shape[2]%cgc.shape[1],idx%cgc.shape[2]};
+	return {idx/cgc.n_yz,idx/cgc.shape[2] % cgc.shape[1],idx % cgc.shape[2]};
 }
 
 vector<index_t> UnionFind::getBoundaryIndices(const Cube& edge) const {
@@ -354,7 +354,7 @@ index_t UnionFindDual::link(index_t x, index_t y) {
 
 value_t UnionFindDual::getBirth(const index_t& idx) const { return birthtime[idx]; }
 
-vector<index_t> UnionFindDual::getCoordinates(index_t x) const { return {x/cgc.m_yz,x/cgc.m_z%cgc.m_y,x%cgc.m_z}; }
+vector<index_t> UnionFindDual::getCoordinates(index_t x) const { return {x/cgc.m_yz,x/cgc.m_z % cgc.m_y,x % cgc.m_z}; }
 
 vector<index_t> UnionFindDual::getBoundaryIndices(const Cube& edge) const {
 	vector<index_t> boundaryIndices(2);

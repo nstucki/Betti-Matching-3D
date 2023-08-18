@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-using namespace D2;
+using namespace dim2;
 using namespace std;
 using namespace std::chrono;
 

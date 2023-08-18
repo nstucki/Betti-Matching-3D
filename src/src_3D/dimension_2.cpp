@@ -45,7 +45,6 @@ void Dimension2::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>&
 	cout << "enumeration ";
 	auto start = high_resolution_clock::now();
 #endif 
-	dualEdges.clear();
 	dualEdges.reserve(cgc.getNumberOfCubes(2));
 	value_t birth;
 	for (index_t x = 0; x < cgc.shape[0]; ++x) {

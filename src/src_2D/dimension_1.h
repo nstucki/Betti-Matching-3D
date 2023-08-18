@@ -1,12 +1,11 @@
 #pragma once
 
 #include "data_structures.h"
-#include "../config.h"
 
 #include <unordered_map>
 
 
-namespace D2 {
+namespace dim2 {
 	class Dimension1 {
 		public:
 		Dimension1(const CubicalGridComplex& cgc0, const CubicalGridComplex& cgc1, const CubicalGridComplex& cgcComp, 

@@ -4,12 +4,10 @@
 #include <limits>
 #include <cstdint>
 
-using namespace std;
-
 //#define COMPUTE_COMPARISON
 #define RUNTIME
-//#define USE_EMERGENT_PAIRS
-#define USE_CLEARING_DIM_0
+#define USE_EMERGENT_PAIRS
+#define USE_CLEARING_DIM0
 
 typedef uint32_t index_t;
 typedef double value_t;
@@ -18,6 +16,8 @@ typedef double value_t;
 #define NONE numeric_limits<index_t>::max()
 
 enum fileFormat { DIPHA, PERSEUS, NUMPY };
+
+using namespace std;
 
 
 struct Config {
