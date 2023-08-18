@@ -86,8 +86,10 @@ void BettiMatching::computeVoxels() {
             }
         }
         for (auto& match : matches[d]) {
-            matched[d].push_back(VoxelMatch(VoxelPair(cgc0.getParentVoxel(match.pair0.birth, d), cgc0.getParentVoxel(match.pair0.death, d+1)), 
-                                            VoxelPair(cgc1.getParentVoxel(match.pair1.birth, d), cgc1.getParentVoxel(match.pair1.death, d+1))));
+            matched[d].push_back(VoxelMatch(VoxelPair(cgc0.getParentVoxel(match.pair0.birth, d),
+                                                        cgc0.getParentVoxel(match.pair0.death, d+1)), 
+                                            VoxelPair(cgc1.getParentVoxel(match.pair1.birth, d),
+                                                        cgc1.getParentVoxel(match.pair1.death, d+1))));
         }
     }
 #ifdef RUNTIME

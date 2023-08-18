@@ -12,17 +12,11 @@ using namespace dimN;
 using namespace std;
 
 
-Cube::Cube() {
-	birth = 0; 
-	coordinates.push_back(NONE);
-}
+Cube::Cube() : birth(0) { coordinates.push_back(NONE); }
 
 Cube::Cube(value_t _birth, vector<index_t>_coordinates) : birth(_birth), coordinates(_coordinates) {}
 
-Cube::Cube(const Cube &cube) {
-    birth = cube.birth;
-    coordinates = cube.coordinates;
-}
+Cube::Cube(const Cube &cube) : birth(cube.birth), coordinates(cube.coordinates) {}
 
 bool Cube::operator==(const Cube& rhs) const { return (birth == rhs.birth && coordinates == rhs.coordinates); }
 
