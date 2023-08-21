@@ -37,10 +37,9 @@ void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, 
 
     computeMatching();
 
+#ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
-
-#ifdef RUNTIME
 	cout << "took " << duration.count() << " ms" << endl;
 #endif
 }
