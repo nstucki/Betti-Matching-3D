@@ -38,19 +38,19 @@ void BettiMatching::computeVoxels() {
 #endif
     for (auto& pair : pairs0) {
         if (!isMatched0[pair.birth.index]) {
-            unmatched0.push_back(VoxelPair(cgc0.getParentVoxel(pair.birth, 0), cgc0.getParentVoxel(pair.death, 1)));
+            _unmatched0.push_back(VoxelPair(std::vector{cgc0.getParentVoxel(pair.birth, 0)}, std::vector{cgc0.getParentVoxel(pair.death, 1)}));
         }
     }
     for (auto& pair : pairs1) {
         if (!isMatched1[pair.birth.index]) {
-            unmatched1.push_back(VoxelPair(cgc1.getParentVoxel(pair.birth, 0), cgc1.getParentVoxel(pair.death, 1)));
+            _unmatched1.push_back(VoxelPair(std::vector{cgc1.getParentVoxel(pair.birth, 0)}, std::vector{cgc1.getParentVoxel(pair.death, 1)}));
         }
     }
     for (auto& match : matches) {
-        matched.push_back(VoxelMatch(VoxelPair(cgc0.getParentVoxel(match.pair0.birth, 0), 
-                                                cgc0.getParentVoxel(match.pair0.death, 1)), 
-                                        VoxelPair(cgc1.getParentVoxel(match.pair1.birth, 0), 
-                                                    cgc1.getParentVoxel(match.pair1.death, 1))));
+        _matched.push_back(VoxelMatch(VoxelPair(std::vector{cgc0.getParentVoxel(match.pair0.birth, 0)}, 
+                                                std::vector{cgc0.getParentVoxel(match.pair0.death, 1)}), 
+                                        VoxelPair(std::vector{cgc1.getParentVoxel(match.pair1.birth, 0)}, 
+                                                    std::vector{cgc1.getParentVoxel(match.pair1.death, 1)})));
     }
 #ifdef RUNTIME
     auto stop = high_resolution_clock::now();
@@ -120,26 +120,26 @@ void BettiMatching::printResult() {
     cout << endl;
     cout << "matched voxels: " << endl;
     cout << "dim " << 0 << ": ";
-    count = matched.size();
+    count = _matched.size();
     if (0 < count && count < 10) {
         cout << endl;
-        for (auto& match : matched) { match.print(); }
+        for (auto& match : _matched) { match.print(); }
     } else { cout << count << endl; }
     cout << endl;
     cout << "unmatched voxels in Input 0" << endl;
     cout << "dim " << 0 << ": ";
-    count = unmatched0.size();
+    count = _unmatched0.size();
     if (0 < count && count < 10) {
         cout << endl;
-        for (auto& pair : unmatched0) { pair.print(); cout << endl; }
+        for (auto& pair : _unmatched0) { pair.print(); cout << endl; }
     } else { cout << count << endl; }
     cout << endl;
     cout << "unmatched voxels in Input 1" << endl;
     cout << "dim " << 0 << ": ";
-    count = unmatched1.size();
+    count = _unmatched1.size();
     if (0 < count && count < 10) {
         cout << endl;
-        for (auto& pair : unmatched1) { pair.print(); cout << endl; }
+        for (auto& pair : _unmatched1) { pair.print(); cout << endl; }
     } else { cout << count << endl; }
     cout << endl;
 }

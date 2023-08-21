@@ -12,6 +12,10 @@ namespace dim3 {
         void computeVoxels();
         void printResult();
 
+        // Read-only properties
+        const vector<vector<VoxelMatch>> &matched = _matched;
+        const vector<vector<VoxelPair>> &unmatched0 = _unmatched0;
+        const vector<vector<VoxelPair>> &unmatched1 = _unmatched1;
         private:
         const CubicalGridComplex cgc0;
         const CubicalGridComplex cgc1;
@@ -22,9 +26,9 @@ namespace dim3 {
         vector<vector<Match>> matches;
         vector<unordered_map<uint64_t, bool>> isMatched0;
         vector<unordered_map<uint64_t, bool>> isMatched1;
-        vector<vector<VoxelMatch>> matched;
-        vector<vector<VoxelPair>> unmatched0;
-        vector<vector<VoxelPair>> unmatched1;
+        vector<vector<VoxelMatch>> _matched;
+        vector<vector<VoxelPair>> _unmatched0;
+        vector<vector<VoxelPair>> _unmatched1;
         Config& config;
     };
 }

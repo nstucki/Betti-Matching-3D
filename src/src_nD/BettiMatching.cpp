@@ -19,9 +19,9 @@ BettiMatching::BettiMatching(vector<value_t> input0, vector<value_t> input1, vec
     pairs1 = vector<vector<Pair>>(dim);
     pairsComp = vector<vector<Pair>>(dim);
     matches = vector<vector<Match>>(dim);
-    matched = vector<vector<VoxelMatch>>(dim);
-    unmatched0 = vector<vector<VoxelPair>>(dim);
-    unmatched1 = vector<vector<VoxelPair>>(dim);
+    _matched = vector<vector<VoxelMatch>>(dim);
+    _unmatched0 = vector<vector<VoxelPair>>(dim);
+    _unmatched1 = vector<vector<VoxelPair>>(dim);
 }
 
 void BettiMatching::computeMatching() {
@@ -77,16 +77,16 @@ void BettiMatching::computeVoxels() {
     for (uint8_t d = 0; d < dim; ++d) {
         for (auto& pair : pairs0[d]) {
             if (!isMatched0[cgc0.getCubeIndex(pair.birth)]) {
-                unmatched0[d].push_back(VoxelPair(cgc0.getParentVoxel(pair.birth), cgc0.getParentVoxel(pair.death)));
+                _unmatched0[d].push_back(VoxelPair(cgc0.getParentVoxel(pair.birth), cgc0.getParentVoxel(pair.death)));
             }
         }
         for (auto& pair : pairs1[d]) {
             if (!isMatched1[cgc1.getCubeIndex(pair.birth)]) {
-                unmatched1[d].push_back(VoxelPair(cgc1.getParentVoxel(pair.birth), cgc1.getParentVoxel(pair.death)));
+                _unmatched1[d].push_back(VoxelPair(cgc1.getParentVoxel(pair.birth), cgc1.getParentVoxel(pair.death)));
             }
         }
         for (auto& match : matches[d]) {
-            matched[d].push_back(VoxelMatch(VoxelPair(cgc0.getParentVoxel(match.pair0.birth),
+            _matched[d].push_back(VoxelMatch(VoxelPair(cgc0.getParentVoxel(match.pair0.birth),
                                                         cgc0.getParentVoxel(match.pair0.death)), 
                                             VoxelPair(cgc1.getParentVoxel(match.pair1.birth),
                                                         cgc1.getParentVoxel(match.pair1.death))));
@@ -170,30 +170,30 @@ void BettiMatching::printResult() {
     cout << "matched voxels: " << endl;
     for (uint8_t d = 0; d < dim; ++d) {
         cout << "dim " << unsigned(d) << ": ";
-        count = matched[d].size();
+        count = _matched[d].size();
         if (0 < count && count < 10) {
             cout << endl;
-            for (auto& match : matched[d]) { match.print(); }
+            for (auto& match : _matched[d]) { match.print(); }
         } else { cout << count << endl; }
     }
     cout << endl;
     cout << "unmatched voxels in Input 0" << endl;
     for (uint8_t d = 0; d < dim; ++d) {
         cout << "dim " << unsigned(d) << ": ";
-        count = unmatched0[d].size();
+        count = _unmatched0[d].size();
         if (0 < count && count < 10) {
             cout << endl;
-            for (auto& pair : unmatched0[d]) { pair.print(); cout << endl; }
+            for (auto& pair : _unmatched0[d]) { pair.print(); cout << endl; }
         } else { cout << count << endl; }
     }
     cout << endl;
     cout << "unmatched voxels in Input 1" << endl;
     for (uint8_t d = 0; d < dim; ++d) {
         cout << "dim " << unsigned(d) << ": ";
-        count = unmatched1[d].size();
+        count = _unmatched1[d].size();
         if (0 < count && count < 10) {
             cout << endl;
-            for (auto& pair : unmatched1[d]) { pair.print(); cout << endl; }
+            for (auto& pair : _unmatched1[d]) { pair.print(); cout << endl; }
         } else { cout << count << endl; }
     }
     cout << endl;
