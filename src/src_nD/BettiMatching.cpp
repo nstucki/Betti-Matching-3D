@@ -4,6 +4,7 @@
 #include "top_dimension.h"
 
 #include <iostream>
+#include <chrono>
 
 using namespace dimN;
 using namespace std;

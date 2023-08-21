@@ -4,6 +4,7 @@
 #include "dimension_2.h"
 
 #include <iostream>
+#include <chrono>
 
 using namespace dim3;
 using namespace std;

@@ -3,6 +3,8 @@
 #include "dimension_1.h"
 
 #include <iostream>
+#include <chrono>
+#include <unordered_map>
 
 using namespace dim2;
 using namespace std;
