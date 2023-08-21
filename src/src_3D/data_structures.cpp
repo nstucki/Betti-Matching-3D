@@ -53,12 +53,20 @@ CubicalGridComplex::CubicalGridComplex(const vector<value_t>& image, const vecto
 	shape(_shape), m_x(shape[0]-1), m_y(shape[1]-1), m_z(shape[2]-1), m_yz(m_y*m_z), m_xyz(m_x*m_yz), 
 	n_yz(shape[1]*shape[2]), n_xyz(shape[0]*n_yz) { getGridFromVector(image); }
 
+CubicalGridComplex::CubicalGridComplex(CubicalGridComplex &&other) : m_x(other.m_x), m_y(other.m_y), m_z(other.m_z), m_yz(other.m_yz), m_xyz(other.m_xyz), n_yz(other.n_yz), n_xyz(other.n_xyz), shape(std::move(other.shape))
+{
+	grid = other.grid;
+	other.grid = nullptr;
+}
+
 CubicalGridComplex::~CubicalGridComplex() {
-	for (index_t i = 0; i < shape[0]+2; ++i) {
-        for (index_t j = 0; j < shape[1]+2; ++j) { delete[] grid[i][j]; }
-        delete[] grid[i];
-    }
-    delete[] grid;
+	if (grid != nullptr) {
+		for (index_t i = 0; i < shape[0]+2; ++i) {
+			for (index_t j = 0; j < shape[1]+2; ++j) { delete[] grid[i][j]; }
+			delete[] grid[i];
+		}
+		delete[] grid;
+	}
 }
 
 size_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {

@@ -8,6 +8,7 @@ namespace dim2 {
         public:
         BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<value_t> comparison, vector<index_t> shape,
                         Config& config);
+        BettiMatching(BettiMatching &&other);
         void computeMatching();
         void computeVoxels();
         void printResult();
@@ -18,9 +19,9 @@ namespace dim2 {
         const vector<vector<VoxelPair>> &unmatched1 = _unmatched1;
 
         private:
-        const CubicalGridComplex cgc0;
-        const CubicalGridComplex cgc1;
-        const CubicalGridComplex cgcComp;
+        CubicalGridComplex cgc0;
+        CubicalGridComplex cgc1;
+        CubicalGridComplex cgcComp;
         vector<vector<Pair>> pairs0;
         vector<vector<Pair>> pairs1;
         vector<vector<Pair>> pairsComp;

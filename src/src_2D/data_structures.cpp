@@ -49,9 +49,17 @@ void Match::print() const { pair0.print(); cout << " <-> "; pair1.print(); cout 
 CubicalGridComplex::CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& _shape) : 
 	shape(_shape), m_x(shape[0]-1), m_y(shape[1]-1), m_xy(m_x*m_y), n_xy(shape[0]*shape[1]) { getGridFromVector(image); }
 
+CubicalGridComplex::CubicalGridComplex(CubicalGridComplex &&other) : m_x(other.m_x), m_y(other.m_y), m_xy(other.m_xy), n_xy(other.n_xy), shape(std::move(other.shape))
+{
+	grid = other.grid;
+	other.grid = nullptr;
+}
+
 CubicalGridComplex::~CubicalGridComplex() {
-	for (index_t i = 0; i < shape[0]+2; ++i) { delete[] grid[i]; }
-    delete[] grid;
+	if (grid != nullptr) {
+		for (index_t i = 0; i < shape[0]+2; ++i) { delete[] grid[i]; }
+		delete[] grid;
+	}
 }
 
 size_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {

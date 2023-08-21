@@ -55,6 +55,7 @@ namespace dim1 {
 		const index_t m_x;
 
 		CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& shape);
+		CubicalGridComplex(CubicalGridComplex &&other);
 		~CubicalGridComplex();
 		size_t getNumberOfCubes(const uint8_t& dim) const;
 		value_t getBirth(const index_t& x) const;

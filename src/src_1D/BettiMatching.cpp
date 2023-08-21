@@ -14,6 +14,12 @@ BettiMatching::BettiMatching(vector<value_t> input0, vector<value_t> input1, vec
                                 Config& _config) : 
     cgc0(input0, shape), cgc1(input1, shape), cgcComp(comparison, shape), config(_config) {}
 
+BettiMatching::BettiMatching(BettiMatching &&other) : cgc0(std::move(other.cgc0)), cgc1(std::move(other.cgc1)), cgcComp(std::move(other.cgcComp)),
+                                                      config(other.config), pairs0(other.pairs0), pairs1(other.pairs1), pairsComp(other.pairsComp),
+                                                      matches(other.matches), isMatched0(other.isMatched0), isMatched1(other.isMatched1),
+                                                      _matched(other.matched), _unmatched0(other.unmatched0), _unmatched1(other.unmatched1) {}
+
+
 void BettiMatching::computeMatching() {
     vector<Cube> ctr0;
     vector<Cube> ctr1;

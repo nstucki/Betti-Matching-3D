@@ -19,9 +19,9 @@ namespace dimN {
 
         private:
         size_t dim;
-        const CubicalGridComplex cgc0;
-        const CubicalGridComplex cgc1;
-        const CubicalGridComplex cgcComp;
+        CubicalGridComplex cgc0;
+        CubicalGridComplex cgc1;
+        CubicalGridComplex cgcComp;
         vector<vector<Pair>> pairs0;
         vector<vector<Pair>> pairs1;
         vector<vector<Pair>> pairsComp;
