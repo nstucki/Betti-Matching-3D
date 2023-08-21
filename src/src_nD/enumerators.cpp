@@ -59,17 +59,13 @@ void CubeEnumerator::IncreaseByOne(const index_t& axis) {
          if (axis == nonDegenMax) { nonDegenMax = degenMax; }
         degenMax -= 1;
     }
-    for (index_t a = axis+1; a < cgc.dim; a++) {
-        nextCube.coordinates[a] = nonDegen[a];
-    }
+    for (size_t a = axis+1; a < cgc.dim; ++a) { nextCube.coordinates[a] = nonDegen[a]; }
     nextCube.birth = cgc.getBirth(nextCube.coordinates);
 }
 
 void CubeEnumerator::IncreaseByTwo(const index_t& axis) {
     nextCube.coordinates[axis] += 2;
-    for (index_t a = axis+1; a < cgc.dim; a++) {
-        nextCube.coordinates[a] = nonDegen[a];
-    }
+    for (size_t a = axis+1; a < cgc.dim; ++a) { nextCube.coordinates[a] = nonDegen[a]; }
     nextCube.birth = cgc.getBirth(nextCube.coordinates);
 }
 

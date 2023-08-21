@@ -136,7 +136,7 @@ void InterDimensions::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	bool checkEmergentPair;
 	bool foundPair;
 #endif
-	for (size_t i = 0; i < ctrSize; i++) {
+	for (size_t i = 0; i < ctrSize; ++i) {
 #ifdef USE_EMERGENT_PAIRS
 		checkEmergentPair = true;
 		foundPair = false;
@@ -190,7 +190,7 @@ void InterDimensions::computePairs(const vector<Cube>& ctr, uint8_t k) {
 				auto pair = pivotColumnIndex.find(cgc.getCubeIndex(pivot));
 				if (pair != pivotColumnIndex.end()) {
 					j = pair->second;
-					numRecurse++;
+					++numRecurse;
 					continue;
 				} else {
 					if (numRecurse >= config.minRecursionToCache) {
@@ -242,7 +242,7 @@ void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 	bool checkEmergentPair;
 	bool foundPair;
 #endif
-	for (size_t i = 0; i < ctrSize; i++) {
+	for (size_t i = 0; i < ctrSize; ++i) {
 #ifdef USE_EMERGENT_PAIRS
 		checkEmergentPair = true;
 		foundPair = false;
@@ -296,7 +296,7 @@ void InterDimensions::computePairsComp(vector<Cube>& ctr) {
 				auto pair = pivotColumnIndex.find(cgcComp.getCubeIndex(pivot));
 				if (pair != pivotColumnIndex.end()) {
 					j = pair->second;
-					numRecurse++;
+					++numRecurse;
 					continue;
 				} else {
 					if (numRecurse >= config.minRecursionToCache) {
@@ -361,7 +361,7 @@ void InterDimensions::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 	bool checkEmergentPair;
 	bool foundPair;
 #endif
-	for (size_t i = 0; i < ctrSize; i++) {
+	for (size_t i = 0; i < ctrSize; ++i) {
 #ifdef USE_EMERGENT_PAIRS
 		checkEmergentPair = true;
 		foundPair = false;
@@ -421,7 +421,7 @@ void InterDimensions::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 				auto pair = pivotColumnIndex.find(cgc.getCubeIndex(pivot));
 				if (pair != pivotColumnIndex.end()) {
 					j = pair->second;
-					numRecurse++;
+					++numRecurse;
 					continue;
 				} else {
 					if (numRecurse >= config.minRecursionToCache) {

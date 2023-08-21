@@ -2,6 +2,7 @@
 #include "dimension_0.h"
 
 #include <iostream>
+#include <chrono>
 
 using namespace dim1;
 using namespace std;
