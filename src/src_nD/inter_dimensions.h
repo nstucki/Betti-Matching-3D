@@ -29,7 +29,7 @@ namespace dimN {
 		vector<vector<Match>>& matches;
 		unordered_map<index_t, bool>& isMatched0;
 		unordered_map<index_t, bool>& isMatched1;
-		unordered_map<index_t, bool> matchMapComp;
+		unordered_map<index_t, bool> isMatchedComp;
 		unordered_map<index_t, Pair> matchMap0;
 		unordered_map<index_t, Pair> matchMap1;
 		unordered_map<index_t, Cube> matchMapIm0;
@@ -38,9 +38,9 @@ namespace dimN {
 		unordered_map<index_t, CubeQueue> cache;
 		index_t computeDim;
 
-		void computePairsComp(vector<Cube>& ctr);
 		void computePairs(const vector<Cube>& ctr, uint8_t k);
-		void computeImagePairs(const vector<Cube>& ctr, uint8_t k);
+		void computePairsComp(vector<Cube>& ctr);
+		void computeImagePairs(vector<Cube>& ctr, uint8_t k);
 		void computeMatching();
 		void assembleColumnsToReduce(const CubicalGridComplex& cgc, vector<Cube>& ctr) const;
 		Cube popPivot(CubeQueue& column) const;

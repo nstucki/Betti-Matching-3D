@@ -19,25 +19,54 @@ Dimension2::Dimension2(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						uf0(UnionFindDual(cgc0)), uf1(UnionFindDual(cgc1)), ufComp(UnionFindDual(cgcComp)) {}
 
 void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
+	size_t actualDim = 3;
+	for (index_t s : cgc0.shape) { if (s == 1) { --actualDim; } }
+	bool needToCompute = ( actualDim == 3);
+	if (!needToCompute) {
 #ifdef RUNTIME
-	cout << endl << "input & image 0: ";
+		cout << endl << "input & image 0: ";
 #endif
-	enumerateDualEdges(cgc0, ctr0);
-    computeImagePairs(ctr0, 0);
+		enumerateDualEdges(cgc0, ctr0);
+#ifdef RUNTIME
+		cout << "barcodes not computed";
+#endif
 
 #ifdef RUNTIME
 	cout << endl << "input & image 1: ";
 #endif
-	enumerateDualEdges(cgc1, ctr1);
-	ufComp.reset();
-    computeImagePairs(ctr1, 1);
+		enumerateDualEdges(cgc1, ctr1);
+#ifdef RUNTIME
+		cout << "barcodes not computed";
+#endif
+
+#ifdef RUNTIME
+	cout << endl << "comparison & matching: ";
+#endif
+		enumerateDualEdges(cgcComp, ctrComp);
+#ifdef RUNTIME
+		cout << "barcode & matching not computed";
+#endif
+	} else {
+#ifdef RUNTIME
+		cout << endl << "input & image 0: ";
+#endif
+		enumerateDualEdges(cgc0, ctr0);
+		computeImagePairs(ctr0, 0);
+
+#ifdef RUNTIME
+		cout << endl << "input & image 1: ";
+#endif
+		enumerateDualEdges(cgc1, ctr1);
+		ufComp.reset();
+		computeImagePairs(ctr1, 1);
     
 #ifdef RUNTIME
 	cout << endl << "comparison & matching: ";
 #endif
-	enumerateDualEdges(cgcComp, ctrComp);
-	ufComp.reset();
-	computeCompPairsAndMatch(ctrComp);
+		enumerateDualEdges(cgcComp, ctrComp);
+		ufComp.reset();
+		computeCompPairsAndMatch(ctrComp);
+	}
 }
 
 void Dimension2::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& dualEdges) const {
@@ -114,7 +143,6 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges) {
 	cout << "barcode and matching ";
 	auto start = high_resolution_clock::now();
 #endif 
-
 	vector<index_t> boundaryIndices;
 	index_t parentIdx0;
 	index_t parentIdx1;
@@ -146,7 +174,6 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges) {
 	}
 	auto new_end = std::remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& cube){ return cube.index == NONE; });
 	dualEdges.erase(new_end, dualEdges.end());
-
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);

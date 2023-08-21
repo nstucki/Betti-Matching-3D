@@ -21,32 +21,61 @@ TopDimension::TopDimension(const CubicalGridComplex& _cgc0, const CubicalGridCom
 					uf0(UnionFindDual(cgc0)), uf1(UnionFindDual(cgc1)), ufComp(UnionFindDual(cgcComp)) {}
 
 void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
+	size_t actualDim = cgc0.dim;
+	for (index_t s : cgc0.shape) { if (s == 1) { --actualDim; } }
+	bool needToCompute = (cgc0.dim == actualDim);
+	if (!needToCompute) {
 #ifdef RUNTIME
-	cout << "computing top dimension ... ";
-    auto start = high_resolution_clock::now();
+		cout << endl << "input & image 0: ";
+#endif
+		enumerateDualEdges(cgc0, ctr0);
+#ifdef RUNTIME
+		cout << "barcodes not computed";
 #endif
 
-	enumerateDualEdges(cgcComp, ctrComp);
-	computePairsComp(ctrComp);
-	
+#ifdef RUNTIME
+	cout << endl << "input & image 1: ";
+#endif
+		enumerateDualEdges(cgc1, ctr1);
+#ifdef RUNTIME
+		cout << "barcodes not computed";
+#endif
+
+#ifdef RUNTIME
+	cout << endl << "comparison & matching: ";
+#endif
+		enumerateDualEdges(cgcComp, ctrComp);
+#ifdef RUNTIME
+		cout << "barcode & matching not computed";
+#endif
+	} else {
+		#ifdef RUNTIME
+	cout << endl << "input & image 0: ";
+#endif
 	enumerateDualEdges(cgc0, ctr0);
-    computeImagePairs(ctr0, 0);
-
-	enumerateDualEdges(cgc1, ctr1);
-    computeImagePairs(ctr1, 1);
-
-    computeMatching();
-
-	auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - start);
+	computeImagePairs(ctr0, 0);
 
 #ifdef RUNTIME
-	cout << "took " << duration.count() << " ms" << endl;
+	cout << endl << "input & image 1: ";
 #endif
+	enumerateDualEdges(cgc1, ctr1);
+	ufComp.reset();
+	computeImagePairs(ctr1, 1);
+
+#ifdef RUNTIME
+	cout << endl << "comparison & matching: ";
+#endif
+	enumerateDualEdges(cgcComp, ctrComp);
+	ufComp.reset();
+	computePairsCompAndMatch(ctrComp);
+	}
 }
 
 void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& dualEdges) const {
-	dualEdges.clear();
+#ifdef RUNTIME
+	cout << "enumeration ";
+	auto start = high_resolution_clock::now();
+#endif
 	dualEdges.reserve(cgc.getNumberOfCubes(cgc.dim-1));
 	CubeEnumerator cubeEnum(cgc, cgc.dim-1);
 	Cube cube = cubeEnum.getNextCube();
@@ -56,124 +85,92 @@ void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube
 		if (cube.birth < config.threshold) { dualEdges.push_back(cube); }
 	}
 	sort(dualEdges.begin(), dualEdges.end(), CubeComparator());
-}
-
-void TopDimension::computePairsComp(vector<Cube>& dualEdges) {
-	vector<index_t> boundaryCoordinates;
-	index_t degenAxis;
-	index_t boundaryIdx0;
-	index_t boundaryIdx1;
-	index_t parentIdx0;
-	index_t parentIdx1;
-	index_t birthIdx;
-	value_t birth;
-	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge) {
-		boundaryCoordinates = edge->coordinates;
-		for (index_t i = 0; i < cgcComp.dim; i++) {
-			if (boundaryCoordinates[i]%2 == 0) {
-				degenAxis = i;
-				break;
-			}
-		}
-		if (boundaryCoordinates[degenAxis] == 0) {
-			boundaryIdx0 = ufComp.star;
-			boundaryCoordinates[degenAxis] += 1;
-			boundaryIdx1 = ufComp.getIndex(boundaryCoordinates);
-		} else if (boundaryCoordinates[degenAxis] == 2*cgcComp.shape[degenAxis]-2) {
-			boundaryCoordinates[degenAxis] -= 1;
-			boundaryIdx0 = ufComp.getIndex(boundaryCoordinates);
-			boundaryIdx1 = ufComp.star;
-		} else {
-			boundaryCoordinates[degenAxis] -= 1;
-			boundaryIdx0 = ufComp.getIndex(boundaryCoordinates);
-			boundaryCoordinates[degenAxis] += 2;
-			boundaryIdx1 = ufComp.getIndex(boundaryCoordinates);
-		}
-		parentIdx0 = ufComp.find(boundaryIdx0);
-		parentIdx1 = ufComp.find(boundaryIdx1);
-		if (parentIdx0 != parentIdx1) {
-			birthIdx = ufComp.link(parentIdx0, parentIdx1);
-			birth = ufComp.getBirth(birthIdx);
-			if (edge->birth != birth) {
-				pairsComp.push_back(Pair(*edge, Cube(birth, ufComp.getCoordinates(birthIdx))));
-			}
-			edge->coordinates[0] = NONE;
-		}
-	}
-	auto new_end = remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& edge){ return edge.coordinates[0] == NONE; });
-	dualEdges.erase(new_end, dualEdges.end());
+#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms, ";
+#endif
 }
 
 void TopDimension::computeImagePairs(vector<Cube>& dualEdges, uint8_t k) {
+#ifdef RUNTIME
+cout << "barcodes ";
+auto start = high_resolution_clock::now();
+#endif
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	UnionFindDual& uf = (k == 0) ? uf0 : uf1; 
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<index_t, Pair>& matchMap = (k==0) ? matchMap0 : matchMap1;
 	
-	ufComp.reset();
-	vector<index_t> boundaryCoordinates;
-	index_t degenAxis;
-	index_t boundaryIdx0;
-	index_t boundaryIdx1;
+	vector<index_t> boundaryIndices;
 	index_t parentIdx0;
 	index_t parentIdx1;
 	index_t birthIdx;
 	index_t birthIdxComp;
 	value_t birth;
 	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge) {
-		boundaryCoordinates = edge->coordinates;
-		for (index_t i = 0; i < cgc.dim; i++) {
-			if (boundaryCoordinates[i]%2 == 0) {
-				degenAxis = i;
-				break;
-			}
-		}
-		if (boundaryCoordinates[degenAxis] == 0) {
-			boundaryIdx0 = uf.star;
-			boundaryCoordinates[degenAxis] += 1;
-			boundaryIdx1 = uf.getIndex(boundaryCoordinates);
-		} else if (boundaryCoordinates[degenAxis] == 2*cgc.shape[degenAxis]-2) {
-			boundaryCoordinates[degenAxis] -= 1;
-			boundaryIdx0 = uf.getIndex(boundaryCoordinates);
-			boundaryIdx1 = uf.star;
-		} else {
-			boundaryCoordinates[degenAxis] -= 1;
-			boundaryIdx0 = uf.getIndex(boundaryCoordinates);
-			boundaryCoordinates[degenAxis] += 2;
-			boundaryIdx1 = uf.getIndex(boundaryCoordinates);
-		}
-
-		parentIdx0 = uf.find(boundaryIdx0);
-		parentIdx1 = uf.find(boundaryIdx1);
+		boundaryIndices = uf.getBoundaryIndices(*edge);
+		parentIdx0 = uf.find(boundaryIndices[0]);
+		parentIdx1 = uf.find(boundaryIndices[1]);
 		if (parentIdx0 != parentIdx1) {
 			birthIdx = uf.link(parentIdx0, parentIdx1);
 			birth = uf.getBirth(birthIdx);
-			parentIdx0 = ufComp.find(boundaryIdx0);
-			parentIdx1 = ufComp.find(boundaryIdx1);
+			parentIdx0 = ufComp.find(boundaryIndices[0]);
+			parentIdx1 = ufComp.find(boundaryIndices[1]);
 			birthIdxComp = ufComp.link(parentIdx0, parentIdx1);
 			if (edge->birth != birth) {
 				pairs.push_back(Pair(*edge, Cube(birth, uf.getCoordinates(birthIdx))));
-				matchMap.emplace(cgcComp.getCubeIndex(ufComp.getCoordinates(birthIdxComp)), pairs.back());
+				matchMap.emplace(birthIdxComp, pairs.back());
 			} 
 			edge->coordinates[0] = NONE;
 		}
 	}
 	auto new_end = remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& edge){ return edge.coordinates[0] == NONE; });
 	dualEdges.erase(new_end, dualEdges.end());
+#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms";
+#endif
 }
 
-void TopDimension::computeMatching() {
-	Pair pair0;
-	Pair pair1;
-	for (auto& pair : pairsComp) {
-		auto find0 = matchMap0.find(cgcComp.getCubeIndex(pair.death));
-		auto find1 = matchMap1.find(cgcComp.getCubeIndex(pair.death));
-		if (find0 != matchMap0.end() && find1 != matchMap1.end()) {
-			pair0 = (find0->second);
-			pair1 = (find1->second);
-			matches.push_back(Match(pair0, pair1));
-			isMatched0.emplace(cgc0.getCubeIndex(pair0.birth), true);
-			isMatched1.emplace(cgc1.getCubeIndex(pair1.birth), true);
+void TopDimension::computePairsCompAndMatch(vector<Cube>& dualEdges) {
+#ifdef RUNTIME
+	cout << "barcode and matching ";
+	auto start = high_resolution_clock::now();
+#endif 
+	vector<index_t> boundaryIndices;
+	index_t parentIdx0;
+	index_t parentIdx1;
+	index_t birthIdx;
+	value_t birth;
+	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge) {
+		boundaryIndices = ufComp.getBoundaryIndices(*edge);
+		parentIdx0 = ufComp.find(boundaryIndices[0]);
+		parentIdx1 = ufComp.find(boundaryIndices[1]);
+		if (parentIdx0 != parentIdx1) {
+			birthIdx = ufComp.link(parentIdx0, parentIdx1);
+			birth = ufComp.getBirth(birthIdx);
+			if (edge->birth != birth) { 
+#ifdef COMPUTE_COMPARISON
+				pairsComp.push_back(Pair(*edge, Cube(birth, ufComp.getCoordinates(birthIdx))));
+#endif
+				auto find0 = matchMap0.find(birthIdx);
+				auto find1 = matchMap1.find(birthIdx);
+				if (find0 != matchMap0.end() && find1 != matchMap1.end()) {
+					matches.push_back(Match(find0->second, find1->second));
+					isMatched0.emplace(cgc0.getCubeIndex(find0->second.birth), true);
+					isMatched1.emplace(cgc1.getCubeIndex(find1->second.birth), true);
+				}
+			}
+			edge->coordinates[0] = NONE;
 		}
 	}
+	auto new_end = remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& edge){ return edge.coordinates[0] == NONE; });
+	dualEdges.erase(new_end, dualEdges.end());
+#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms";
+#endif
 }

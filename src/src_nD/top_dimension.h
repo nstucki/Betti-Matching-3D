@@ -32,8 +32,7 @@ namespace dimN {
 		UnionFindDual ufComp;
 
 		void enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& dualEdges) const;
-		void computePairsComp(vector<Cube>& dualEdges);
 		void computeImagePairs(vector<Cube>& dualEdges, uint8_t k);
-		void computeMatching();
+		void computePairsCompAndMatch(vector<Cube>& dualEdges);
 	};
 }

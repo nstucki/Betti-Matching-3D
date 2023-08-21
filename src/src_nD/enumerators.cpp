@@ -76,38 +76,41 @@ void CubeEnumerator::IncreaseByTwo(const index_t& axis) {
 
 BoundaryEnumerator::BoundaryEnumerator(const CubicalGridComplex& _cgc) : cgc(_cgc) {}
 
-void BoundaryEnumerator::setBoundaryEnumerator(const Cube& _cube, index_t _dim) {
+void BoundaryEnumerator::setBoundaryEnumerator(const Cube& _cube, const size_t& _dim) {
 	cube = _cube;
     dim = _dim;
     nonDegenAxes.clear();
     nonDegenAxes.reserve(dim);
-    index_t counter = 0;
-    for (index_t i = 0; i < cgc.dim; i++) {
-        if (cube.coordinates[i]%2 != 0) {
-            nonDegenAxes.push_back(i);
-            counter++;
-            if (counter == dim) { break; }
+    size_t counter = 0;
+    for (size_t axis = 0; axis < cgc.dim; ++axis) {
+        if (cube.coordinates[axis] % 2 != 0) {
+            nonDegenAxes.push_back(axis);
+            if (++counter == dim) { break; }
         }
     }
     position = 0;
+#ifdef USE_EMERGENT_PAIRS
+    shift = 1;
+#else
     shift = -1;
+#endif
+
 }
 
-Cube BoundaryEnumerator::getNextFace() const { return nextFace; }
-
 bool BoundaryEnumerator::hasNextFace() {
-	if ( position == -1 ) { return false; } 
+	if ( position == -1 ) { return false; }
     else {
         vector<index_t> coordinates = cube.coordinates;
         coordinates[nonDegenAxes[position]] += shift;
         nextFace = Cube(cgc.getBirth(coordinates), coordinates);
-        if (position == dim-1 && shift == -1) {
-            shift = 1;
-        } else if (shift == -1) {
-            position++;
-        } else {
-            position--;
-        }
+#ifdef USE_EMERGENT_PAIRS
+        if (position == dim-1 && shift == 1) { shift = -1; }
+        else if (shift == 1) { ++position; }
+#else
+        if (position == dim-1 && shift == -1) { shift = 1; }
+        else if (shift == -1) { ++position; }
+#endif
+        else { --position; }
         return true;
     }
 }

@@ -4,7 +4,7 @@
 namespace dimN {
     class BettiMatching {
         public:
-        BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<value_t> comparison, vector<index_t> shape,
+        BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<value_t> comparison, vector<index_t> shape, 
                         Config& config);
         void computeMatching();
         void computeVoxels();

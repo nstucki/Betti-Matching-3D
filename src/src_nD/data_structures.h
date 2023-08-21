@@ -90,8 +90,10 @@ namespace dimN {
 		vector<index_t> pixelCoordFactor;
 		vector<index_t> cubeCoordFactor;
 
-		value_t getValue(const vector<index_t>& pixelCoordinates) const;
 		index_t getIndex(const vector<index_t>& pixelCoordinates) const;
+		value_t getValue(const vector<index_t>& pixelCoordinates) const;
+		bool getParentVoxelRecursion(const value_t& birth, const size_t& axis, 
+										vector<index_t>& parentVoxel, vector<size_t>& nonDegen) const;
 	};
 
 
@@ -103,6 +105,7 @@ namespace dimN {
 		value_t getBirth(const index_t& idx) const;
 		index_t getIndex(const vector<index_t>& coordinates) const;
 		vector<index_t> getCoordinates(index_t idx) const;
+		vector<index_t> getBoundaryIndices(const Cube& edge) const;
 		void reset();
 
 		private:
@@ -114,19 +117,19 @@ namespace dimN {
 
 	class UnionFindDual {
 		public:
-		index_t star;
-		
 		UnionFindDual(const CubicalGridComplex& cgc);
 		index_t find(index_t x);
 		index_t link(const index_t& x, const index_t& y);
 		value_t getBirth(const index_t& idx) const;
 		index_t getIndex(const vector<index_t>& coordinates) const;
 		vector<index_t> getCoordinates(index_t idx) const;
+		vector<index_t> getBoundaryIndices(const Cube& edge) const;
 		void reset();
 
 		private:
 		vector<index_t> parent;
 		vector<value_t> birthtime;
 		const CubicalGridComplex& cgc;
+		index_t star;
 	};
 }

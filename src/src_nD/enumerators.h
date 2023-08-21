@@ -5,11 +5,11 @@
 
 
 namespace dimN {
-    class CubeEnumerator{
+    class CubeEnumerator {
         public:
         CubeEnumerator(const CubicalGridComplex& cgc, const index_t dim);
-        Cube getNextCube() const;
         bool hasNextCube();
+        Cube getNextCube() const;
 
         private:
         const CubicalGridComplex& cgc;
@@ -27,16 +27,16 @@ namespace dimN {
 
     class BoundaryEnumerator {
         public:
+        Cube nextFace;
+
         BoundaryEnumerator(const CubicalGridComplex& cgc);
-        void setBoundaryEnumerator(const Cube& cube, index_t dim);
-        Cube getNextFace() const;
+        void setBoundaryEnumerator(const Cube& cube, const size_t& dim);
         bool hasNextFace();
         
         private:
         const CubicalGridComplex& cgc;
         Cube cube;
         index_t dim;
-        Cube nextFace;
         vector<index_t> nonDegenAxes;
         index_t position;
         int8_t shift;
