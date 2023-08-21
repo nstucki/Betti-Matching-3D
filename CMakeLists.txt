@@ -1,7 +1,5 @@
 # CMakeLists.txt
 
-set(CMAKE_BUILD_TYPE, "Release")
-
 cmake_minimum_required(VERSION 3.5)
 project(bettiMatching)
 
@@ -18,20 +16,10 @@ project(bettiMatching)
 #    src/src_nD/utils.cpp
 #)
 
-#add_executable(BettiMatchingND
-#    src/src_nD/BettiMatching.cpp
-#    src/src_nD/dimension_0.cpp
-#    src/src_nD/inter_dimensions.cpp
-#    src/src_nD/top_dimension.cpp
-#    src/src_nD/data_structures.cpp
-#    src/src_nD/enumerators.cpp
-#    src/src_nD/utils.cpp
-#    src/src_nD/betti_matching_nD.cpp
-#)
-
 add_executable(BettiMatching
     src/main.cpp
     src/utils.cpp
+    src/data_structures.cpp
     src/src_1D/BettiMatching.cpp
     src/src_1D/dimension_0.cpp
     src/src_1D/data_structures.cpp

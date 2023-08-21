@@ -41,16 +41,6 @@ Match::Match(Pair _pair0, Pair _pair1) : pair0(_pair0), pair1(_pair1) {}
 void Match::print() const { pair0.print(); cout << " <-> "; pair1.print(); cout << endl; }
 
 
-VoxelPair::VoxelPair(const index_t& _birth, const index_t& _death) : birth(_birth), death(_death) {}
-
-void VoxelPair::print() const { cout << "(" << birth << ";" << death << ")"; }
-
-
-VoxelMatch::VoxelMatch(const VoxelPair& _pair0, const VoxelPair& _pair1) : pair0(_pair0), pair1(_pair1) {}
-
-void VoxelMatch::print() const { pair0.print(); cout << " <-> "; pair1.print(); cout << endl; }
-
-
 CubicalGridComplex::CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& _shape) : shape(_shape), m_x(shape[0]-1) {
 	getGridFromVector(image); }
 

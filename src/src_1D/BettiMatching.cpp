@@ -1,4 +1,5 @@
 #include "BettiMatching.h"
+#include "../data_structures.h"
 #include "dimension_0.h"
 
 #include <iostream>

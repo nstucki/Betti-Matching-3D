@@ -49,26 +49,6 @@ namespace dim1 {
 	};
 
 
-	class VoxelPair {
-		public:
-		const index_t birth;
-		const index_t death;
-
-		VoxelPair(const index_t& birth, const index_t& death);
-		void print() const;
-	};
-
-
-	class VoxelMatch {
-		public:
-		const VoxelPair pair0;
-		const VoxelPair pair1;
-
-		VoxelMatch(const VoxelPair& pair0, const VoxelPair& pair1);
-		void print() const;
-	};
-
-
 	class CubicalGridComplex {
 		public:
 		const vector<index_t> shape;

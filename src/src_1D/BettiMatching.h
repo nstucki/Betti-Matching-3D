@@ -1,5 +1,7 @@
 #include "data_structures.h"
+#include "../data_structures.h"
 #include <unordered_map>
+
 
 namespace dim1 {
     class BettiMatching {
