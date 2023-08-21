@@ -33,8 +33,8 @@ void BettiMatching::computeMatching() {
         cout << "dimension " << dim-1 << ":";
         auto start = high_resolution_clock::now();
 #endif
-        TopDimension topDim(cgc0, cgc1, cgcComp,  config, pairs0[dim-1], pairs1[dim-1], pairsComp[dim-1], matches[dim-1],
-                            isMatched0, isMatched1);       
+        TopDimension topDim(cgc0, cgc1, cgcComp, config, pairs0[dim-1], pairs1[dim-1], pairsComp[dim-1], matches[dim-1],
+                            isMatched0, isMatched1);
         topDim.computePairsAndMatch(ctr0, ctr1, ctrComp);
 #ifdef RUNTIME
         auto stop = high_resolution_clock::now();

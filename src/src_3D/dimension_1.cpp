@@ -207,7 +207,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	bool checkEmergentPair;
 	bool foundPair;
 #endif
-	for(size_t i = 0; i < ctrSize; ++i) {
+	for (size_t i = 0; i < ctrSize; ++i) {
 #ifdef USE_EMERGENT_PAIRS
 		checkEmergentPair = true;
 		foundPair = false;
@@ -229,10 +229,10 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
                 }
 			}
 			if (!cacheHit) {
-				enumerator.setBoundaryEnumerator(ctr[j]);
 #ifdef USE_EMERGENT_PAIRS
 				faces.clear();
 #endif
+				enumerator.setBoundaryEnumerator(ctr[j]);
 				while (enumerator.hasNextFace()) {
 #ifdef USE_EMERGENT_PAIRS
 					if (checkEmergentPair && ctr[j].birth == enumerator.nextFace.birth) {

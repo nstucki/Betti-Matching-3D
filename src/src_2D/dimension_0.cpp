@@ -52,16 +52,16 @@ void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 	index_t birthIdx;
 	value_t birth;
 	vector<index_t> birthCoordinates(2);
-	for (auto edge = edges.begin(), last = edges.end(); edge != last; ++edge) {
-		boundaryIndices = uf.getBoundaryIndices(*edge);
+	for (Cube& edge : edges) {
+		boundaryIndices = uf.getBoundaryIndices(edge);
 		parentIdx0 = uf.find(boundaryIndices[0]);
 		parentIdx1 = uf.find(boundaryIndices[1]);
 		if (parentIdx0 != parentIdx1) {
 			birthIdx = uf.link(parentIdx0, parentIdx1);
 			birth = uf.getBirth(birthIdx);
-			if (birth != edge->birth) {
+			if (birth != edge.birth) {
 				birthCoordinates = uf.getCoordinates(birthIdx);
-				pairs.push_back(Pair(Cube(birth, birthCoordinates[0], birthCoordinates[1], 0), *edge));
+				pairs.push_back(Pair(Cube(birth, birthCoordinates[0], birthCoordinates[1], 0), edge));
 				matchMap.emplace(birthIdx, pairs.back());
 			}
 		}
@@ -86,8 +86,8 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 	index_t birthIdxComp;
 	value_t birth;
 	vector<index_t> birthCoordinates(2);
-	for (auto edge = edges.begin(), last = edges.end(); edge != last; ++edge) {
-		boundaryIndices = ufComp.getBoundaryIndices(*edge);
+	for (Cube& edge : edges) {
+		boundaryIndices = ufComp.getBoundaryIndices(edge);
 		parentIdx0 = ufComp.find(boundaryIndices[0]);
 		parentIdx1 = ufComp.find(boundaryIndices[1]);
 		if (parentIdx0 != parentIdx1) {
@@ -99,10 +99,10 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 			parentIdx0 = uf1.find(boundaryIndices[0]);
 			parentIdx1 = uf1.find(boundaryIndices[1]);
 			birthIdx1 = uf1.link(parentIdx0, parentIdx1);
-			if (birth != edge->birth) {
+			if (birth != edge.birth) {
 				birthCoordinates = ufComp.getCoordinates(birthIdxComp);
 #ifdef COMPUTE_COMPARISON
-				pairsComp.push_back(Pair(Cube(birth, birthCoordinates[0], birthCoordinates[1], 0), *edge));
+				pairsComp.push_back(Pair(Cube(birth, birthCoordinates[0], birthCoordinates[1], 0), edge));
 #endif
 				auto find0 = matchMap0.find(birthIdx0);
 				auto find1 = matchMap1.find(birthIdx1);
