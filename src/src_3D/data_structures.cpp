@@ -8,9 +8,22 @@ using namespace std;
 
 Cube::Cube() : birth(0), index(NONE) {}
 
-Cube::Cube(const Cube& cube) : birth(cube.birth), index(cube.index) {}
+Cube::Cube(const Cube &cube) : birth(cube.birth), index(cube.index)
+#ifdef CUBE_DEBUG_INFO
+, dimension(cube.dimension)
+, parentCgc(cube.parentCgc)
+#endif
+{}
 
-Cube::Cube(value_t _birth, index_t _x, index_t _y, index_t _z, uint8_t _type) : birth(_birth) {
+Cube::Cube(value_t _birth, index_t _x, index_t _y, index_t _z, uint8_t _type
+#ifdef CUBE_DEBUG_INFO
+	, const CubicalGridComplex *parentCgc
+#endif
+) : birth(_birth)
+#ifdef CUBE_DEBUG_INFO
+	, parentCgc(parentCgc)
+#endif
+{
     index = ((uint64_t)_x << 44) | ((uint64_t)_y<<24) | ((uint64_t)_z<<4) | (uint64_t)_type;
 }
 
@@ -126,6 +139,11 @@ value_t CubicalGridComplex::getBirth(const index_t& x, const index_t& y, const i
 	cerr << "birth not found!" << endl;
 	return INFTY;
 }
+
+#ifdef CUBE_DEBUG_INFO
+__attribute__((noinline))
+value_t CubicalGridComplex::getBirthByCoordinate(index_t x, index_t y, index_t z) {return getBirth(x,y,z);}
+#endif
 
 vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8_t& dim) const {
 	index_t x = cube.x();

@@ -9,13 +9,24 @@ using namespace std;
 
 
 namespace dim3 {
-		class Cube {
+	class CubicalGridComplex;
+
+	class Cube {
 		public:
 		value_t birth;
 		uint64_t index;
+#ifdef CUBE_DEBUG_INFO
+		int dimension = -1;
+		// const std::optional<std::reference_wrapper<CubicalGridComplex>> parentCgc;
+		const CubicalGridComplex *parentCgc = nullptr;
+#endif
 
 		Cube();
-		Cube(value_t birth, index_t x, index_t y, index_t z, uint8_t type);
+		Cube(value_t birth, index_t x, index_t y, index_t z, uint8_t type
+#ifdef CUBE_DEBUG_INFO
+	, const CubicalGridComplex *parentCgc = nullptr
+#endif
+		);
 		Cube(const Cube& cube);
 		index_t x() const;
 		index_t y() const;
@@ -25,6 +36,32 @@ namespace dim3 {
 		void print() const;
 	};
 
+	class Cube0 : public Cube {
+		public:
+		Cube0(value_t birth, index_t x, index_t y, index_t z, uint8_t type, const CubicalGridComplex *parentCgc = nullptr) : Cube(birth, x, y, z, type, parentCgc) {
+#ifdef CUBE_DEBUG_INFO
+			dimension = 0;
+#endif
+		}
+	};
+
+	class Cube1 : public Cube {
+		public:
+		Cube1(value_t birth, index_t x, index_t y, index_t z, uint8_t type, const CubicalGridComplex *parentCgc = nullptr) : Cube(birth, x, y, z, type, parentCgc) {
+#ifdef CUBE_DEBUG_INFO
+			dimension = 1;
+#endif
+		}
+	};
+
+	class Cube2 : public Cube {
+		public:
+		Cube2(value_t birth, index_t x, index_t y, index_t z, uint8_t type, const CubicalGridComplex *parentCgc = nullptr) : Cube(birth, x, y, z, type, parentCgc) {
+#ifdef CUBE_DEBUG_INFO
+			dimension = 2;
+#endif
+		}
+	};
 
 	struct CubeComparator{ bool operator()(const Cube& Cube1, const Cube& Cube2) const; };
 
@@ -70,6 +107,11 @@ namespace dim3 {
 		value_t getBirth(const index_t& x, const index_t& y, const index_t& z, const uint8_t& type, const uint8_t& dim) const;
 		vector<index_t> getParentVoxel(const Cube& c, const uint8_t& dim) const;
 		void printImage() const;
+
+#ifdef CUBE_DEBUG_INFO
+		// Needed for pretty printing as gdb python plugin can't handle overloading
+		value_t getBirthByCoordinate(index_t x, index_t y, index_t z);
+#endif
 
 		private:
 		value_t*** grid;
