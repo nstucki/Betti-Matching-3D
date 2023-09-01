@@ -63,6 +63,8 @@ PYBIND11_MODULE(betti_matching, m)
     py::class_<VoxelPair>(m, "VoxelPair")
         .def_readonly("birth", &VoxelPair::birth)
         .def_readonly("death", &VoxelPair::death)
-        .def("__repr__", [](VoxelMatch &self)
-             { return "VoxelPair(birth=" + repr_vector(self.pair0.birth) + ", death=" + repr_vector(self.pair0.death) + ")"; });
+        .def("__repr__", [](VoxelPair &self) {
+          return "VoxelPair(birth=" + repr_vector(self.birth) +
+                 ", death=" + repr_vector(self.death) + ")";
+        });
 }
