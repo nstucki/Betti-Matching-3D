@@ -75,6 +75,45 @@ PYBIND11_MODULE(betti_matching, m)
         .def("compute_matching_with_voxels",
              &BettiMatching::computeMatchingWithVoxels);
 
+    m.def("compute_matching_with_voxels", [](py::array_t<value_t> &input0, py::array_t<value_t> &input1, py::array_t<value_t> &comparison,
+                         Config &config)
+    {
+        const vector<index_t> shape0(input0.shape(), input0.shape() + input0.ndim());
+        const vector<index_t> shape1(input1.shape(), input1.shape() + input1.ndim());
+        const vector<index_t> shapeComparison(comparison.shape(), comparison.shape() + comparison.ndim());
+        if (shape0 != shape1 || shape0 != shapeComparison) {
+            throw invalid_argument("The shapes of the tree input volumes must agree. Got " + repr_vector(shape0) + ", " + repr_vector(shape1) + " and " + repr_vector(shapeComparison));
+        }
+        const vector<value_t> input0Vector(input0.mutable_data(), input0.mutable_data() + input0.size());
+        const vector<value_t> input1Vector(input1.mutable_data(), input1.mutable_data() + input1.size());
+        const vector<value_t> comparisonVector(comparison.mutable_data(), comparison.mutable_data() + comparison.size());
+
+        return BettiMatching(input0Vector, input1Vector, comparisonVector, shape0, config).computeMatchingWithVoxels();
+    });
+
+    m.def("compute_matching_with_voxels", [](std::string input0_path, std::string input1_path, std::string comparison_path,
+                         Config &config)
+    {
+
+        vector<value_t> input0Vector;
+        vector<value_t> input1Vector;
+        vector<value_t> comparisonVector;
+
+        vector<index_t> shape0;
+        vector<index_t> shape1;
+        vector<index_t> shapeComparison;
+
+        readImage(input0_path, NUMPY, input0Vector, shape0);
+        readImage(input1_path, NUMPY, input1Vector, shape1);
+        readImage(comparison_path, NUMPY, comparisonVector, shapeComparison);
+
+        if (shape0 != shape1 || shape0 != shapeComparison) {
+            throw invalid_argument("The shapes of the tree input volumes must agree. Got " + repr_vector(shape0) + ", " + repr_vector(shape1) + " and " + repr_vector(shapeComparison));
+        }
+
+        return BettiMatching(input0Vector, input1Vector, comparisonVector, shape0, config).computeMatchingWithVoxels();
+    });
+
     py::class_<VoxelMatch>(m, "VoxelMatch")
         .def_readonly("pair0", &VoxelMatch::pair0)
         .def_readonly("pair1", &VoxelMatch::pair1)
