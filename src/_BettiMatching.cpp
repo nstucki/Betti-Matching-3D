@@ -51,6 +51,27 @@ PYBIND11_MODULE(betti_matching, m)
                 const vector<value_t> comparisonVector(comparison.mutable_data(), comparison.mutable_data() + comparison.size());
 
                 return BettiMatching(input0Vector, input1Vector, comparisonVector, shape0, config); }))
+        .def(py::init([](std::string input0_path, std::string input1_path, std::string comparison_path,
+                         Config &config)
+                      {
+
+                vector<value_t> input0Vector;
+                vector<value_t> input1Vector;
+                vector<value_t> comparisonVector;
+
+                vector<index_t> shape0;
+                vector<index_t> shape1;
+                vector<index_t> shapeComparison;
+
+                readImage(input0_path, NUMPY, input0Vector, shape0);
+                readImage(input1_path, NUMPY, input1Vector, shape1);
+                readImage(comparison_path, NUMPY, comparisonVector, shapeComparison);
+
+                if (shape0 != shape1 || shape0 != shapeComparison) {
+                    throw invalid_argument("The shapes of the tree input volumes must agree. Got " + repr_vector(shape0) + ", " + repr_vector(shape1) + " and " + repr_vector(shapeComparison));
+                }
+
+                return BettiMatching(input0Vector, input1Vector, comparisonVector, shape0, config); }))
         .def("compute_matching_with_voxels",
              &BettiMatching::computeMatchingWithVoxels);
 
