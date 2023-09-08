@@ -37,7 +37,7 @@ uint8_t Cube::type() const { return( index & 0xf); }
 
 bool Cube::operator==(const Cube& rhs) const{ return (index == rhs.index); }
 
-void Cube::print() const { cout << "(" << birth << "," << x() << "," << y() << "," << z() << "," << unsigned(type()) << ")"; }
+void Cube::print() const { cout << "(" << x() << "," << y() << "," << z() << ")"; }
 
 
 bool CubeComparator::operator()(const Cube& cube1, const Cube& cube2) const{
