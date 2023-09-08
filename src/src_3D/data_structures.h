@@ -110,14 +110,8 @@ namespace dim3 {
 		vector<index_t> getParentVoxel(const Cube& c, const uint8_t& dim) const;
 		void printImage() const;
 
-#ifdef CUBE_DEBUG_INFO
-		// Needed for pretty printing as gdb python plugin can't handle overloading
-		value_t getBirthByCoordinate(index_t x, index_t y, index_t z);
-#endif
-
 		private:
 		value_t*** grid;
-
 		value_t*** allocateMemory() const;
 		void getGridFromVector(const vector<value_t>& vector);
 	};

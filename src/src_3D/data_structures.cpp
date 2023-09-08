@@ -140,11 +140,6 @@ value_t CubicalGridComplex::getBirth(const index_t& x, const index_t& y, const i
 	return INFTY;
 }
 
-#ifdef CUBE_DEBUG_INFO
-__attribute__((noinline))
-value_t CubicalGridComplex::getBirthByCoordinate(index_t x, index_t y, index_t z) {return getBirth(x,y,z);}
-#endif
-
 vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8_t& dim) const {
 	index_t x = cube.x();
 	index_t y = cube.y();
