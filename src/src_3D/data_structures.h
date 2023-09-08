@@ -43,6 +43,7 @@ namespace dim3 {
 			dimension = 0;
 #endif
 		}
+		Cube0() : Cube() {dimension = 0;}
 	};
 
 	class Cube1 : public Cube {
@@ -52,6 +53,7 @@ namespace dim3 {
 			dimension = 1;
 #endif
 		}
+		Cube1() : Cube() {dimension = 1;}
 	};
 
 	class Cube2 : public Cube {
@@ -61,6 +63,7 @@ namespace dim3 {
 			dimension = 2;
 #endif
 		}
+		Cube2() : Cube() {dimension = 2;}
 	};
 
 	struct CubeComparator{ bool operator()(const Cube& Cube1, const Cube& Cube2) const; };
@@ -98,7 +101,6 @@ namespace dim3 {
 		const index_t m_xyz;
 		const index_t n_yz;
 		const index_t n_xyz;
-
 		CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& shape);
 		CubicalGridComplex(CubicalGridComplex &&other);
 		~CubicalGridComplex();
