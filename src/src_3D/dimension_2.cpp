@@ -4,10 +4,15 @@
 #include <chrono>
 #include <algorithm>
 
+#include <tracy/Tracy.hpp>
+
 using namespace dim3;
 using namespace std;
 using namespace std::chrono;
 
+#ifdef TRACY_ENABLE
+const int DIM2_COLOR_TRACY = 0xfef26a;
+#endif
 
 Dimension2::Dimension2(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, 
 						const CubicalGridComplex& _cgcComp, const Config& _config, 
@@ -19,6 +24,7 @@ Dimension2::Dimension2(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						uf0(UnionFindDual(cgc0)), uf1(UnionFindDual(cgc1)), ufComp(UnionFindDual(cgcComp)) {}
 
 void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
+    ZoneScopedNC("computePairsAndMatch{2}", DIM2_COLOR_TRACY);
 	size_t actualDim = 3;
 	for (index_t s : cgc0.shape) { if (s == 1) { --actualDim; } }
 	bool needToCompute = ( actualDim == 3);
@@ -70,6 +76,7 @@ void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 }
 
 void Dimension2::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& dualEdges) const {
+    ZoneScopedNC("enumerateDualEdges{2}", DIM2_COLOR_TRACY);
 #ifdef RUNTIME
 	cout << "enumeration ";
 	auto start = high_resolution_clock::now();
@@ -95,6 +102,7 @@ void Dimension2::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>&
 }
 
 void Dimension2::computeImagePairs(vector<Cube>& dualEdges, const uint8_t& k) {
+    ZoneScopedNC("computeImagePairs{2}", DIM2_COLOR_TRACY);
 #ifdef RUNTIME
 	cout << "barcodes ";
 	auto start = high_resolution_clock::now();
@@ -139,6 +147,7 @@ void Dimension2::computeImagePairs(vector<Cube>& dualEdges, const uint8_t& k) {
 }
 
 void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges) {
+    ZoneScopedNC("computeCompPairsAndMatch{2}", DIM2_COLOR_TRACY);
 #ifdef RUNTIME
 	cout << "barcode and matching ";
 	auto start = high_resolution_clock::now();

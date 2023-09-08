@@ -1,10 +1,13 @@
 #include "utils.h"
 #include "npy.hpp"
 
+#include "tracy/Tracy.hpp"
+
 #include <cfloat>
 #include <cassert>
 
 void readImage(const string& filename, const fileFormat& format, vector<double>& image, vector<index_t>& shape) {
+    ZoneScoped;
     switch (format) {
         case DIPHA: {
             ifstream fin(filename, ios::in | ios::binary );

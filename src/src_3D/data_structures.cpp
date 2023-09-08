@@ -2,6 +2,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include <tracy/Tracy.hpp>
+
 using namespace dim3;
 using namespace std;
 
@@ -62,9 +64,14 @@ CubicalGridComplex::CubicalGridComplex(CubicalGridComplex &&other) : m_x(other.m
 CubicalGridComplex::~CubicalGridComplex() {
 	if (grid != nullptr) {
 		for (index_t i = 0; i < shape[0]+2; ++i) {
-			for (index_t j = 0; j < shape[1]+2; ++j) { delete[] grid[i][j]; }
+			for (index_t j = 0; j < shape[1] + 2; ++j) {
+				TracyFree(grid[i][j]);
+				delete[] grid[i][j];
+			}
+			TracyFree(grid[i]);
 			delete[] grid[i];
 		}
+		TracyFree(grid);
 		delete[] grid;
 	}
 }
@@ -87,7 +94,10 @@ size_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
 	return -1;
 }
 
-value_t CubicalGridComplex::getBirth(const index_t& x, const index_t&  y, const index_t& z) const { return grid[x+1][y+1][z+1]; }
+value_t CubicalGridComplex::getBirth(const index_t& x, const index_t&  y, const index_t& z) const
+{
+	return grid[x+1][y+1][z+1];
+}
 
 value_t CubicalGridComplex::getBirth(const index_t& x, const index_t& y, const index_t& z, 
 										const uint8_t& type, const uint8_t& dim) const {
@@ -202,9 +212,14 @@ void CubicalGridComplex::printImage() const {
 
 value_t*** CubicalGridComplex::allocateMemory() const {
 	value_t*** g = new value_t**[shape[0]+2];
+    TracyAlloc(g, (shape[0] + 2) * sizeof(value_t));
     for (index_t i = 0; i < shape[0]+2; ++i) {
         g[i] = new value_t*[shape[1]+2];
-        for (index_t j = 0; j < shape[1]+2; ++j) { g[i][j] = new value_t[shape[2]+2]; }
+        TracyAlloc(g[i], (shape[1] + 2) * sizeof(value_t));
+        for (index_t j = 0; j < shape[1] + 2; ++j) {
+            g[i][j] = new value_t[shape[2] + 2];
+            TracyAlloc(g[i][j], (shape[2] + 2) * sizeof(value_t));
+        }
     }
 	if (g == NULL) { cerr << "Out of memory!" << endl; }
 	return g;

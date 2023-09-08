@@ -6,6 +6,8 @@
 #include <iostream>
 #include <chrono>
 
+#include <tracy/Tracy.hpp>
+
 using namespace dim3;
 using namespace std;
 using namespace std::chrono;
@@ -32,6 +34,7 @@ BettiMatching::BettiMatching(BettiMatching &&other) : cgc0(std::move(other.cgc0)
 
 
 void BettiMatching::computeMatching() {
+	ZoneScoped;
     vector<Cube> ctr0;
     vector<Cube> ctr1;
     vector<Cube> ctrComp;
@@ -77,6 +80,7 @@ void BettiMatching::computeMatching() {
 }
 
 void BettiMatching::computeVoxels() {
+	ZoneScoped;
 #ifdef RUNTIME
     cout << "computing voxels ... ";
     auto start = high_resolution_clock::now();

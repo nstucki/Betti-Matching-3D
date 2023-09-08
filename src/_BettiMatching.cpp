@@ -9,6 +9,8 @@
 #include "data_structures.h"
 #include "BettiMatching.h"
 
+#include <tracy/Tracy.hpp>
+
 namespace py = pybind11;
 
 std::string repr_vector(const std::vector<index_t> shape)
@@ -40,6 +42,7 @@ PYBIND11_MODULE(betti_matching, m)
         .def(py::init([](py::array_t<value_t> &input0, py::array_t<value_t> &input1, py::array_t<value_t> &comparison,
                          Config &config)
                       {
+                ZoneScopedN("pybind BettiMatching constructor");
                 const vector<index_t> shape0(input0.shape(), input0.shape() + input0.ndim());
                 const vector<index_t> shape1(input1.shape(), input1.shape() + input1.ndim());
                 const vector<index_t> shapeComparison(comparison.shape(), comparison.shape() + comparison.ndim());
@@ -54,6 +57,7 @@ PYBIND11_MODULE(betti_matching, m)
         .def(py::init([](std::string input0_path, std::string input1_path, std::string comparison_path,
                          Config &config)
                       {
+                ZoneScopedN("pybind BettiMatching constructor (path inputs)");
 
                 vector<value_t> input0Vector;
                 vector<value_t> input1Vector;
@@ -78,6 +82,7 @@ PYBIND11_MODULE(betti_matching, m)
     m.def("compute_matching_with_voxels", [](py::array_t<value_t> &input0, py::array_t<value_t> &input1, py::array_t<value_t> &comparison,
                          Config &config)
     {
+        ZoneScopedN("betti_matching.compute_matching_with_voxels");
         const vector<index_t> shape0(input0.shape(), input0.shape() + input0.ndim());
         const vector<index_t> shape1(input1.shape(), input1.shape() + input1.ndim());
         const vector<index_t> shapeComparison(comparison.shape(), comparison.shape() + comparison.ndim());
@@ -94,6 +99,7 @@ PYBIND11_MODULE(betti_matching, m)
     m.def("compute_matching_with_voxels", [](std::string input0_path, std::string input1_path, std::string comparison_path,
                          Config &config)
     {
+        ZoneScopedN("betti_matching.compute_matching_with_voxels (path inputs)");
 
         vector<value_t> input0Vector;
         vector<value_t> input1Vector;

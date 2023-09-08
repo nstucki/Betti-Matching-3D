@@ -6,6 +6,8 @@
 #include <optional>
 #include <stdexcept>
 
+#include <tracy/Tracy.hpp>
+
 BettiMatching::BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<value_t> comparison, vector<index_t> shape, Config &config) : dimension(shape.size()), dimensionSpecificBettiMatching(dim1::BettiMatching(input0, input1, comparison, shape, config))
 {
     switch (dimension)
@@ -29,6 +31,7 @@ BettiMatching::BettiMatching(BettiMatching &&other) : dimension(other.dimension)
 
 std::tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>, vector<vector<VoxelPair>>> BettiMatching::computeMatchingWithVoxels()
 {
+    ZoneScoped;
     switch (dimension)
     {
     case 1:

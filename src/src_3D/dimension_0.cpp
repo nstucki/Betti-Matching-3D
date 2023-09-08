@@ -4,9 +4,14 @@
 #include <chrono>
 #include <algorithm>
 
+#include <tracy/Tracy.hpp>
+
 using namespace dim3;
 using namespace std::chrono;
 
+#ifdef TRACY_ENABLE
+const int DIM0_COLOR_TRACY = 0x67b4ff;
+#endif
 
 Dimension0::Dimension0(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, 
 						const CubicalGridComplex& _cgcComp, const Config& _config, 
@@ -18,6 +23,7 @@ Dimension0::Dimension0(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						uf0(UnionFind(cgc0)), uf1(UnionFind(cgc1)), ufComp(UnionFind(cgcComp)) {}
 
 void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
+    ZoneScopedNC("computePairsAndMatch{0}", DIM0_COLOR_TRACY);
 #ifdef RUNTIME
 	cout << endl << "input 0: ";
 #endif
@@ -49,6 +55,7 @@ void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 }
 
 void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
+    ZoneScopedNC("computePairs{0}", DIM0_COLOR_TRACY);
 #ifdef RUNTIME
 	cout << "barcode ";
 	auto start = high_resolution_clock::now();
@@ -86,6 +93,7 @@ void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 }
 
 void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
+    ZoneScopedNC("computeImagePairsAndMatch{0}", DIM0_COLOR_TRACY);
 #ifdef RUNTIME
 	cout << "barcodes & matching ";
 	auto start = high_resolution_clock::now();
@@ -134,6 +142,7 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 }
 
 void Dimension0::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
+    ZoneScopedNC("enumerateEdges{0}", DIM0_COLOR_TRACY);
 #ifdef RUNTIME
 	cout << "enumeration ";
 	auto start = high_resolution_clock::now();
