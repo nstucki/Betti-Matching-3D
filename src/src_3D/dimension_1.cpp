@@ -482,6 +482,7 @@ void Dimension1::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edg
 	edges.reserve(cgc.getNumberOfCubes(1));
 	value_t birth;
 	Cube cube;
+	bool binaryInputs = true;
 	for (index_t x = 0; x < cgc.shape[0]; ++x) {
 		for (index_t y = 0; y < cgc.shape[1]; ++y) {
 			for (index_t z = 0; z < cgc.shape[2]; ++z) {
@@ -490,17 +491,25 @@ void Dimension1::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edg
 					if (birth < config.threshold) {
 						cube = Cube(birth, x, y, z, type);
 						auto find = pivotColumnIndex.find(cube.index);
-						if (!find.has_value()) { edges.push_back(cube); }
+						if (!find.has_value()) {
+							edges.push_back(cube);
+							if (binaryInputs && cube.birth != 0 && cube.birth != 1) binaryInputs = false;
+						}
 					}	
 				}				
 			}
 		}
 	}
-	sort(edges.begin(), edges.end(), CubeComparator());
+	if (binaryInputs) {
+		std::stable_partition(edges.begin(), edges.end(), [](Cube &cube) { return cube.birth; });
+	} else {
+		std::stable_sort(edges.begin(), edges.end(), [](const Cube &cube1, const Cube &cube2) { return cube1.birth < cube2.birth; }); //CubeComparator
+	}
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms";
+	cout << duration.count() << " ms" << endl;
+	cout << "Binary inputs: " << (binaryInputs ? "true" : "false") << endl;
 #endif
 }
 
