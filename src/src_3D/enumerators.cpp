@@ -3,7 +3,7 @@
 using namespace dim3;
 
 
-BoundaryEnumerator::BoundaryEnumerator(const CubicalGridComplex& _cgc) : cgc(_cgc) { nextFace = Cube(); }
+BoundaryEnumerator::BoundaryEnumerator(const CubicalGridComplex& _cgc) : cgc(_cgc) { nextFace = Cube1(); }
 
 void BoundaryEnumerator::setBoundaryEnumerator(const Cube& _cube) {
 	cube = _cube;
@@ -23,42 +23,42 @@ bool BoundaryEnumerator::hasNextFace() {
 #ifdef USE_EMERGENT_PAIRS
 				case 0:
 				birth = cgc.getBirth(x, y+1, z, 2, 1);
-				nextFace = Cube(birth, x, y+1, z, 2);
+				nextFace = Cube1(birth, x, y+1, z, 2);
 				break;
 
 				case 1:
 				birth = cgc.getBirth(x, y, z+1, 1, 1);
-				nextFace = Cube(birth, x, y, z+1, 1);
+				nextFace = Cube1(birth, x, y, z+1, 1);
 				break;
 
 				case 2:
 				birth = cgc.getBirth(x, y, z, 2, 1);
-				nextFace = Cube(birth, x, y, z, 2);
+				nextFace = Cube1(birth, x, y, z, 2);
 				break;
 
 				case 3:
 				birth = cgc.getBirth(x, y, z, 1, 1);
-				nextFace = Cube(birth, x, y, z, 1);
+				nextFace = Cube1(birth, x, y, z, 1);
 				break;
 #else
 				case 0:
 				birth = cgc.getBirth(x, y, z, 1, 1);
-				nextFace = Cube(birth, x, y, z, 1);
+				nextFace = Cube1(birth, x, y, z, 1);
 				break;
 
 				case 1:
 				birth = cgc.getBirth(x, y, z, 2, 1);
-				nextFace = Cube(birth, x, y, z, 2);
+				nextFace = Cube1(birth, x, y, z, 2);
 				break;
 
 				case 2:
 				birth = cgc.getBirth(x, y, z+1, 1, 1);
-				nextFace = Cube(birth, x, y, z+1, 1);
+				nextFace = Cube1(birth, x, y, z+1, 1);
 				break;
 
 				case 3:
 				birth = cgc.getBirth(x, y+1, z, 2, 1);
-				nextFace = Cube(birth, x, y+1, z, 2);
+				nextFace = Cube1(birth, x, y+1, z, 2);
 				break;
 #endif
 			}
@@ -69,42 +69,42 @@ bool BoundaryEnumerator::hasNextFace() {
 #ifdef USE_EMERGENT_PAIRS
 				case 0:
 				birth = cgc.getBirth(x+1, y, z, 2, 1);
-				nextFace = Cube(birth, x+1, y, z, 2);
+				nextFace = Cube1(birth, x+1, y, z, 2);
 				break;
 
 				case 1:
 				birth = cgc.getBirth(x, y, z+1, 0, 1);
-				nextFace = Cube(birth, x, y, z+1, 0);
+				nextFace = Cube1(birth, x, y, z+1, 0);
 				break;
 
 				case 2:
 				birth = cgc.getBirth(x, y, z, 2, 1);
-				nextFace = Cube(birth, x, y, z, 2);
+				nextFace = Cube1(birth, x, y, z, 2);
 				break;
 
 				case 3:
 				birth = cgc.getBirth(x, y, z, 0, 1);
-				nextFace = Cube(birth, x, y, z, 0);
+				nextFace = Cube1(birth, x, y, z, 0);
 				break;
 #else
 				case 0:
 				birth = cgc.getBirth(x, y, z, 0, 1);
-				nextFace = Cube(birth, x, y, z, 0);
+				nextFace = Cube1(birth, x, y, z, 0);
 				break;
 
 				case 1:
 				birth = cgc.getBirth(x, y, z, 2, 1);
-				nextFace = Cube(birth, x, y, z, 2);
+				nextFace = Cube1(birth, x, y, z, 2);
 				break;
 
 				case 2:
 				birth = cgc.getBirth(x, y, z+1, 0, 1);
-				nextFace = Cube(birth, x, y, z+1, 0);
+				nextFace = Cube1(birth, x, y, z+1, 0);
 				break;
 
 				case 3:
 				birth = cgc.getBirth(x+1, y, z, 2, 1);
-				nextFace = Cube(birth, x+1, y, z, 2);
+				nextFace = Cube1(birth, x+1, y, z, 2);
 				break;
 #endif
 			}
@@ -115,42 +115,42 @@ bool BoundaryEnumerator::hasNextFace() {
 #ifdef USE_EMERGENT_PAIRS
 				case 0:
 				birth = cgc.getBirth(x+1, y, z, 1, 1);
-				nextFace = Cube(birth, x+1, y, z, 1);
+				nextFace = Cube1(birth, x+1, y, z, 1);
 				break;
 
 				case 1:
 				birth = cgc.getBirth(x, y+1, z, 0, 1);
-				nextFace = Cube(birth, x, y+1, z, 0);
+				nextFace = Cube1(birth, x, y+1, z, 0);
 				break;
 
 				case 2:
 				birth = cgc.getBirth(x, y, z, 1, 1);
-				nextFace = Cube(birth, x, y, z, 1);
+				nextFace = Cube1(birth, x, y, z, 1);
 				break;
 
 				case 3:
 				birth = cgc.getBirth(x, y, z, 0, 1);
-				nextFace = Cube(birth, x, y, z, 0);
+				nextFace = Cube1(birth, x, y, z, 0);
 				break;
 #else
 				case 0:
 				birth = cgc.getBirth(x, y, z, 0, 1);
-				nextFace = Cube(birth, x, y, z, 0);
+				nextFace = Cube1(birth, x, y, z, 0);
 				break;
 
 				case 1:
 				birth = cgc.getBirth(x, y, z, 1, 1);
-				nextFace = Cube(birth, x, y, z, 1);
+				nextFace = Cube1(birth, x, y, z, 1);
 				break;
 
 				case 2:
 				birth = cgc.getBirth(x, y+1, z, 0, 1);
-				nextFace = Cube(birth, x, y+1, z, 0);
+				nextFace = Cube1(birth, x, y+1, z, 0);
 				break;
 
 				case 3:
 				birth = cgc.getBirth(x+1, y, z, 1, 1);
-				nextFace = Cube(birth, x+1, y, z, 1);
+				nextFace = Cube1(birth, x+1, y, z, 1);
 				break;
 #endif
 			}

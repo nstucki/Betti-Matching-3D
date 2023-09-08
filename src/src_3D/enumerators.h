@@ -6,7 +6,7 @@
 namespace dim3 {
 	class BoundaryEnumerator {
 		public:
-		Cube nextFace;
+		Cube1 nextFace;
 		
 		BoundaryEnumerator(const CubicalGridComplex& cgc);
 		void setBoundaryEnumerator(const Cube& cube);
