@@ -459,6 +459,7 @@ void Dimension1::computeMatching() {
 }
 
 void Dimension1::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
+    ZoneScopedNC("enumerateEdges{1}", DIM1_COLOR_TRACY);
 #ifdef RUNTIME
 	cout << ", enumeration ";
 	auto start = high_resolution_clock::now();
