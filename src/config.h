@@ -9,7 +9,7 @@
 #define USE_EMERGENT_PAIRS
 #define USE_CLEARING_DIM0
 
-typedef uint32_t index_t;
+typedef uint64_t index_t;
 typedef double value_t;
 
 #define INFTY numeric_limits<value_t>::infinity()
