@@ -1,5 +1,6 @@
 #include "data_structures.h"
 #include "../data_structures.h"
+#include "dimension_1.h"
 #include <unordered_map>
 
 
@@ -28,6 +29,8 @@ namespace dim3 {
         vector<vector<Match>> matches;
         vector<unordered_map<uint64_t, bool>> isMatched0;
         vector<unordered_map<uint64_t, bool>> isMatched1;
+        Cube1Map<bool> isMatched0_dim1;
+        Cube1Map<bool> isMatched1_dim1;
         vector<vector<VoxelMatch>> _matched;
         vector<vector<VoxelPair>> _unmatched0;
         vector<vector<VoxelPair>> _unmatched1;

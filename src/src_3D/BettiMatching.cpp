@@ -13,7 +13,7 @@ using namespace std::chrono;
 
 BettiMatching::BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<value_t> comparison, vector<index_t> shape,
                                 Config& _config) : 
-    cgc0(input0, shape), cgc1(input1, shape), cgcComp(comparison, shape), config(_config) {
+    cgc0(input0, shape), cgc1(input1, shape), cgcComp(comparison, shape), config(_config), isMatched0_dim1(shape), isMatched1_dim1(shape) {
     pairs0 = vector<vector<Pair>>(3);
     pairs1 = vector<vector<Pair>>(3);
     pairsComp = vector<vector<Pair>>(3);
@@ -28,7 +28,8 @@ BettiMatching::BettiMatching(vector<value_t> input0, vector<value_t> input1, vec
 BettiMatching::BettiMatching(BettiMatching &&other) : cgc0(std::move(other.cgc0)), cgc1(std::move(other.cgc1)), cgcComp(std::move(other.cgcComp)),
                                                       config(other.config), pairs0(other.pairs0), pairs1(other.pairs1), pairsComp(other.pairsComp),
                                                       matches(other.matches), isMatched0(other.isMatched0), isMatched1(other.isMatched1),
-                                                      _matched(other.matched), _unmatched0(other.unmatched0), _unmatched1(other.unmatched1) {}
+                                                      _matched(other.matched), _unmatched0(other.unmatched0), _unmatched1(other.unmatched1),
+                                                      isMatched0_dim1(std::move(other.isMatched0_dim1)), isMatched1_dim1(std::move(other.isMatched1_dim1)) {}
 
 
 void BettiMatching::computeMatching() {
@@ -53,7 +54,7 @@ void BettiMatching::computeMatching() {
         cout << "dimension 1:";
         auto start = high_resolution_clock::now();
 #endif
-        Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);       
+        Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0_dim1, isMatched1_dim1);
         dim1.computePairsAndMatch(ctr0, ctr1, ctrComp);
 #ifdef RUNTIME
         auto stop = high_resolution_clock::now();
@@ -83,12 +84,12 @@ void BettiMatching::computeVoxels() {
 #endif
     for (uint8_t d = 0; d < 3; ++d) {
         for (auto& pair : pairs0[d]) {
-            if (!isMatched0[d][pair.birth.index]) {
+            if ((d != 1 && !isMatched0[d][pair.birth.index]) || (d == 1 && isMatched0_dim1.find(pair.birth.index).value_or(false))) {
                 _unmatched0[d].push_back(VoxelPair(cgc0.getParentVoxel(pair.birth, d), cgc0.getParentVoxel(pair.death, d+1)));
             }
         }
         for (auto& pair : pairs1[d]) {
-            if (!isMatched1[d][pair.birth.index]) {
+            if ((d != 1 && !isMatched1[d][pair.birth.index]) || (d == 1 && isMatched1_dim1.find(pair.birth.index).value_or(false))) {
                 _unmatched1[d].push_back(VoxelPair(cgc1.getParentVoxel(pair.birth, d), cgc1.getParentVoxel(pair.death, d+1)));
             }
         }

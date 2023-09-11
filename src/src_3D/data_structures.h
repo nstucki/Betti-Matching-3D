@@ -31,8 +31,8 @@ namespace dim3 {
 
 	class Pair {
 		public:
-		const Cube birth;
-		const Cube death;
+		Cube birth;
+		Cube death;
 
 		Pair();
 		Pair(const Cube& birth, const Cube& death);
