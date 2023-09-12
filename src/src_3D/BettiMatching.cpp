@@ -85,12 +85,12 @@ void BettiMatching::computeVoxels() {
 #endif
     for (uint8_t d = 0; d < 3; ++d) {
         for (auto& pair : pairs0[d]) {
-            if ((d != 1 && !isMatched0[d][pair.birth.index]) || (d == 1 && isMatched0_dim1.find(pair.birth.index).value_or(false))) {
+            if ((d != 1 && !isMatched0[d][pair.birth.index]) || (d == 1 && !isMatched0_dim1.find(pair.birth.index).value_or(false))) {
                 _unmatched0[d].push_back(VoxelPair(cgc0.getParentVoxel(pair.birth, d), cgc0.getParentVoxel(pair.death, d+1)));
             }
         }
         for (auto& pair : pairs1[d]) {
-            if ((d != 1 && !isMatched1[d][pair.birth.index]) || (d == 1 && isMatched1_dim1.find(pair.birth.index).value_or(false))) {
+            if ((d != 1 && !isMatched1[d][pair.birth.index]) || (d == 1 && !isMatched1_dim1.find(pair.birth.index).value_or(false))) {
                 _unmatched1[d].push_back(VoxelPair(cgc1.getParentVoxel(pair.birth, d), cgc1.getParentVoxel(pair.death, d+1)));
             }
         }
@@ -161,10 +161,10 @@ void BettiMatching::printResult() {
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = 0;
-        for (auto &pair : pairs0[d]) { if (!isMatched0[d][pair.birth.index]) { ++count; } }
+        for (auto &pair : pairs0[d]) { if ((d != 1 && !isMatched0[d][pair.birth.index]) || (d == 1 && !isMatched0_dim1.find(pair.birth.index).value_or(false))) { ++count; } }
         if (0 < count && count < 10) {
             cout << endl;
-            for (auto &pair : pairs0[d]) { if (!isMatched0[d][pair.birth.index]) { pair.print(); cout << endl; } }
+            for (auto &pair : pairs0[d]) { if ((d != 1 && !isMatched0[d][pair.birth.index]) || (d == 1 && !isMatched0_dim1.find(pair.birth.index).value_or(false))) { pair.print(); cout << endl; } }
         } else { cout << count << endl; }
     }
     cout << endl;
@@ -172,10 +172,10 @@ void BettiMatching::printResult() {
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = 0;
-        for (auto &pair : pairs1[d]) {if (!isMatched1[d][pair.birth.index]) { ++count; } }
+        for (auto &pair : pairs1[d]) {if ((d != 1 && !isMatched1[d][pair.birth.index]) || (d == 1 && !isMatched1_dim1.find(pair.birth.index).value_or(false))) { ++count; } }
         if (0 < count && count < 10) {
             cout << endl;
-            for (auto &pair : pairs1[d]) { if (!isMatched1[d][pair.birth.index]) { pair.print(); cout << endl; } }
+            for (auto &pair : pairs1[d]) { if ((d != 1 && !isMatched1[d][pair.birth.index]) || (d == 1 && !isMatched1_dim1.find(pair.birth.index).value_or(false))) { pair.print(); cout << endl; } }
         } else { cout << count << endl; }
     }
     cout << endl;
