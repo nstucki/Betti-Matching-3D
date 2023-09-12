@@ -12,25 +12,6 @@
 namespace dim3 {
 	typedef priority_queue<Cube, vector<Cube>, CubeComparator> CubeQueue;
 
-	template<typename _Tp>
-    class Cube1Map {
-		public:
-		Cube1Map(vector<index_t> shape);
-		void emplace(uint64_t cube_index, _Tp element);
-		std::optional<_Tp> find(uint64_t cube_index) const;
-		void clear();
-		optional<_Tp>& operator[](int index);
-		
-		private:
-		vector<std::optional<_Tp>> elements;
-		uint64_t computeCoordinateIndex(uint64_t cube_index) const;
-		vector<index_t> shape;
-		const int size_x_direction;
-		const int size_y_direction;
-		const int size_z_direction;
-	};
-	
-
 	class Dimension1 {
 		public:
 		Dimension1(const CubicalGridComplex& cgc0, const CubicalGridComplex& cgc1, const CubicalGridComplex& cgcComp, 
