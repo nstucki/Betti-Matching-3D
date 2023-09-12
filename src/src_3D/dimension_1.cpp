@@ -26,8 +26,7 @@ Dimension1::Dimension1(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						matchMap1(_cgc0.shape),
 						matchMapIm0(_cgc0.shape),
 						matchMapIm1(_cgc0.shape),
-						pivotColumnIndex(_cgc0.shape),
-						cache(_cgc0.shape)
+						pivotColumnIndex(_cgc0.shape)
 						// isMatched0(_isMatched0), isMatched1(_isMatched1), isMatchedComp(cgc0.shape[0] * cgc0.shape[1] * cgc0.shape[2] * 3, false)
 						{}
 
@@ -108,6 +107,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	size_t ctrSize = ctr.size();
 	// pivotColumnIndex.reserve(ctrSize);
 	// cache.reserve(min(config.cacheSize, ctrSize));
+	cache = vector<std::optional<CubeQueue>>(ctrSize);
 	BoundaryEnumerator enumerator(cgc);
 	Cube pivot;
 	queue<index_t> cachedColumnIdx;
@@ -131,7 +131,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 		while (true) {
 			cacheHit = false;
 			if (i != j) {
-                auto findCb = cache.find(j);
+                auto findCb = cache[j];
                 if (findCb.has_value()) {
                     cacheHit = true;
                     auto cachedBoundary = *findCb;
@@ -213,6 +213,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	size_t ctrSize = ctr.size();
 	// pivotColumnIndex.reserve(ctrSize);	
 	// cache.reserve(min(config.cacheSize, ctrSize));
+	cache = vector<std::optional<CubeQueue>>(ctrSize);
 	BoundaryEnumerator enumerator = BoundaryEnumerator(cgcComp);
 	Cube pivot;
 	queue<index_t> cachedColumnIdx;
@@ -238,7 +239,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 		while (true) {
 			cacheHit = false;
 			if (i != j) {
-                auto findCb = cache.find(j);
+                auto findCb = cache[j];
                 if (findCb.has_value()) {
                     cacheHit = true;
                     auto cachedBoundary = *findCb;
@@ -332,6 +333,7 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 	// pivotColumnIndex.reserve(ctrSize);
 	// cache.reserve(min(config.cacheSize, ctrSize));
 	// matchMapIm.reserve(pairsComp.size());
+	cache = vector<std::optional<CubeQueue>>(ctrSize);
 	BoundaryEnumerator enumerator = BoundaryEnumerator(cgc);
 	Cube pivot;
 	value_t birth;
@@ -357,7 +359,7 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 		while (true) {
 			cacheHit = false;
 			if (i != j) {
-                auto findCb = cache.find(j);
+                auto findCb = cache[j];
                 if (findCb.has_value()) {
                     cacheHit = true;
                     auto cachedBoundary = *findCb;
@@ -532,5 +534,5 @@ void Dimension1::addCache(const index_t& i, CubeQueue& workingBoundary) {
 		if (!workingBoundary.empty() && c == workingBoundary.top()) { workingBoundary.pop(); } 
 		else { cleanWb.push(c); }
 	}
-	cache.emplace(i, cleanWb);
+	cache[i] = cleanWb;
 }

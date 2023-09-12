@@ -40,7 +40,7 @@ namespace dim3 {
 		Cube1Map<uint64_t> matchMapIm0;
 		Cube1Map<uint64_t> matchMapIm1;
 		Cube1Map<uint64_t> pivotColumnIndex;
-		Cube1Map<CubeQueue> cache;
+		vector<std::optional<CubeQueue>> cache;
 
 		void computePairs(const vector<Cube>& ctr, uint8_t k);
 		void computePairsComp(vector<Cube>& ctr);
