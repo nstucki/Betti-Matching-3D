@@ -149,7 +149,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 				while (enumerator.hasNextFace()) {
 #ifdef USE_EMERGENT_PAIRS
 					if (checkEmergentPair && ctr[j].birth == enumerator.nextFace.birth) {
-						if (pivotColumnIndex.find(enumerator.nextFace.index).has_value()) {
+						if (!pivotColumnIndex.find(enumerator.nextFace.index).has_value()) {
 							pivot = enumerator.nextFace;
                             foundPair = true;
 							break;
@@ -256,7 +256,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 				while (enumerator.hasNextFace()) {
 #ifdef USE_EMERGENT_PAIRS
 					if (checkEmergentPair && ctr[j].birth == enumerator.nextFace.birth) {
-						if (pivotColumnIndex.find(enumerator.nextFace.index).has_value()) {
+						if (!pivotColumnIndex.find(enumerator.nextFace.index).has_value()) {
 							pivot = enumerator.nextFace;
                             foundPair = true;
 							break;
@@ -377,7 +377,7 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 					if (checkEmergentPair) {
 						birth = cgc.getBirth(ctr[j].x(), ctr[j].y(), ctr[j].z(), ctr[j].type(), 2);
 						if (birth == enumerator.nextFace.birth) {
-							if (pivotColumnIndex.find(enumerator.nextFace.index).has_value()) {
+							if (!pivotColumnIndex.find(enumerator.nextFace.index).has_value()) {
 								pivot = enumerator.nextFace;
                             	foundPair = true;
 								break;
@@ -488,7 +488,7 @@ void Dimension1::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edg
 					if (birth < config.threshold) {
 						cube = Cube(birth, x, y, z, type);
 						auto find = pivotColumnIndex.find(cube.index);
-						if (find.has_value()) { edges.push_back(cube); }
+						if (!find.has_value()) { edges.push_back(cube); }
 					}	
 				}				
 			}
