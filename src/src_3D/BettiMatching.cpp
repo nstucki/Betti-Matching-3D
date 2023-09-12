@@ -2,6 +2,7 @@
 #include "dimension_0.h"
 #include "dimension_1.h"
 #include "dimension_2.h"
+#include "data_structures.h"
 
 #include <iostream>
 #include <chrono>

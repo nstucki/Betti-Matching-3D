@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <optional>
 
 using namespace std;
 
@@ -110,4 +111,69 @@ namespace dim3 {
 		vector<value_t> birthtime;
 		const CubicalGridComplex& cgc;
 	};
+
+
+
+	template<typename _Tp>
+    class Cube1Map {
+		public:
+		Cube1Map(vector<index_t> shape);
+		void emplace(uint64_t cube_index, _Tp element);
+		std::optional<_Tp> find(uint64_t cube_index) const;
+		void clear();
+		optional<_Tp>& operator[](int index);
+
+		private:
+		vector<std::optional<_Tp>> elements;
+		uint64_t computeCoordinateIndex(uint64_t cube_index) const;
+		vector<index_t> shape;
+		const int size_x_direction;
+		const int size_y_direction;
+		const int size_z_direction;
+	};
+
+	template<class _Tp>
+	Cube1Map<_Tp>::Cube1Map(vector<index_t> shape) : shape(shape), size_x_direction(shape[1] * shape[2] * 3), size_y_direction(shape[2] * 3), size_z_direction(3), elements(shape[0] * shape[1] * shape[2] * 3) {}
+
+	template<class _Tp>
+	void Cube1Map<_Tp>::emplace(uint64_t cube_index, _Tp element) {
+		if (cube_index != NONE) {
+			elements[computeCoordinateIndex(cube_index)] = element;
+		} else {
+			throw runtime_error("Cube1Map::emplace may not be called with NONE magic number");
+		}
+	}
+
+	template<class _Tp>
+	std::optional<_Tp> Cube1Map<_Tp>::find(uint64_t cube_index) const{
+		if (cube_index != NONE) {
+			return elements[computeCoordinateIndex(cube_index)];
+		}
+		return {};
+	}
+
+	template<class _Tp>
+	optional<_Tp>& Cube1Map<_Tp>::operator[](int cube_index) {
+		if (cube_index != NONE) {
+			return elements[computeCoordinateIndex(cube_index)];
+		}
+		throw runtime_error("Cube1Map subscript operator may not be called with NONE magic number");
+	}
+
+	template<class _Tp>
+	uint64_t Cube1Map<_Tp>::computeCoordinateIndex(uint64_t cube_index) const {
+		int x = (cube_index >> 44) & 0xfffff;
+		int y = (cube_index >> 24) & 0xfffff;
+		int z = (cube_index >> 4) & 0xfffff;
+		int type = cube_index & 0xf;
+
+		return x * size_x_direction + y * size_y_direction + z * size_z_direction + type;
+	}
+
+	template<class _Tp>
+	void Cube1Map<_Tp>::clear() {
+		elements.clear();
+		elements.resize(shape[0] * shape[1] * shape[2] * 3);
+	}
+
 }
