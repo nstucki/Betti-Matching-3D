@@ -91,7 +91,7 @@ void Dimension2::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>&
 		}
 	}
 	if (binaryInputs) {
-		std::stable_partition(dualEdges.begin(), dualEdges.end(), [](Cube &cube) { return cube.birth; });
+		std::stable_partition(dualEdges.begin(), dualEdges.end(), [](Cube &cube) { return cube.birth == 0; });
 	} else {
 		std::stable_sort(dualEdges.begin(), dualEdges.end(), [](const Cube &cube1, const Cube &cube2) { return cube1.birth < cube2.birth; }); //CubeComparator());
 	}
