@@ -3,6 +3,32 @@
 cmake_minimum_required(VERSION 3.5)
 project(bettiMatching)
 
+find_package(pybind11 REQUIRED)
+pybind11_add_module(betti_matching
+    src/_BettiMatching.cpp
+    src/BettiMatching.cpp
+    src/utils.cpp
+    src/data_structures.cpp
+    src/src_1D/BettiMatching.cpp
+    src/src_1D/dimension_0.cpp
+    src/src_1D/data_structures.cpp
+    src/src_2D/BettiMatching.cpp
+    src/src_2D/dimension_0.cpp
+    src/src_2D/dimension_1.cpp
+    src/src_2D/data_structures.cpp
+    src/src_3D/BettiMatching.cpp
+    src/src_3D/dimension_0.cpp
+    src/src_3D/dimension_1.cpp
+    src/src_3D/dimension_2.cpp
+    src/src_3D/data_structures.cpp
+    src/src_3D/enumerators.cpp
+    src/src_nD/BettiMatching.cpp
+    src/src_nD/dimension_0.cpp
+    src/src_nD/inter_dimensions.cpp
+    src/src_nD/top_dimension.cpp
+    src/src_nD/data_structures.cpp
+    src/src_nD/enumerators.cpp
+)
 
 add_executable(BettiMatching
     src/main.cpp
@@ -29,8 +55,10 @@ add_executable(BettiMatching
     src/src_nD/enumerators.cpp
 )
 
-set_target_properties(BettiMatching
+set_target_properties(BettiMatching betti_matching
 PROPERTIES
 CXX_STANDARD 17
 CXX_EXTENSIONS OFF
 )
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
