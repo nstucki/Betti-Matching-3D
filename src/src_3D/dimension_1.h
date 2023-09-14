@@ -11,18 +11,7 @@
 
 
 namespace dim3 {
-
-	template<typename _Tp, typename _Sequence = vector<_Tp>,
-		typename _Compare  = less<typename _Sequence::value_type> >
-	class element_access_priority_queue : public std::priority_queue<_Tp, _Sequence, _Compare>
-	{
-	public:
-		const std::vector<_Tp>& elements() const {
-			return this->c;
-		}
-	};
-
-	typedef element_access_priority_queue<Cube, vector<Cube>, CubeComparator> CubeQueue;
+	typedef priority_queue<Cube, vector<Cube>, CubeComparator> CubeQueue;
 
 
 	class Dimension1 {
@@ -53,7 +42,7 @@ namespace dim3 {
 		Cube1Map<uint64_t> matchMapIm0;
 		Cube1Map<uint64_t> matchMapIm1;
 		Cube1Map<uint64_t> pivotColumnIndex;
-		vector<std::optional<CubeQueue>> cache;
+		vector<std::optional<vector<Cube>>> cache;
 
 		void computePairs(const vector<Cube>& ctr, uint8_t k);
 		void computePairsComp(vector<Cube>& ctr);

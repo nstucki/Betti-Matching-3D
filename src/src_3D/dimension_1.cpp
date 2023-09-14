@@ -107,7 +107,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	size_t ctrSize = ctr.size();
 	// pivotColumnIndex.reserve(ctrSize);
 	// cache.reserve(min(config.cacheSize, ctrSize));
-	cache = vector<std::optional<CubeQueue>>(ctrSize);
+	cache = vector<std::optional<vector<Cube>>>(ctrSize);
 	BoundaryEnumerator enumerator(cgc);
 	Cube pivot;
 	queue<index_t> cachedColumnIdx;
@@ -134,7 +134,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
                 auto &cachedBoundary = cache[j];
                 if (cachedBoundary.has_value()) {
                     cacheHit = true;
-					for (auto &face : (*cachedBoundary).elements()) {
+					for (auto &face : *cachedBoundary) {
 						workingBoundary.push(face);
 					}
                 }
@@ -211,7 +211,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	size_t ctrSize = ctr.size();
 	// pivotColumnIndex.reserve(ctrSize);	
 	// cache.reserve(min(config.cacheSize, ctrSize));
-	cache = vector<std::optional<CubeQueue>>(ctrSize);
+	cache = vector<std::optional<vector<Cube>>>(ctrSize);
 	BoundaryEnumerator enumerator = BoundaryEnumerator(cgcComp);
 	Cube pivot;
 	queue<index_t> cachedColumnIdx;
@@ -240,7 +240,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
                 auto &cachedBoundary = cache[j];
                 if (cachedBoundary.has_value()) {
                     cacheHit = true;
-					for (auto &face : (*cachedBoundary).elements()) {
+					for (auto &face : *cachedBoundary) {
 						workingBoundary.push(face);
 					}
                 }
@@ -329,7 +329,7 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 	// pivotColumnIndex.reserve(ctrSize);
 	// cache.reserve(min(config.cacheSize, ctrSize));
 	// matchMapIm.reserve(pairsComp.size());
-	cache = vector<std::optional<CubeQueue>>(ctrSize);
+	cache = vector<std::optional<vector<Cube>>>(ctrSize);
 	BoundaryEnumerator enumerator = BoundaryEnumerator(cgc);
 	Cube pivot;
 	value_t birth;
@@ -358,7 +358,7 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
                 auto &cachedBoundary = cache[j];
                 if (cachedBoundary.has_value()) {
                     cacheHit = true;
-					for (auto &face : (*cachedBoundary).elements()) {
+					for (auto &face : *cachedBoundary) {
 						workingBoundary.push(face);
 					}
                 }
@@ -530,12 +530,12 @@ Cube Dimension1::getPivot(CubeQueue& column) const {
 }
 
 void Dimension1::addCache(const index_t& i, CubeQueue& workingBoundary) {
-	CubeQueue cleanWb;
+	std::vector<Cube> cleanWb;
 	while (!workingBoundary.empty()) {
 		Cube c = workingBoundary.top();
 		workingBoundary.pop();
 		if (!workingBoundary.empty() && c == workingBoundary.top()) { workingBoundary.pop(); } 
-		else { cleanWb.push(c); }
+		else { cleanWb.emplace_back(c); }
 	}
-	cache[i] = cleanWb;
+	cache[i] = std::move(cleanWb);
 }
