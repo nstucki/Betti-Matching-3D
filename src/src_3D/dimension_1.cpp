@@ -131,14 +131,12 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 		while (true) {
 			cacheHit = false;
 			if (i != j) {
-                auto findCb = cache[j];
-                if (findCb.has_value()) {
+                auto &cachedBoundary = cache[j];
+                if (cachedBoundary.has_value()) {
                     cacheHit = true;
-                    auto cachedBoundary = *findCb;
-                    while (!cachedBoundary.empty()) {
-                        workingBoundary.push(cachedBoundary.top());
-                        cachedBoundary.pop();
-                    }
+					for (auto &face : (*cachedBoundary).elements()) {
+						workingBoundary.push(face);
+					}
                 }
 			}
 			if (!cacheHit) {
@@ -239,14 +237,12 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 		while (true) {
 			cacheHit = false;
 			if (i != j) {
-                auto findCb = cache[j];
-                if (findCb.has_value()) {
+                auto &cachedBoundary = cache[j];
+                if (cachedBoundary.has_value()) {
                     cacheHit = true;
-                    auto cachedBoundary = *findCb;
-                    while (!cachedBoundary.empty()) {
-                        workingBoundary.push(cachedBoundary.top());
-                        cachedBoundary.pop();
-                    }
+					for (auto &face : (*cachedBoundary).elements()) {
+						workingBoundary.push(face);
+					}
                 }
 			}
 			if (!cacheHit) {
@@ -359,14 +355,12 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 		while (true) {
 			cacheHit = false;
 			if (i != j) {
-                auto findCb = cache[j];
-                if (findCb.has_value()) {
+                auto &cachedBoundary = cache[j];
+                if (cachedBoundary.has_value()) {
                     cacheHit = true;
-                    auto cachedBoundary = *findCb;
-                    while (!cachedBoundary.empty()) {
-                        workingBoundary.push(cachedBoundary.top());
-                        cachedBoundary.pop();
-                    }
+					for (auto &face : (*cachedBoundary).elements()) {
+						workingBoundary.push(face);
+					}
                 }
 			}
 			if (!cacheHit) {

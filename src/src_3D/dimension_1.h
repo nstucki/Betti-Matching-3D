@@ -7,10 +7,23 @@
 #include <optional>
 #include <queue>
 #include <unordered_map>
+#include <vector>
 
 
 namespace dim3 {
-	typedef priority_queue<Cube, vector<Cube>, CubeComparator> CubeQueue;
+
+	template<typename _Tp, typename _Sequence = vector<_Tp>,
+		typename _Compare  = less<typename _Sequence::value_type> >
+	class element_access_priority_queue : public std::priority_queue<_Tp, _Sequence, _Compare>
+	{
+	public:
+		const std::vector<_Tp>& elements() const {
+			return this->c;
+		}
+	};
+
+	typedef element_access_priority_queue<Cube, vector<Cube>, CubeComparator> CubeQueue;
+
 
 	class Dimension1 {
 		public:
