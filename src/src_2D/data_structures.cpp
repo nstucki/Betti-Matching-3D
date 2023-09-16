@@ -110,19 +110,19 @@ vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8
 		case 1:
 			switch (cube.type()) {
 				case 0:
-					if (cube.birth == getBirth(x, y)) { return {x,y}; }
-					else { return {x+1,y}; }
+					if (cube.birth == getBirth(x+1, y)) { return {x+1,y}; }
+					else { return {x,y}; }
 
 				case 1:
-					if (cube.birth == getBirth(x, y)) { return {x,y}; }
-					else { return {x,y+1}; }
+					if (cube.birth == getBirth(x, y+1)) { return {x,y+1}; }
+					else { return {x,y}; }
 			}
 			
 		case 2:
-			if (cube.birth == getBirth(x, y)) { return {x,y}; }
-			else if (cube.birth == getBirth(x, y+1)) { return {x,y+1}; }
+			if (cube.birth == getBirth(x+1, y+1)) { return {x+1,y+1}; }
 			else if (cube.birth == getBirth(x+1, y)) { return {x+1,y}; }
-			else { return {x+1,y+1}; }
+			else if (cube.birth == getBirth(x, y+1)) { return {x,y+1}; }
+			else { return {x,y}; }
 	}
 	cerr << "parent voxel not found!" << endl;
 	return {0,0};

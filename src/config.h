@@ -6,6 +6,7 @@
 
 //#define COMPUTE_COMPARISON
 #define RUNTIME
+//#define USE_APPARENT_PAIRS
 #define USE_EMERGENT_PAIRS
 #define USE_CLEARING_DIM0
 

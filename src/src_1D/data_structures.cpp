@@ -89,8 +89,8 @@ index_t CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8_t& dim)
 			return x;
 
 		case 1:
-			if (cube.birth == getBirth(x)) { return x; }
-			else { return x+1; }
+			if (cube.birth == getBirth(x+1)) { return x+1; }
+			else { return x; }
 
 	}
 	cerr << "parent voxel not found!" << endl;

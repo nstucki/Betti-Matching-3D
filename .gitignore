@@ -1,3 +1,4 @@
+env
 venv
 build
 build-3D
@@ -12,3 +13,4 @@ betti_matching.cpython-311-x86_64-linux-gnu.so
 cmake_install.cmake
 BettiMatching
 Makefile
+test/inputs

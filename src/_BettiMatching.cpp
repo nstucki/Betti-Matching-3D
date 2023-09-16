@@ -44,7 +44,7 @@ PYBIND11_MODULE(betti_matching, m)
                 const vector<index_t> shape1(input1.shape(), input1.shape() + input1.ndim());
                 const vector<index_t> shapeComparison(comparison.shape(), comparison.shape() + comparison.ndim());
                 if (shape0 != shape1 || shape0 != shapeComparison) {
-                    throw invalid_argument("The shapes of the tree input volumes must agree. Got " + repr_vector(shape0) + ", " + repr_vector(shape1) + " and " + repr_vector(shapeComparison));
+                    throw invalid_argument("The shapes of the input volumes must agree. Got " + repr_vector(shape0) + ", " + repr_vector(shape1) + " and " + repr_vector(shapeComparison));
                 }
                 const vector<value_t> input0Vector(input0.mutable_data(), input0.mutable_data() + input0.size());
                 const vector<value_t> input1Vector(input1.mutable_data(), input1.mutable_data() + input1.size());

@@ -138,37 +138,37 @@ vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8
 		case 1:
 		switch (cube.type()) {
 			case 0:
-				if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; }
-				else { return {x+1,y,z}; }
+				if (cube.birth == getBirth(x+1, y, z)) { return {x+1,y,z}; }
+				else { return {x,y,z}; }
 
 			case 1:
-				if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; }
-				else { return {x,y+1,z}; }
+				if (cube.birth == getBirth(x, y+1, z)) { return {x,y+1,z}; }
+				else { return {x,y,z}; }
 
 			case 2:
-				if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; }
-				else { return {x,y,z+1}; }
+				if (cube.birth == getBirth(x, y, z+1)) { return {x,y,z+1}; }
+				else { return {x,y,z}; }
 		}
 
 		case 2:
 		switch(cube.type()) {
 			case 0:
-				if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; }
-				else if (cube.birth == getBirth(x, y, z+1)) { return {x,y,z+1}; }
+				if (cube.birth == getBirth(x, y+1, z+1)) { return {x,y+1,z+1}; }
 				else if (cube.birth == getBirth(x, y+1, z)) { return {x,y+1,z}; }
-				else { return {x,y+1,z+1}; }
+				else if (cube.birth == getBirth(x, y, z+1)) { return {x,y,z+1}; }
+				else { return {x,y,z}; }
 
 			case 1:
-				if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; }
-				else if (cube.birth == getBirth(x, y, z+1)) { return {x,y,z+1}; }
+				if (cube.birth == getBirth(x+1, y, z+1)) { return {x+1,y,z+1}; }
 				else if (cube.birth == getBirth(x+1, y, z)) { return {x+1,y,z}; }
-				else { return {x+1,y,z+1}; }
+				else if (cube.birth == getBirth(x, y, z+1)) { return {x,y,z+1}; }
+				else { return {x,y,z}; }
 
 			case 2:
-				if (cube.birth == getBirth(x, y, z)) { return {x,y,z}; } 
-				else if (cube.birth == getBirth(x, y+1, z)) { return {x,y+1,z}; }
-				else if (cube.birth == getBirth(x+1, y, z)) { return {x+1,y,z}; } 
-				else { return {x+1,y+1,z}; }
+				if (cube.birth == getBirth(x+1, y+1, z)) { return {x+1,y+1,z}; } 
+				else if (cube.birth == getBirth(x+1, y, z)) { return {x+1,y,z}; }
+				else if (cube.birth == getBirth(x, y+1, z)) { return {x,y+1,z}; } 
+				else { return {x,y,z}; }
 		}
 		
 		case 3:

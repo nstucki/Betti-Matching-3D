@@ -126,9 +126,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 				enumerator.setBoundaryEnumerator(ctr[j]);
 #ifdef USE_EMERGENT_PAIRS
 				faces.clear();
-#endif
-				while (enumerator.hasNextFace()) {
-#ifdef USE_EMERGENT_PAIRS
+				while (enumerator.hasPreviousFace()) {
 					if (checkEmergentPair && ctr[j].birth == enumerator.nextFace.birth) {
 						if (pivotColumnIndex.find(enumerator.nextFace.index) == pivotColumnIndex.end()) {
 							pivot = enumerator.nextFace;
@@ -137,17 +135,14 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 						} else { checkEmergentPair = false; }
 					}
 					faces.push_back(enumerator.nextFace);
-#else
-					workingBoundary.push(enumerator.nextFace);
-#endif
 				}
-#ifdef USE_EMERGENT_PAIRS
 				if (foundPair) {
                     pivotColumnIndex.emplace(pivot.index, i);
                     ++numEmergentPairs;
                     break;
-                }
-				for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+                } else { for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); } }
+#else			
+				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #endif
 			}
 			pivot = getPivot(workingBoundary);
@@ -229,12 +224,10 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
                 }
 			}
 			if (!cacheHit) {
+				enumerator.setBoundaryEnumerator(ctr[j]);
 #ifdef USE_EMERGENT_PAIRS
 				faces.clear();
-#endif
-				enumerator.setBoundaryEnumerator(ctr[j]);
-				while (enumerator.hasNextFace()) {
-#ifdef USE_EMERGENT_PAIRS
+				while (enumerator.hasPreviousFace()) {
 					if (checkEmergentPair && ctr[j].birth == enumerator.nextFace.birth) {
 						if (pivotColumnIndex.find(enumerator.nextFace.index) == pivotColumnIndex.end()) {
 							pivot = enumerator.nextFace;
@@ -243,17 +236,14 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 						} else { checkEmergentPair = false; }
 					}
 					faces.push_back(enumerator.nextFace);
-#else
-					workingBoundary.push(enumerator.nextFace);
-#endif
 				}
-#ifdef USE_EMERGENT_PAIRS
 				if (foundPair) {
                     pivotColumnIndex.emplace(pivot.index, i);
                     ++numEmergentPairs;
                     break;
-                }
-				for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+                } else { for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); } }
+#else			
+				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #endif
 			}
 			pivot = getPivot(workingBoundary);
@@ -351,9 +341,7 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 				enumerator.setBoundaryEnumerator(ctr[j]);
 #ifdef USE_EMERGENT_PAIRS
 				faces.clear();
-#endif
-				while (enumerator.hasNextFace()) {
-#ifdef USE_EMERGENT_PAIRS
+				while (enumerator.hasPreviousFace()) {
 					if (checkEmergentPair) {
 						birth = cgc.getBirth(ctr[j].x(), ctr[j].y(), ctr[j].z(), ctr[j].type(), 2);
 						if (birth == enumerator.nextFace.birth) {
@@ -365,18 +353,15 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 						}
 					}
 					faces.push_back(enumerator.nextFace);
-#else
-					workingBoundary.push(enumerator.nextFace);
-#endif
 				}
-#ifdef USE_EMERGENT_PAIRS
 				if (foundPair) {
                     pivotColumnIndex.emplace(pivot.index, i);
 					if (isMatchedComp[ctr[i].index]) { matchMapIm.emplace(ctr[i].index, pivot.index); }
                     ++numEmergentPairs;
                     break;
-                }
-				for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+                } else { for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); } }
+#else			
+				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #endif
 			}
 			pivot = getPivot(workingBoundary);

@@ -1,4 +1,5 @@
 #include "dimension_2.h"
+#include "enumerators.h"
 
 #include <iostream>
 #include <chrono>
@@ -32,7 +33,7 @@ void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #endif
 
 #ifdef RUNTIME
-	cout << endl << "input & image 1: ";
+		cout << endl << "input & image 1: ";
 #endif
 		enumerateDualEdges(cgc1, ctr1);
 #ifdef RUNTIME
@@ -40,7 +41,7 @@ void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #endif
 
 #ifdef RUNTIME
-	cout << endl << "comparison & matching: ";
+		cout << endl << "comparison & matching: ";
 #endif
 		enumerateDualEdges(cgcComp, ctrComp);
 #ifdef RUNTIME
@@ -76,12 +77,40 @@ void Dimension2::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>&
 #endif 
 	dualEdges.reserve(cgc.getNumberOfCubes(2));
 	value_t birth;
+#ifdef USE_APPARENT_PAIRS
+	Cube dualEdge;
+	BoundaryEnumerator enumerator = BoundaryEnumerator(cgc);
+	CoboundaryEnumerator coEnumerator = CoboundaryEnumerator(cgc);
+	size_t numApparentPairs = 0;
+#endif
 	for (index_t x = 0; x < cgc.shape[0]; ++x) {
 		for (index_t y = 0; y < cgc.shape[1]; ++y) {
 			for (index_t z = 0; z < cgc.shape[2]; ++z) {
 				for (uint8_t type = 0; type < 3; ++type) {
 					birth = cgc.getBirth(x, y, z, type, 2);
-					if (birth < config.threshold) { dualEdges.push_back(Cube(birth, x, y, z, type)); }
+					if (birth < config.threshold) {
+#ifdef USE_APPARENT_PAIRS
+						dualEdge = Cube(birth, x, y, z, type);
+						enumerator.setBoundaryEnumerator(dualEdge);
+						while (enumerator.hasPreviousFace()) {
+							if (enumerator.nextFace.birth == birth) {
+								coEnumerator.setCoboundaryEnumerator(enumerator.nextFace);
+								while (coEnumerator.hasNextCoface()) {
+									if (coEnumerator.nextCoface == dualEdge) {
+										++numApparentPairs;
+										break;
+									} else if ( coEnumerator.nextCoface.birth == birth ) { 
+										dualEdges.push_back(dualEdge);
+										break;
+									}
+								}
+								break;
+							}
+						}
+#else
+						dualEdges.push_back(Cube(birth, x, y, z, type));
+#endif
+					}
 				}
 			}
 		}
@@ -90,7 +119,11 @@ void Dimension2::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>&
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms, ";
+	cout << duration.count() << " ms with " << dualEdges.size() << " columns to reduce";
+#ifdef USE_APPARENT_PAIRS
+	cout << " and " << numApparentPairs << " apparent pairs";
+#endif
+	cout << ", ";
 #endif
 }
 
