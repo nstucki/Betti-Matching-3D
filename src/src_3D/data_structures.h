@@ -121,7 +121,7 @@ namespace dim3 {
 		void emplace(uint64_t cube_index, _Tp element);
 		const std::optional<_Tp>& find(uint64_t cube_index) const;
 		void clear();
-		optional<_Tp>& operator[](int index);
+		optional<_Tp>& operator[](uint64_t cube_index);
 
 		private:
 		vector<std::optional<_Tp>> elements;
@@ -154,7 +154,7 @@ namespace dim3 {
 	}
 
 	template<class _Tp>
-	optional<_Tp>& Cube1Map<_Tp>::operator[](int cube_index) {
+	optional<_Tp>& Cube1Map<_Tp>::operator[](uint64_t cube_index) {
 		if (cube_index != NONE) {
 			return elements[computeCoordinateIndex(cube_index)];
 		}
