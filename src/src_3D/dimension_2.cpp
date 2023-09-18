@@ -91,22 +91,8 @@ void Dimension2::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>&
 					if (birth < config.threshold) {
 #ifdef USE_APPARENT_PAIRS
 						dualEdge = Cube(birth, x, y, z, type);
-						enumerator.setBoundaryEnumerator(dualEdge);
-						while (enumerator.hasPreviousFace()) {
-							if (enumerator.nextFace.birth == birth) {
-								coEnumerator.setCoboundaryEnumerator(enumerator.nextFace);
-								while (coEnumerator.hasNextCoface()) {
-									if (coEnumerator.nextCoface == dualEdge) {
-										++numApparentPairs;
-										break;
-									} else if ( coEnumerator.nextCoface.birth == birth ) { 
-										dualEdges.push_back(dualEdge);
-										break;
-									}
-								}
-								break;
-							}
-						}
+						if (isApparentPair(enumerator, coEnumerator, dualEdge)) { ++numApparentPairs; }
+						else { dualEdges.push_back(dualEdge); }
 #else
 						dualEdges.push_back(Cube(birth, x, y, z, type));
 #endif
@@ -212,4 +198,18 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges) {
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << duration.count() << " ms";
 #endif
+}
+
+bool Dimension2::isApparentPair(BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator, const Cube& dualEdge) const {
+	enumerator.setBoundaryEnumerator(dualEdge);
+	while (enumerator.hasPreviousFace()) {
+		if (enumerator.nextFace.birth == dualEdge.birth) {
+			coEnumerator.setCoboundaryEnumerator(enumerator.nextFace);
+			while (coEnumerator.hasNextCoface()) {
+				if (coEnumerator.nextCoface == dualEdge) { return true; } 
+				else if (coEnumerator.nextCoface.birth == dualEdge.birth) { return false; }
+			}
+		}
+	}
+	return false;
 }

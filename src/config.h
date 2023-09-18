@@ -4,10 +4,12 @@
 #include <limits>
 #include <cstdint>
 
-//#define COMPUTE_COMPARISON
+#define COMPUTE_COMPARISON
 #define RUNTIME
+#define USE_CACHE
 //#define USE_APPARENT_PAIRS
-#define USE_EMERGENT_PAIRS
+//#define USE_EMERGENT_PAIRS
+#define USE_CLEARING_IMAGE
 #define USE_CLEARING_DIM0
 
 typedef uint32_t index_t;
@@ -33,7 +35,7 @@ struct Config {
 	value_t threshold = numeric_limits<value_t>::infinity();
 
 	size_t minRecursionToCache = 1;
-	size_t cacheSize = 1 << 31;
+	size_t cacheSize = numeric_limits<size_t>::max();
 
 	bool print = false;
 	bool saveResult = false;

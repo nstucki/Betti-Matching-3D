@@ -87,7 +87,7 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
 		computeImagePairs(ctrImage, 0);
 #else
 		if (computeDim != 1) { computeImagePairs(ctrImage, 0); }
-		else { computeImagePairs(ctrComp, 0) }
+		else { computeImagePairs(ctrComp, 0); }
 #endif
 
 #ifdef RUNTIME
@@ -100,7 +100,7 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
 		computeImagePairs(ctrImage, 1);
 #else
 		if (computeDim != 1) { computeImagePairs(ctrImage, 1); }
-		else { computeImagePairs(ctrComp, 1) }
+		else { computeImagePairs(ctrComp, 1); }
 #endif
 
 #ifdef RUNTIME

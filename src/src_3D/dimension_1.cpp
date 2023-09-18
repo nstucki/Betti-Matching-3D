@@ -29,8 +29,6 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #ifdef RUNTIME
 	cout << endl << "input 1: ";
 #endif
-	pivotColumnIndex.clear();
-	cache.clear();
 	computePairs(ctr1, 1);
 #ifdef USE_CLEARING_DIM0
 	ctr1.clear();
@@ -40,8 +38,6 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #ifdef RUNTIME
 	cout << endl << "comparison: ";
 #endif
-	pivotColumnIndex.clear();
-	cache.clear();
 	computePairsComp(ctrComp);
 #ifdef USE_CLEARING_DIM0
 	vector<Cube> ctrImage = ctrComp;
@@ -52,23 +48,19 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #ifdef RUNTIME
 	cout << endl << "image 0: ";
 #endif
-	pivotColumnIndex.clear();
-	cache.clear();
 #ifdef USE_CLEARING_DIM0
-	computeImagePairs(ctrImage, 0);
+	computePairsImage(ctrImage, 0);
 #else
-	computeImagePairs(ctrComp, 0); 
+	computePairsImage(ctrComp, 0); 
 #endif
 
 #ifdef RUNTIME
 	cout << endl << "image 1: ";
 #endif
-	pivotColumnIndex.clear();
-	cache.clear();
 #ifdef USE_CLEARING_DIM0
-	computeImagePairs(ctrImage, 1);
+	computePairsImage(ctrImage, 1);
 #else
-	computeImagePairs(ctrComp, 1); 
+	computePairsImage(ctrComp, 1); 
 #endif
 	
 #ifdef RUNTIME
@@ -85,67 +77,66 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<uint64_t, Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
-
 	size_t ctrSize = ctr.size();
+	pivotColumnIndex.clear();
 	pivotColumnIndex.reserve(ctrSize);
-	cache.reserve(min(config.cacheSize, ctrSize));
 	BoundaryEnumerator enumerator(cgc);
+	CoboundaryEnumerator coEnumerator(cgc);
 	Cube pivot;
-	queue<index_t> cachedColumnIdx;
 	size_t numRecurse;
 	size_t j;
-	bool cacheHit;
+	bool cacheHit = false;
+#ifdef USE_CACHE
+	queue<index_t> cachedColumnIdx;
+	cache.clear();
+	cache.reserve(min(config.cacheSize, ctrSize));
+#endif
+#ifdef USE_APPARENT_PAIRS
+	bool foundApparentPair;
+#endif
 #ifdef USE_EMERGENT_PAIRS
-	vector<Cube> faces;
 	size_t numEmergentPairs = 0;
 	bool checkEmergentPair;
-	bool foundPair;
+	bool foundEmergentPair;
+#endif
+#if defined(USE_APPARENT_PAIRS) || defined(USE_EMERGENT_PAIRS)
+	vector<Cube> faces;
 #endif
 	for (size_t i = 0; i < ctrSize; ++i) {
-#ifdef USE_EMERGENT_PAIRS
-		checkEmergentPair = true;
-		foundPair = false;
-#endif
 		CubeQueue workingBoundary;
 		j = i;
 		numRecurse = 0;
-		while (true) {
-			cacheHit = false;
-			if (i != j) {
-                auto findCb = cache.find(j);
-                if (findCb != cache.end()) {
-                    cacheHit = true;
-                    auto cachedBoundary = findCb->second;
-                    while (!cachedBoundary.empty()) {
-                        workingBoundary.push(cachedBoundary.top());
-                        cachedBoundary.pop();
-                    }
-                }
-			}
-			if (!cacheHit) {
-				enumerator.setBoundaryEnumerator(ctr[j]);
 #ifdef USE_EMERGENT_PAIRS
-				faces.clear();
-				while (enumerator.hasPreviousFace()) {
-					if (checkEmergentPair && ctr[j].birth == enumerator.nextFace.birth) {
-						if (pivotColumnIndex.find(enumerator.nextFace.index) == pivotColumnIndex.end()) {
-							pivot = enumerator.nextFace;
-                            foundPair = true;
-							break;
-						} else { checkEmergentPair = false; }
-					}
-					faces.push_back(enumerator.nextFace);
-				}
-				if (foundPair) {
+		checkEmergentPair = true;
+#endif
+		while (true) {
+#ifdef USE_CACHE
+			if (i != j) { cacheHit = tryCache(j, workingBoundary); }
+#endif
+			if (!cacheHit) {
+#ifdef USE_EMERGENT_PAIRS
+				foundEmergentPair = isEmergentPair(ctr[j], pivot, faces, checkEmergentPair, enumerator, coEnumerator);
+				if (foundEmergentPair) {
                     pivotColumnIndex.emplace(pivot.index, i);
                     ++numEmergentPairs;
                     break;
                 } else { for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); } }
 #else			
+				enumerator.setBoundaryEnumerator(ctr[j]);
 				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #endif
 			}
+#ifdef USE_APPARENT_PAIRS
+			while (true) {
+				pivot = getPivot(workingBoundary);
+				foundApparentPair = isApparentPair(pivot, faces, enumerator, coEnumerator);	
+				if (foundApparentPair) {
+					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+				} else { break; }
+			}
+#else
 			pivot = getPivot(workingBoundary);
+#endif
 			if (pivot.index != NONE) {
 				auto pair = pivotColumnIndex.find(pivot.index);
 				if (pair != pivotColumnIndex.end()) {
@@ -153,132 +144,18 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 					++numRecurse;
 					continue;
 				} else {
-					if (numRecurse >= config.minRecursionToCache) {
-                        addCache(i, workingBoundary);
-						cachedColumnIdx.push(i);
-						if (cachedColumnIdx.size() > config.cacheSize) {
-							cache.erase(cachedColumnIdx.front());
-							cachedColumnIdx.pop();
-						}
-                    }
 					pivotColumnIndex.emplace(pivot.index, i);
 					if (pivot.birth != ctr[i].birth) {
 						pairs.push_back(Pair(pivot, ctr[i]));
 						matchMap.emplace(pivot.index, pairs.back());
 					}
+#ifdef USE_CACHE
+					if (numRecurse >= config.minRecursionToCache) { addCache(i, workingBoundary, cachedColumnIdx); }
+#endif
 					break;
 				}
 			} else { break; }
 		}
-	}
-#ifdef RUNTIME
-	auto stop = high_resolution_clock::now();
-	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms";
-#ifdef USE_EMERGENT_PAIRS
-	cout <<" with " << numEmergentPairs << " emergent pairs";
-#endif
-#endif
-}
-
-void Dimension1::computePairsComp(vector<Cube>& ctr) {
-#ifdef RUNTIME
-	cout << "barcode ";
-	auto start = high_resolution_clock::now();
-#endif
-	size_t ctrSize = ctr.size();
-	pivotColumnIndex.reserve(ctrSize);	
-	cache.reserve(min(config.cacheSize, ctrSize));
-	BoundaryEnumerator enumerator = BoundaryEnumerator(cgcComp);
-	Cube pivot;
-	queue<index_t> cachedColumnIdx;
-	size_t numRecurse;
-	size_t j;
-	bool cacheHit;
-	bool shouldClear = false;
-#ifdef USE_EMERGENT_PAIRS
-	vector<Cube> faces;
-	size_t numEmergentPairs = 0;
-	bool checkEmergentPair;
-	bool foundPair;
-#endif
-	for (size_t i = 0; i < ctrSize; ++i) {
-#ifdef USE_EMERGENT_PAIRS
-		checkEmergentPair = true;
-		foundPair = false;
-#endif
-		CubeQueue workingBoundary;
-		j = i;
-		numRecurse = 0;
-		while (true) {
-			cacheHit = false;
-			if (i != j) {
-                auto findCb = cache.find(j);
-                if (findCb != cache.end()) {
-                    cacheHit = true;
-                    auto cachedBoundary = findCb->second;
-                    while (!cachedBoundary.empty()) {
-                        workingBoundary.push(cachedBoundary.top());
-                        cachedBoundary.pop();
-                    }
-                }
-			}
-			if (!cacheHit) {
-				enumerator.setBoundaryEnumerator(ctr[j]);
-#ifdef USE_EMERGENT_PAIRS
-				faces.clear();
-				while (enumerator.hasPreviousFace()) {
-					if (checkEmergentPair && ctr[j].birth == enumerator.nextFace.birth) {
-						if (pivotColumnIndex.find(enumerator.nextFace.index) == pivotColumnIndex.end()) {
-							pivot = enumerator.nextFace;
-                            foundPair = true;
-							break;
-						} else { checkEmergentPair = false; }
-					}
-					faces.push_back(enumerator.nextFace);
-				}
-				if (foundPair) {
-                    pivotColumnIndex.emplace(pivot.index, i);
-                    ++numEmergentPairs;
-                    break;
-                } else { for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); } }
-#else			
-				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
-#endif
-			}
-			pivot = getPivot(workingBoundary);
-			if (pivot.index != NONE) {
-				auto pair = pivotColumnIndex.find(pivot.index);
-				if (pair != pivotColumnIndex.end()) {
-					j = pair->second;
-					++numRecurse;
-					continue;
-				} else {
-					if (numRecurse >= config.minRecursionToCache) {
-                        addCache(i, workingBoundary);
-						cachedColumnIdx.push(i);
-						if (cachedColumnIdx.size() > config.cacheSize) {
-							cache.erase(cachedColumnIdx.front());
-							cachedColumnIdx.pop();
-						}
-                    }
-					pivotColumnIndex.emplace(pivot.index, i);
-					if (pivot.birth != ctr[i].birth) {
-						pairsComp.push_back(Pair(pivot, ctr[i]));
-						isMatchedComp.emplace(ctr[i].index, true);
-					}
-					break;
-				}
-			} else {
-				ctr[i].index = NONE;
-				shouldClear = true;
-				break;
-			}
-		}
-	}
-	if (shouldClear) {
-		auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.index == NONE; });
-		ctr.erase(newEnd, ctr.end());
 	}
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
@@ -290,81 +167,74 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 #endif
 }
 
-void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
+void Dimension1::computePairsComp(vector<Cube>& ctr) {
 #ifdef RUNTIME
 	cout << "barcode ";
 	auto start = high_resolution_clock::now();
 #endif
-	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
-	unordered_map<uint64_t, uint64_t>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
-
 	size_t ctrSize = ctr.size();
-	pivotColumnIndex.reserve(ctrSize);
-	cache.reserve(min(config.cacheSize, ctrSize));
-	matchMapIm.reserve(pairsComp.size());
-	BoundaryEnumerator enumerator = BoundaryEnumerator(cgc);
+	pivotColumnIndex.clear();
+	pivotColumnIndex.reserve(ctrSize);	
+	BoundaryEnumerator enumerator(cgcComp);
+	CoboundaryEnumerator coEnumerator(cgcComp);
 	Cube pivot;
-	value_t birth;
-	queue<index_t> cachedColumnIdx;
 	size_t numRecurse;
 	size_t j;
-	bool cacheHit;
-	bool shouldClear = false;
+	bool cacheHit = false;
+#ifdef USE_CACHE
+	queue<index_t> cachedColumnIdx;
+	cache.clear();
+	cache.reserve(min(config.cacheSize, ctrSize));
+#endif
+#ifdef USE_APPARENT_PAIRS
+	bool foundApparentPair;
+#endif
 #ifdef USE_EMERGENT_PAIRS
-	vector<Cube> faces;
 	size_t numEmergentPairs = 0;
 	bool checkEmergentPair;
-	bool foundPair;
+	bool foundEmergentPair;
+#endif
+#if defined(USE_APPARENT_PAIRS) || defined(USE_EMERGENT_PAIRS)
+	vector<Cube> faces;
+#endif
+#ifdef USE_CLEARING_IMAGE
+	bool shouldClear = false;
 #endif
 	for (size_t i = 0; i < ctrSize; ++i) {
-#ifdef USE_EMERGENT_PAIRS
-		checkEmergentPair = true;
-		foundPair = false;
-#endif
 		CubeQueue workingBoundary;
 		j = i;
 		numRecurse = 0;
-		while (true) {
-			cacheHit = false;
-			if (i != j) {
-                auto findCb = cache.find(j);
-                if (findCb != cache.end()) {
-                    cacheHit = true;
-                    auto cachedBoundary = findCb->second;
-                    while (!cachedBoundary.empty()) {
-                        workingBoundary.push(cachedBoundary.top());
-                        cachedBoundary.pop();
-                    }
-                }
-			}
-			if (!cacheHit) {
-				enumerator.setBoundaryEnumerator(ctr[j]);
 #ifdef USE_EMERGENT_PAIRS
-				faces.clear();
-				while (enumerator.hasPreviousFace()) {
-					if (checkEmergentPair) {
-						birth = cgc.getBirth(ctr[j].x(), ctr[j].y(), ctr[j].z(), ctr[j].type(), 2);
-						if (birth == enumerator.nextFace.birth) {
-							if (pivotColumnIndex.find(enumerator.nextFace.index) == pivotColumnIndex.end()) {
-								pivot = enumerator.nextFace;
-                            	foundPair = true;
-								break;
-							} else { checkEmergentPair = false; }
-						}
-					}
-					faces.push_back(enumerator.nextFace);
-				}
-				if (foundPair) {
+		checkEmergentPair = true;
+#endif
+		while (true) {
+#ifdef USE_CACHE
+			if (i != j) { cacheHit = tryCache(j, workingBoundary); }
+#endif
+			if (!cacheHit) {
+#ifdef USE_EMERGENT_PAIRS
+				foundEmergentPair = isEmergentPair(ctr[j], pivot, faces, checkEmergentPair, enumerator, coEnumerator);
+				if (foundEmergentPair) {
                     pivotColumnIndex.emplace(pivot.index, i);
-					if (isMatchedComp[ctr[i].index]) { matchMapIm.emplace(ctr[i].index, pivot.index); }
                     ++numEmergentPairs;
                     break;
-                } else { for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); } }
+                } else { for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); } }					
 #else			
+				enumerator.setBoundaryEnumerator(ctr[j]);
 				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #endif
 			}
+#ifdef USE_APPARENT_PAIRS
+			while (true) {
+				pivot = getPivot(workingBoundary);
+				foundApparentPair = isApparentPair(pivot, faces, enumerator, coEnumerator);	
+				if (foundApparentPair) {
+					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+				} else { break; }
+			}
+#else
 			pivot = getPivot(workingBoundary);
+#endif
 			if (pivot.index != NONE) {
 				auto pair = pivotColumnIndex.find(pivot.index);
 				if (pair != pivotColumnIndex.end()) {
@@ -372,29 +242,143 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 					++numRecurse;
 					continue;
 				} else {
-					if (numRecurse >= config.minRecursionToCache) {
-                        addCache(i, workingBoundary);
-						cachedColumnIdx.push(i);
-						if (cachedColumnIdx.size() > config.cacheSize) {
-							cache.erase(cachedColumnIdx.front());
-							cachedColumnIdx.pop();
-						}
-                    }
 					pivotColumnIndex.emplace(pivot.index, i);
-					if (isMatchedComp[ctr[i].index]) { matchMapIm.emplace(ctr[i].index, pivot.index); }
+					if (pivot.birth != ctr[i].birth) {
+						pairsComp.push_back(Pair(pivot, ctr[i]));
+						isPairedComp.emplace(ctr[i].index, true);
+					}
+#ifdef USE_CACHE
+					if (numRecurse >= config.minRecursionToCache) { addCache(i, workingBoundary, cachedColumnIdx); }
+#endif
 					break;
 				}
 			} else {
+#ifdef USE_CLEARING_IMAGE
 				ctr[i].index = NONE;
 				shouldClear = true;
+#endif
 				break;
 			}
 		}
 	}
+#ifdef USE_CLEARING_IMAGE
 	if (shouldClear) {
 		auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.index == NONE; });
 		ctr.erase(newEnd, ctr.end());
 	}
+#endif
+#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms";
+#ifdef USE_EMERGENT_PAIRS
+	cout << " with " << numEmergentPairs << " emergent pairs";
+#endif
+#endif
+}
+
+void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
+#ifdef RUNTIME
+	cout << "barcode ";
+	auto start = high_resolution_clock::now();
+#endif
+	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
+	unordered_map<uint64_t, uint64_t>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
+	matchMapIm.reserve(pairsComp.size());
+	size_t ctrSize = ctr.size();
+	pivotColumnIndex.clear();
+	pivotColumnIndex.reserve(ctrSize);
+	BoundaryEnumerator enumerator = BoundaryEnumerator(cgc);
+	CoboundaryEnumerator coEnumerator(cgcComp);
+	Cube pivot;
+	value_t birth;
+	size_t numRecurse;
+	size_t j;
+	bool cacheHit = false;
+#ifdef USE_CACHE
+	queue<index_t> cachedColumnIdx;
+	cache.clear();
+	cache.reserve(min(config.cacheSize, ctrSize));
+#endif
+#ifdef USE_APPARENT_PAIRS
+	bool foundApparentPair;
+#endif
+#ifdef USE_EMERGENT_PAIRS
+	size_t numEmergentPairs = 0;
+	bool checkEmergentPair;
+	bool foundEmergentPair;
+#endif
+#if defined(USE_APPARENT_PAIRS) || defined(USE_EMERGENT_PAIRS)
+	vector<Cube> faces;
+#endif
+#ifdef USE_CLEARING_IMAGE
+	bool shouldClear = false;
+#endif
+	for (size_t i = 0; i < ctrSize; ++i) {
+		CubeQueue workingBoundary;
+		j = i;
+		numRecurse = 0;
+#ifdef USE_EMERGENT_PAIRS
+		checkEmergentPair = true;
+#endif
+		while (true) {
+#ifdef USE_CACHE
+			if (i != j) { cacheHit = tryCache(j, workingBoundary); }
+#endif
+			if (!cacheHit) {
+#ifdef USE_EMERGENT_PAIRS
+				foundEmergentPair = isEmergentPairImage(ctr[j], pivot, faces, checkEmergentPair, enumerator, coEnumerator, cgc);
+				if (foundEmergentPair) {
+                    pivotColumnIndex.emplace(pivot.index, i);
+					if (isPairedComp[ctr[i].index]) { matchMapIm.emplace(ctr[i].index, pivot.index); }
+                    ++numEmergentPairs;
+                    break;
+                } else { for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); } }
+#else			
+				enumerator.setBoundaryEnumerator(ctr[j]);
+				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
+#endif
+			}
+#ifdef USE_APPARENT_PAIRS
+			while (true) {
+				pivot = getPivot(workingBoundary);
+				foundApparentPair = isApparentPairImage(pivot, faces, enumerator, coEnumerator);	
+				if (foundApparentPair) {
+					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+				} else { break; }
+			}
+#else
+			pivot = getPivot(workingBoundary);
+#endif
+			if (pivot.index != NONE) {
+				auto pair = pivotColumnIndex.find(pivot.index);
+				if (pair != pivotColumnIndex.end()) {
+					j = pair->second;
+					++numRecurse;
+					continue;
+				} else {
+					pivotColumnIndex.emplace(pivot.index, i);
+					if (isPairedComp[ctr[i].index]) { matchMapIm.emplace(ctr[i].index, pivot.index); }
+#ifdef USE_CACHE
+					if (numRecurse >= config.minRecursionToCache) { addCache(i, workingBoundary, cachedColumnIdx); }
+#endif
+					break;
+				}
+			} else {
+#ifdef USE_CLEARING_IMAGE
+				ctr[i].index = NONE;
+				shouldClear = true;
+#endif
+				break;
+			}
+		}
+	}
+#ifdef USE_CLEARING_IMAGE
+	if (shouldClear) {
+		auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.index == NONE; });
+		ctr.erase(newEnd, ctr.end());
+	}
+#endif
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
@@ -463,6 +447,153 @@ void Dimension1::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edg
 #endif
 }
 
+#ifdef USE_CACHE
+bool Dimension1::tryCache(const size_t& j, CubeQueue& workingBoundary) const {
+	auto findCb = cache.find(j);
+	if (findCb != cache.end()) {
+		auto cachedBoundary = findCb->second;
+		while (!cachedBoundary.empty()) {
+			workingBoundary.push(cachedBoundary.top());
+			cachedBoundary.pop();
+		}
+		return true;
+	} else { return false; }
+}
+
+void Dimension1::addCache(const index_t& i, CubeQueue& workingBoundary, queue<index_t>& cachedColumnIdx) {
+	CubeQueue cleanWb;
+	Cube c;
+	while (!workingBoundary.empty()) {
+		c = workingBoundary.top();
+		workingBoundary.pop();
+		if (!workingBoundary.empty() && c == workingBoundary.top()) { workingBoundary.pop(); } 
+		else { cleanWb.push(c); }
+	}
+	cache.emplace(i, cleanWb);
+	cachedColumnIdx.push(i);
+	if (cachedColumnIdx.size() > config.cacheSize) {
+		cache.erase(cachedColumnIdx.front());
+		cachedColumnIdx.pop();
+	}
+}
+#endif
+#ifdef USE_APPARENT_PAIRS
+bool Dimension1::isApparentPair(const Cube& face, vector<Cube>& faces, 
+									BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator) const {
+	bool foundApparentPair = false;
+	coEnumerator.setCoboundaryEnumerator(face);
+	while (coEnumerator.hasNextCoface()) {
+		if (coEnumerator.nextCoface.birth == face.birth) {
+			faces.clear();
+			enumerator.setBoundaryEnumerator(coEnumerator.nextCoface);
+			while (enumerator.hasPreviousFace()) {
+				if (enumerator.nextFace == face) { foundApparentPair = true; } 
+				else if (!foundApparentPair && enumerator.nextFace.birth == coEnumerator.nextCoface.birth) { return false; }
+				faces.push_back(enumerator.nextFace);
+			}
+			break;
+		}
+	}
+	return foundApparentPair;
+}
+
+bool Dimension1::isApparentPairImage(const Cube& face, vector<Cube>& faces, 
+									BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator) const {
+	bool foundApparentPair = false;
+	value_t birth = cgcComp.getBirth(face.x(), face.y(), face.z(), face.type(), 1);
+	coEnumerator.setCoboundaryEnumerator(face);
+	while (coEnumerator.hasNextCoface()) {
+		if (coEnumerator.nextCoface.birth == birth) {
+			faces.clear();
+			enumerator.setBoundaryEnumerator(coEnumerator.nextCoface);
+			while (enumerator.hasPreviousFace()) {
+				if (enumerator.nextFace == face) { foundApparentPair = true; } 
+				else {
+					birth = cgcComp.getBirth(enumerator.nextFace.x(), enumerator.nextFace.y(), enumerator.nextFace.z(), enumerator.nextFace.type(), 1);
+					if (!foundApparentPair && birth == coEnumerator.nextCoface.birth) { return false; }
+				}
+				faces.push_back(enumerator.nextFace);
+			}
+			break;
+		}
+	}
+	return foundApparentPair;
+}
+
+bool Dimension1::pivotIsApparentPair(const Cube& pivot, const Cube& column, CoboundaryEnumerator& coEnumerator) const {
+	coEnumerator.setCoboundaryEnumerator(pivot);
+	while (coEnumerator.hasNextCoface()) {
+		if (coEnumerator.nextCoface.birth == pivot.birth) {
+			if (coEnumerator.nextCoface == column) { return false; }
+			else { return true; }
+		}
+	}
+	return false;
+}
+
+bool Dimension1::pivotIsApparentPairImage(const Cube& pivot, const Cube& column, CoboundaryEnumerator& coEnumerator) const {
+	value_t birth = cgcComp.getBirth(pivot.x(), pivot.y(), pivot.z(), pivot.type(), 1);
+	coEnumerator.setCoboundaryEnumerator(pivot);
+	while (coEnumerator.hasNextCoface()) {
+		if (coEnumerator.nextCoface.birth == birth) {
+			if (coEnumerator.nextCoface == column) { return false; }
+			else { return true; }
+		}
+	}
+	return false;
+}
+#endif
+#ifdef USE_EMERGENT_PAIRS
+bool Dimension1::isEmergentPair(const Cube& column, Cube& pivot, vector<Cube>& faces, bool& checkEmergentPair, BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator) const {
+	faces.clear();
+	enumerator.setBoundaryEnumerator(column);
+	while (enumerator.hasPreviousFace()) {
+		if (checkEmergentPair && enumerator.nextFace.birth == column.birth) {
+#ifdef USE_APPARENT_PAIRS
+			if (!pivotIsApparentPair(enumerator.nextFace, column, coEnumerator) && 
+					pivotColumnIndex.find(enumerator.nextFace.index) == pivotColumnIndex.end()) {
+				pivot = enumerator.nextFace;
+                return true;
+			} else { checkEmergentPair = false; }
+#else
+			if (pivotColumnIndex.find(enumerator.nextFace.index) == pivotColumnIndex.end()) {
+				pivot = enumerator.nextFace;
+                return true;
+			} else { checkEmergentPair = false; }
+#endif
+		}
+		faces.push_back(enumerator.nextFace);
+	}
+	return false;
+}
+
+bool Dimension1::isEmergentPairImage(const Cube& column, Cube& pivot, vector<Cube>& faces, bool& checkEmergentPair, BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator, const CubicalGridComplex& cgc) const {
+	faces.clear();
+	enumerator.setBoundaryEnumerator(column);
+	while (enumerator.hasPreviousFace()) {
+		if (checkEmergentPair) {
+			value_t birth = cgc.getBirth(column.x(), column.y(), column.z(), column.type(), 2);
+			if (enumerator.nextFace.birth == birth) {
+#ifdef USE_APPARENT_PAIRS
+				if (!pivotIsApparentPairImage(enumerator.nextFace, column, coEnumerator) && 
+						pivotColumnIndex.find(enumerator.nextFace.index) == pivotColumnIndex.end()) {
+					pivot = enumerator.nextFace;
+					return true;
+				} else { checkEmergentPair = false; }
+#else
+				if (pivotColumnIndex.find(enumerator.nextFace.index) == pivotColumnIndex.end()) {
+					pivot = enumerator.nextFace;
+					return true;
+				} else { checkEmergentPair = false; }
+#endif
+			}
+		}
+		faces.push_back(enumerator.nextFace);
+	}
+	return false;
+}
+#endif
+
 Cube Dimension1::popPivot(CubeQueue& column) const {
     if (column.empty()) { return Cube(); } else {
         Cube pivot = column.top();
@@ -483,15 +614,4 @@ Cube Dimension1::getPivot(CubeQueue& column) const {
 	Cube result = popPivot(column);
 	if (result.index != NONE) { column.push(result); }
 	return result;
-}
-
-void Dimension1::addCache(const index_t& i, CubeQueue& workingBoundary) {
-	CubeQueue cleanWb;
-	while (!workingBoundary.empty()) {
-		Cube c = workingBoundary.top();
-		workingBoundary.pop();
-		if (!workingBoundary.empty() && c == workingBoundary.top()) { workingBoundary.pop(); } 
-		else { cleanWb.push(c); }
-	}
-	cache.emplace(i, cleanWb);
 }
