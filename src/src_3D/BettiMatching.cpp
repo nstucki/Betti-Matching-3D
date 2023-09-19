@@ -120,7 +120,7 @@ void BettiMatching::printResult() {
         } else { cout << count << endl; }
     }
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Input 1" << endl << endl; 
+    cout << "Input 1:" << endl << endl; 
     if (cgc1.shape[0] < 10 && cgc1.shape[1] < 10 && cgc1.shape[2] < 10) { cgc1.printImage(); }
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
@@ -132,7 +132,7 @@ void BettiMatching::printResult() {
     }
 #ifdef COMPUTE_COMPARISON
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Comparison" << endl << endl; 
+    cout << "Comparison:" << endl << endl; 
     if (cgcComp.shape[0] < 10 && cgcComp.shape[1] < 10 && cgcComp.shape[2] < 10) { cgcComp.printImage(); }
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
@@ -155,7 +155,7 @@ void BettiMatching::printResult() {
         } else { cout << count << endl; }
     }
     cout << endl;
-    cout << "unmatched cubes in Input 0" << endl;
+    cout << "unmatched cubes in Input 0:" << endl;
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = 0;
@@ -166,7 +166,7 @@ void BettiMatching::printResult() {
         } else { cout << count << endl; }
     }
     cout << endl;
-    cout << "unmatched cubes in Input 1" << endl;
+    cout << "unmatched cubes in Input 1:" << endl;
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = 0;
@@ -177,7 +177,7 @@ void BettiMatching::printResult() {
         } else { cout << count << endl; }
     }
     cout << endl;
-    cout << "matched voxels: " << endl;
+    cout << "matched voxels:" << endl;
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = _matched[d].size();
@@ -187,7 +187,7 @@ void BettiMatching::printResult() {
         } else { cout << count << endl; }
     }
     cout << endl;
-    cout << "unmatched voxels in Input 0" << endl;
+    cout << "unmatched voxels in Input 0:" << endl;
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = _unmatched0[d].size();
@@ -197,7 +197,7 @@ void BettiMatching::printResult() {
         } else { cout << count << endl; }
     }
     cout << endl;
-    cout << "unmatched voxels in Input 1" << endl;
+    cout << "unmatched voxels in Input 1:" << endl;
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = _unmatched1[d].size();

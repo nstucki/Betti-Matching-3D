@@ -83,9 +83,9 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	BoundaryEnumerator enumerator(cgc);
 	CoboundaryEnumerator coEnumerator(cgc);
 	Cube pivot;
-	size_t numRecurse;
 	size_t j;
-	bool cacheHit = false;
+	size_t numRecurse;
+	bool cacheHit;
 #ifdef USE_CACHE
 	queue<index_t> cachedColumnIdx;
 	cache.clear();
@@ -105,6 +105,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	for (size_t i = 0; i < ctrSize; ++i) {
 		CubeQueue workingBoundary;
 		j = i;
+		cacheHit = false;
 		numRecurse = 0;
 #ifdef USE_EMERGENT_PAIRS
 		checkEmergentPair = true;
@@ -178,9 +179,9 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	BoundaryEnumerator enumerator(cgcComp);
 	CoboundaryEnumerator coEnumerator(cgcComp);
 	Cube pivot;
-	size_t numRecurse;
 	size_t j;
-	bool cacheHit = false;
+	size_t numRecurse;
+	bool cacheHit;
 #ifdef USE_CACHE
 	queue<index_t> cachedColumnIdx;
 	cache.clear();
@@ -203,6 +204,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	for (size_t i = 0; i < ctrSize; ++i) {
 		CubeQueue workingBoundary;
 		j = i;
+		cacheHit = false;
 		numRecurse = 0;
 #ifdef USE_EMERGENT_PAIRS
 		checkEmergentPair = true;
@@ -292,9 +294,9 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 	CoboundaryEnumerator coEnumerator(cgcComp);
 	Cube pivot;
 	value_t birth;
-	size_t numRecurse;
 	size_t j;
-	bool cacheHit = false;
+	size_t numRecurse;
+	bool cacheHit;
 #ifdef USE_CACHE
 	queue<index_t> cachedColumnIdx;
 	cache.clear();
@@ -318,6 +320,7 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 		CubeQueue workingBoundary;
 		j = i;
 		numRecurse = 0;
+		cacheHit = false;
 #ifdef USE_EMERGENT_PAIRS
 		checkEmergentPair = true;
 #endif
