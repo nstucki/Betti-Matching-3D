@@ -35,6 +35,8 @@ namespace dim3 {
 		void enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& dualEdges) const;
 		void computeImagePairs(vector<Cube>& dualEdges, const uint8_t& k);
 		void computeCompPairsAndMatch(vector<Cube>& dualEdges);
-		bool isApparentPair(BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator, const Cube& dualEdge) const ;
+#ifdef USE_APPARENT_PAIRS
+		bool isApparentPair(BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator, const Cube& dualEdge) const;
+#endif
 	};
 }

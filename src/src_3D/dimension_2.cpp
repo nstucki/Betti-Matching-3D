@@ -200,6 +200,7 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges) {
 #endif
 }
 
+#ifdef USE_APPARENT_PAIRS
 bool Dimension2::isApparentPair(BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator, const Cube& dualEdge) const {
 	enumerator.setBoundaryEnumerator(dualEdge);
 	while (enumerator.hasPreviousFace()) {
@@ -213,3 +214,4 @@ bool Dimension2::isApparentPair(BoundaryEnumerator& enumerator, CoboundaryEnumer
 	}
 	return false;
 }
+#endif

@@ -447,6 +447,28 @@ void Dimension1::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edg
 #endif
 }
 
+Cube Dimension1::popPivot(CubeQueue& column) const {
+    if (column.empty()) { return Cube(); } else {
+        Cube pivot = column.top();
+        column.pop();
+        while (!column.empty() && column.top() == pivot) {
+            column.pop();
+            if (column.empty()) {return Cube(); }
+            else {
+                pivot = column.top();
+                column.pop();
+            }
+        }
+        return pivot;
+    }
+}
+
+Cube Dimension1::getPivot(CubeQueue& column) const {
+	Cube result = popPivot(column);
+	if (result.index != NONE) { column.push(result); }
+	return result;
+}
+
 #ifdef USE_CACHE
 bool Dimension1::tryCache(const size_t& j, CubeQueue& workingBoundary) const {
 	auto findCb = cache.find(j);
@@ -477,6 +499,7 @@ void Dimension1::addCache(const index_t& i, CubeQueue& workingBoundary, queue<in
 	}
 }
 #endif
+
 #ifdef USE_APPARENT_PAIRS
 bool Dimension1::isApparentPair(const Cube& face, vector<Cube>& faces, 
 									BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator) const {
@@ -543,6 +566,7 @@ bool Dimension1::pivotIsApparentPairImage(const Cube& pivot, const Cube& column,
 	return false;
 }
 #endif
+
 #ifdef USE_EMERGENT_PAIRS
 bool Dimension1::isEmergentPair(const Cube& column, Cube& pivot, vector<Cube>& faces, bool& checkEmergentPair, BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator) const {
 	faces.clear();
@@ -593,25 +617,3 @@ bool Dimension1::isEmergentPairImage(const Cube& column, Cube& pivot, vector<Cub
 	return false;
 }
 #endif
-
-Cube Dimension1::popPivot(CubeQueue& column) const {
-    if (column.empty()) { return Cube(); } else {
-        Cube pivot = column.top();
-        column.pop();
-        while (!column.empty() && column.top() == pivot) {
-            column.pop();
-            if (column.empty()) {return Cube(); }
-            else {
-                pivot = column.top();
-                column.pop();
-            }
-        }
-        return pivot;
-    }
-}
-
-Cube Dimension1::getPivot(CubeQueue& column) const {
-	Cube result = popPivot(column);
-	if (result.index != NONE) { column.push(result); }
-	return result;
-}
