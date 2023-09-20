@@ -564,7 +564,7 @@ bool Dimension1::pivotOfColumnIsApparentPairImage(const Cube& pivot, const Cube&
 	bool foundApparentPair = false;
 	coEnumerator.setCoboundaryEnumerator(pivot);
 	while (coEnumerator.hasNextCoface()) {
-		if (coEnumerator.nextCoface == column) { return false; }
+		if (coEnumerator.nextCoface == column) { continue; }
 		if (coEnumerator.nextCoface.birth == pivot.birth) {
 			value_t birthCoface = cgcComp.getBirth(coEnumerator.nextCoface.x(), coEnumerator.nextCoface.y(), 
 													coEnumerator.nextCoface.z(), coEnumerator.nextCoface.type(), 2);
@@ -576,11 +576,11 @@ bool Dimension1::pivotOfColumnIsApparentPairImage(const Cube& pivot, const Cube&
 					else if (!foundApparentPair && enumerator.nextFace.birth == coEnumerator.nextCoface.birth) { break; }
 					facesCopy.push_back(enumerator.nextFace);
 				}
-				if (foundApparentPair) { 
+				if (foundApparentPair) {
 					faces = facesCopy;
 					break;
 				}
-			} else { break; }
+			}
 		}
 	}
 	return foundApparentPair;
