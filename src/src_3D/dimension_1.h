@@ -51,16 +51,16 @@ namespace dim3 {
 		void addCache(const index_t& i, CubeQueue& working_boundary, queue<index_t>& cachedColumnIdx);
 #endif
 #ifdef USE_APPARENT_PAIRS
-		bool isApparentPair(const Cube& pivot, vector<Cube>& faces, 
-								BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator) const;
+		bool pivotOfColumnIsApparentPair(const Cube& pivot, const Cube& column, vector<Cube>& faces, 
+											BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator) const;
 		bool isApparentPairImage(const Cube& pivot, vector<Cube>& faces, 
 								BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator) const;
 		bool youngestFaceIsApparentPair(const Cube& face, const Cube& column, CoboundaryEnumerator& coEnumerator) const;
 		bool youngestFaceIsApparentPairImage(const Cube& face, const Cube& column, CoboundaryEnumerator& coEnumerator) const;
 #endif
 #ifdef USE_EMERGENT_PAIRS
-		bool isEmergentPair(const Cube&column, Cube& pivot, vector<Cube>& faces, bool& checkEmergentPair,
-								BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator) const;
+		bool isEmergentPair(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
+							BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, CoboundaryEnumerator& coEnumeratorAP) const;
 		bool isEmergentPairImage(const Cube&column, Cube& pivot, vector<Cube>& faces, bool& checkEmergentPair,
 									BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator, 
 									const CubicalGridComplex& cgc) const;
