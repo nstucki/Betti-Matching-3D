@@ -118,16 +118,15 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 			if (!cacheHit) {
 #ifdef USE_EMERGENT_PAIRS
 				if (j == i) {
-					if (isEmergentPair(ctr[j], pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP)) {
+					if (isEmergentPair(ctr[i], pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP)) {
 						pivotColumnIndex.emplace(pivot.index, i);
 						++numEmergentPairs;
 						break;
 					} else {
-						++numRecurse;
 						for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
-						if (j != i) {
-							continue;
-						} else { pivot = getPivot(workingBoundary); }
+						++numRecurse;
+						if (j != i) { continue; }
+						else { pivot = getPivot(workingBoundary); }
 					}
 				} else {
 					enumerator.setBoundaryEnumerator(ctr[j]);
@@ -144,8 +143,8 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 			while (true) {
 				faces.clear();
 				if (pivotOfColumnIsApparentPair(pivot, ctr[i], faces, enumeratorAP, coEnumeratorAP)) {
-					++numRecurse;
 					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+					++numRecurse;
 					pivot = getPivot(workingBoundary);
 				} else { break; }
 			}
@@ -229,19 +228,15 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 			if (!cacheHit) {
 #ifdef USE_EMERGENT_PAIRS
 				if (j == i) {
-					if (isEmergentPair(ctr[j], pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP)) {
+					if (isEmergentPair(ctr[i], pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP)) {
 						pivotColumnIndex.emplace(pivot.index, i);
 						++numEmergentPairs;
 						break;
 					} else {
 						for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
-						if (j != i) {
-							++numRecurse;
-							continue;
-						} else {
-							++numRecurse;
-							pivot = getPivot(workingBoundary);
-						}
+						++numRecurse;
+						if (j != i) { continue; }
+						else { pivot = getPivot(workingBoundary); }
 					}
 				} else {
 					enumerator.setBoundaryEnumerator(ctr[j]);
@@ -258,8 +253,8 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 			while (true) {
 				faces.clear();
 				if (pivotOfColumnIsApparentPair(pivot, ctr[i], faces, enumeratorAP, coEnumeratorAP)) {
-					++numRecurse;
 					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+					++numRecurse;
 					pivot = getPivot(workingBoundary);
 				} else { break; }
 			}
@@ -335,7 +330,7 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 #if defined(USE_APPARENT_PAIRS) || defined(USE_EMERGENT_PAIRS)
 	vector<Cube> faces;
 	BoundaryEnumerator enumeratorAP(cgc);
-	CoboundaryEnumerator coEnumeratorAP(cgcComp);
+	CoboundaryEnumerator coEnumeratorAP(cgc);
 #endif
 #ifdef USE_CLEARING_IMAGE
 	bool shouldClear = false;
@@ -359,7 +354,7 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 			if (!cacheHit) {
 #ifdef USE_EMERGENT_PAIRS
 				if (j == i) {
-					if (isEmergentPairImage(ctr[j], pivot, j, faces, checkEmergentPair, cgc, 
+					if (isEmergentPairImage(ctr[i], pivot, j, faces, checkEmergentPair, cgc, 
 											enumerator, enumeratorAP, coEnumeratorAP)) {
 						pivotColumnIndex.emplace(pivot.index, i);
 						if (isPairedComp[ctr[i].index]) { matchMapIm.emplace(ctr[i].index, pivot.index); }
@@ -367,13 +362,9 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 						break;
 					} else {
 						for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
-						if (j != i) {
-							++numRecurse;
-							continue;
-						} else {
-							++numRecurse;
-							pivot = getPivot(workingBoundary);
-						}
+						++numRecurse;
+						if (j != i) { continue; }
+						else { pivot = getPivot(workingBoundary); }
 					}
 				} else {
 					enumerator.setBoundaryEnumerator(ctr[j]);
@@ -390,8 +381,8 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 			while (true) {
 				faces.clear();
 				if (pivotOfColumnIsApparentPairImage(pivot, ctr[i], faces, enumeratorAP, coEnumeratorAP)) {
-					++numRecurse;
 					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+					++numRecurse;
 					pivot = getPivot(workingBoundary);
 				} else { break; }
 			}
@@ -575,15 +566,21 @@ bool Dimension1::pivotOfColumnIsApparentPairImage(const Cube& pivot, const Cube&
 	while (coEnumerator.hasNextCoface()) {
 		if (coEnumerator.nextCoface == column) { return false; }
 		if (coEnumerator.nextCoface.birth == pivot.birth) {
-			vector<Cube> facesCopy = faces;
-			enumerator.setBoundaryEnumerator(coEnumerator.nextCoface);
-			while (enumerator.hasPreviousFace()) {
-				if (enumerator.nextFace == pivot) { foundApparentPair = true; } 
-				else if (!foundApparentPair && enumerator.nextFace.birth == coEnumerator.nextCoface.birth) { return false; }
-				facesCopy.push_back(enumerator.nextFace);
-			}
-			if (foundApparentPair) { faces = facesCopy; }
-			break;
+			value_t birthCoface = cgcComp.getBirth(coEnumerator.nextCoface.x(), coEnumerator.nextCoface.y(), 
+													coEnumerator.nextCoface.z(), coEnumerator.nextCoface.type(), 2);
+			if (birthCoface <= column.birth) {
+				vector<Cube> facesCopy = faces;
+				enumerator.setBoundaryEnumerator(coEnumerator.nextCoface);
+				while (enumerator.hasPreviousFace()) {
+					if (enumerator.nextFace == pivot) { foundApparentPair = true; } 
+					else if (!foundApparentPair && enumerator.nextFace.birth == coEnumerator.nextCoface.birth) { break; }
+					facesCopy.push_back(enumerator.nextFace);
+				}
+				if (foundApparentPair) { 
+					faces = facesCopy;
+					break;
+				}
+			} else { break; }
 		}
 	}
 	return foundApparentPair;
@@ -592,7 +589,8 @@ bool Dimension1::pivotOfColumnIsApparentPairImage(const Cube& pivot, const Cube&
 
 #ifdef USE_EMERGENT_PAIRS
 bool Dimension1::isEmergentPair(const Cube& column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair, 
-								BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, CoboundaryEnumerator& coEnumeratorAP) const {
+								BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
+								CoboundaryEnumerator& coEnumeratorAP) const {
 	faces.clear();
 	enumerator.setBoundaryEnumerator(column);
 	while (enumerator.hasPreviousFace()) {
@@ -624,8 +622,8 @@ bool Dimension1::isEmergentPair(const Cube& column, Cube& pivot, size_t& j, vect
 }
 
 bool Dimension1::isEmergentPairImage(const Cube& column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair, 
-										const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
-										CoboundaryEnumerator& coEnumeratorAP) const {
+										const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator, 
+										BoundaryEnumerator& enumeratorAP, CoboundaryEnumerator& coEnumeratorAP) const {
 	value_t birth = cgc.getBirth(column.x(), column.y(), column.z(), column.type(), 2);
 	faces.clear();
 	enumerator.setBoundaryEnumerator(column);
@@ -636,7 +634,7 @@ bool Dimension1::isEmergentPairImage(const Cube& column, Cube& pivot, size_t& j,
 			if (pair != pivotColumnIndex.end()) {
 				checkEmergentPair = false;
 				j = pair->second;
-			} else if (pivotOfColumnIsApparentPair(enumerator.nextFace, column, faces, enumeratorAP, coEnumeratorAP)) {
+			} else if (pivotOfColumnIsApparentPairImage(enumerator.nextFace, column, faces, enumeratorAP, coEnumeratorAP)) {
 				checkEmergentPair = false;
 			} else {
 				pivot = enumerator.nextFace;
