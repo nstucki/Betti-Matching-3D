@@ -49,7 +49,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	cout << endl << "image 0: ";
 #endif
 #ifdef USE_CLEARING_DIM0
-	//computePairsImage(ctrImage, 0);
+	computePairsImage(ctrImage, 0);
 #else
 	computePairsImage(ctrComp, 0); 
 #endif
@@ -58,7 +58,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	cout << endl << "image 1: ";
 #endif
 #ifdef USE_CLEARING_DIM0
-	//computePairsImage(ctrImage, 1);
+	computePairsImage(ctrImage, 1);
 #else
 	computePairsImage(ctrComp, 1); 
 #endif
@@ -359,7 +359,8 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 			if (!cacheHit) {
 #ifdef USE_EMERGENT_PAIRS
 				if (j == i) {
-					if (isEmergentPairImage(ctr[j], pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP)) {
+					if (isEmergentPairImage(ctr[j], pivot, j, faces, checkEmergentPair, cgc, 
+											enumerator, enumeratorAP, coEnumeratorAP)) {
 						pivotColumnIndex.emplace(pivot.index, i);
 						if (isPairedComp[ctr[i].index]) { matchMapIm.emplace(ctr[i].index, pivot.index); }
 						++numEmergentPairs;
@@ -623,11 +624,13 @@ bool Dimension1::isEmergentPair(const Cube& column, Cube& pivot, size_t& j, vect
 }
 
 bool Dimension1::isEmergentPairImage(const Cube& column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair, 
-								BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, CoboundaryEnumerator& coEnumeratorAP) const {
+										const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
+										CoboundaryEnumerator& coEnumeratorAP) const {
+	value_t birth = cgc.getBirth(column.x(), column.y(), column.z(), column.type(), 2);
 	faces.clear();
 	enumerator.setBoundaryEnumerator(column);
 	while (enumerator.hasPreviousFace()) {
-		if (checkEmergentPair && enumerator.nextFace.birth == column.birth) {
+		if (checkEmergentPair && enumerator.nextFace.birth == birth) {
 			auto pair = pivotColumnIndex.find(enumerator.nextFace.index);
 #ifdef USE_APPARENT_PAIRS
 			if (pair != pivotColumnIndex.end()) {

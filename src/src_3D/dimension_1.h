@@ -61,7 +61,7 @@ namespace dim3 {
 							BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
 							CoboundaryEnumerator& coEnumeratorAP) const;
 		bool isEmergentPairImage(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
-									BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
+									const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
 									CoboundaryEnumerator& coEnumeratorAP) const;
 #endif
 	};
