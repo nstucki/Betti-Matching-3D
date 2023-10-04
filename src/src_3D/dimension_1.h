@@ -16,7 +16,7 @@ namespace dim3 {
 		Dimension1(const CubicalGridComplex& cgc0, const CubicalGridComplex& cgc1, const CubicalGridComplex& cgcComp, 
 					const Config& config, vector<Pair>& pairs0, vector<Pair>& pairs1, vector<Pair>& pairsComp,
 					vector<Match>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1);
-		void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp);
+		void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp, vector<Cube>& ctrImage);
 
 		private:
 		const CubicalGridComplex& cgc0;
@@ -50,19 +50,21 @@ namespace dim3 {
 		bool tryCache(const size_t& j, CubeQueue& workingBoundary) const;
 		void addCache(const index_t& i, CubeQueue& working_boundary, queue<index_t>& cachedColumnIdx);
 #endif
-#ifdef USE_APPARENT_PAIRS
+#if defined(USE_APPARENT_PAIRS) or defined(USE_APPARENT_PAIRS_COMP)
+		bool pivotIsApparentPair(const Cube& pivot, vector<Cube>& faces, 
+									BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator) const;
 		bool pivotOfColumnIsApparentPair(const Cube& pivot, const Cube& column, vector<Cube>& faces, 
 											BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator) const;
-		bool pivotOfColumnIsApparentPairImage(const Cube& pivot, const Cube& column, vector<Cube>& faces, 
-												BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator) const;
 #endif
 #ifdef USE_EMERGENT_PAIRS
 		bool isEmergentPair(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
 							BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
 							CoboundaryEnumerator& coEnumeratorAP) const;
+		bool isEmergentPairComp(const Cube& column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair, 
+								BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
+								CoboundaryEnumerator& coEnumeratorAP) const; 
 		bool isEmergentPairImage(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
-									const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
-									CoboundaryEnumerator& coEnumeratorAP) const;
+									const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator) const;
 #endif
 	};
 }

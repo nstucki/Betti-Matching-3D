@@ -35,13 +35,14 @@ void BettiMatching::computeMatching() {
     vector<Cube> ctr0;
     vector<Cube> ctr1;
     vector<Cube> ctrComp;
+    vector<Cube> ctrImage;
     {
 #ifdef RUNTIME
         cout << "dimension 2:";
         auto start = high_resolution_clock::now();
 #endif
         Dimension2 dim2(cgc0, cgc1, cgcComp,  config, pairs0[2], pairs1[2], pairsComp[2], matches[2], isMatched0[2], isMatched1[2]);       
-        dim2.computePairsAndMatch(ctr0, ctr1, ctrComp);
+        dim2.computePairsAndMatch(ctr0, ctr1, ctrComp, ctrImage);
 #ifdef RUNTIME
         auto stop = high_resolution_clock::now();
         auto duration = duration_cast<milliseconds>(stop - start);
@@ -54,7 +55,7 @@ void BettiMatching::computeMatching() {
         auto start = high_resolution_clock::now();
 #endif
         Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);       
-        dim1.computePairsAndMatch(ctr0, ctr1, ctrComp);
+        dim1.computePairsAndMatch(ctr0, ctr1, ctrComp, ctrImage);
 #ifdef RUNTIME
         auto stop = high_resolution_clock::now();
         auto duration = duration_cast<milliseconds>(stop - start);
@@ -140,7 +141,7 @@ void BettiMatching::printResult() {
         if (0 < count && count < 10) {
             cout << endl;
             for (auto &pair : pairsComp[d]) { pair.print(); cout << endl; }
-        } else { cout << "number of pairs: " << count << endl; }
+        } else { cout << count << endl; }
     }
 #endif
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
