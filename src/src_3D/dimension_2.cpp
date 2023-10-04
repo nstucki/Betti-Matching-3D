@@ -151,6 +151,7 @@ void Dimension2::computeImagePairs(vector<Cube>& dualEdges, const uint8_t& k) {
 	UnionFindDual& uf = (k == 0) ? uf0 : uf1; 
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<index_t, Pair>& matchMap = (k==0) ? matchMap0 : matchMap1;
+	uf.reset();
 	ufComp.reset();
 	vector<index_t> boundaryIndices;
 	index_t parentIdx0;

@@ -22,7 +22,6 @@ void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	cout << endl << "input 0: ";
 #endif
 #ifndef USE_CLEARING_DIM0
-	ctr0.clear();
 	enumerateEdges(cgc0, ctr0);
 #endif
 	computePairs(ctr0, 0);
@@ -31,7 +30,6 @@ void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	cout << endl << "input 1: ";
 #endif
 #ifndef USE_CLEARING_DIM0
-	ctr1.clear();
 	enumerateEdges(cgc1, ctr1);
 #endif
     computePairs(ctr1, 1);
@@ -40,11 +38,8 @@ void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	cout << endl << "comparison & image 0 & image 1 & matching: ";
 #endif
 #ifndef USE_CLEARING_DIM0
-	ctrComp.clear();
 	enumerateEdges(cgcComp, ctrComp);
 #endif
-	uf0.reset();
-	uf1.reset();
 	computeImagePairsAndMatch(ctrComp);
 }
 
@@ -57,7 +52,7 @@ void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 	UnionFind& uf = (k == 0) ? uf0 : uf1; 
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<index_t, Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
-
+	uf.reset();
 	vector<index_t> boundaryIndices(2);
 	index_t parentIdx0;
 	index_t parentIdx1;
@@ -90,6 +85,8 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 	cout << "barcodes & matching ";
 	auto start = high_resolution_clock::now();
 #endif
+	uf0.reset();
+	uf1.reset();
 	vector<index_t> boundaryIndices(2);
 	index_t parentIdx0;
 	index_t parentIdx1;
@@ -98,6 +95,7 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 	index_t birthIdxComp;
 	value_t birth;
 	vector<index_t> birthCoordinates(3);
+
 	for (Cube& edge : edges) {
 		boundaryIndices = ufComp.getBoundaryIndices(edge);
 		parentIdx0 = ufComp.find(boundaryIndices[0]);
@@ -126,31 +124,6 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 			} 
 		}
 	}
-#ifdef RUNTIME
-	auto stop = high_resolution_clock::now();
-	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms";
-#endif
-}
-
-void Dimension0::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
-#ifdef RUNTIME
-	cout << "enumeration ";
-	auto start = high_resolution_clock::now();
-#endif
-	edges.reserve(cgc.getNumberOfCubes(1));
-	value_t birth;
-	for (index_t x = 0; x < cgc.shape[0]; ++x) {
-		for (index_t y = 0; y < cgc.shape[1]; ++y) {
-			for (index_t z = 0; z < cgc.shape[2]; ++z) {
-				for (uint8_t type = 0; type < 3; ++type) {
-					birth = cgc.getBirth(x, y, z, type, 1);
-					if (birth < config.threshold) { edges.push_back(Cube(birth, x, y, z, type)); }	
-				}				
-			}
-		}
-	}
-	sort(edges.begin(), edges.end(), CubeComparator());
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);

@@ -21,28 +21,22 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	cout << endl << "input 0: ";
 #endif
 	computePairs(ctr0, 0);
-#ifdef USE_CLEARING_DIM0
-	enumerateEdges(cgc0, ctr0);
-#endif
+	enumerateEdges(ctr0, cgc0);
 
 #ifdef RUNTIME
 	cout << endl << "input 1: ";
 #endif
 	computePairs(ctr1, 1);
-#ifdef USE_CLEARING_DIM0
-	enumerateEdges(cgc1, ctr1);
-#endif
+	enumerateEdges(ctr1, cgc1);
 
 #ifdef RUNTIME
 	cout << endl << "comparison: ";
 #endif
 	computePairsComp(ctrComp);
-#ifdef USE_CLEARING_DIM0
 #if not defined(USE_APPARENT_PAIRS_COMP)
 	ctrImage = ctrComp;
 #endif
-	enumerateEdges(cgcComp, ctrComp);
-#endif
+	enumerateEdges(ctrComp, cgcComp);
 
 #ifdef RUNTIME
 	cout << endl << "image 0: ";
@@ -456,7 +450,7 @@ void Dimension1::computeMatching() {
 #endif
 }
 
-void Dimension1::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
+void Dimension1::enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc) const {
 #ifdef RUNTIME
 	cout << ", enumeration ";
 	auto start = high_resolution_clock::now();
@@ -464,16 +458,22 @@ void Dimension1::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edg
 	edges.clear();
 	edges.reserve(cgc.getNumberOfCubes(1));
 	value_t birth;
+#ifdef USE_CLEARING_DIM0
 	Cube cube;
+#endif
 	for (index_t x = 0; x < cgc.shape[0]; ++x) {
 		for (index_t y = 0; y < cgc.shape[1]; ++y) {
 			for (index_t z = 0; z < cgc.shape[2]; ++z) {
 				for (uint8_t type = 0; type < 3; ++type) {
 					birth = cgc.getBirth(x, y, z, type, 1);
 					if (birth < config.threshold) {
+#ifdef USE_CLEARING_DIM0
 						cube = Cube(birth, x, y, z, type);
 						auto find = pivotColumnIndex.find(cube.index);
 						if (find == pivotColumnIndex.end()) { edges.push_back(cube); }
+#else
+						edges.push_back(Cube(birth, x, y, z, type));
+#endif
 					}	
 				}				
 			}

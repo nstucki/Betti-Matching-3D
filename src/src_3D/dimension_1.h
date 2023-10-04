@@ -43,7 +43,7 @@ namespace dim3 {
 		void computePairsComp(vector<Cube>& ctr);
 		void computePairsImage(vector<Cube>& ctr, uint8_t k);
 		void computeMatching();
-		void enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const;
+		void enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc) const;
 		Cube popPivot(CubeQueue& column) const;
 		Cube getPivot(CubeQueue& column) const;
 #ifdef USE_CACHE

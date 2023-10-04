@@ -5,11 +5,11 @@
 #include <cstdint>
 
 //#define RUNTIME
-#define COMPUTE_COMPARISON
+//#define COMPUTE_COMPARISON
 #define USE_CACHE
-#define USE_EMERGENT_PAIRS
 #define USE_APPARENT_PAIRS
 #define USE_APPARENT_PAIRS_COMP
+#define USE_EMERGENT_PAIRS
 #define USE_CLEARING_IMAGE
 #define USE_CLEARING_DIM0
 
