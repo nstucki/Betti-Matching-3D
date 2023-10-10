@@ -233,7 +233,7 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges, vector<Cube>&
 			if (isApparentPair(*edge, enumeratorComp, coEnumeratorComp)) {
 				edge->index = NONE;
 #ifdef RUNTIME
-				++numApparantPairs;
+				++numApparentPairs;
 #endif
 			}
 #endif
