@@ -25,7 +25,7 @@ void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	bool needToCompute = ( actualDim == 3);
 	if (!needToCompute) {
 #ifdef RUNTIME
-		cout << endl << "input & image 0: ";
+		cout << endl << "input 0 & image 0: ";
 #endif
 		enumerateDualEdges(ctr0, cgc0);
 #ifdef RUNTIME
@@ -33,7 +33,7 @@ void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #endif
 
 #ifdef RUNTIME
-		cout << endl << "input & image 1: ";
+		cout << endl << "input 1 & image 1: ";
 #endif
 		enumerateDualEdges(ctr1, cgc1);
 #ifdef RUNTIME
@@ -49,19 +49,19 @@ void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #endif
 	} else {
 #ifdef RUNTIME
-		cout << endl << "input & image 0: ";
+		cout << endl << "input 0 & image 0: ";
 #endif
 		enumerateDualEdges(ctr0, cgc0);
 		computeImagePairs(ctr0, 0);
 
 #ifdef RUNTIME
-		cout << endl << "input & image 1: ";
+		cout << endl << "input 1 & image 1: ";
 #endif
 		enumerateDualEdges(ctr1, cgc1);
 		computeImagePairs(ctr1, 1);
     
 #ifdef RUNTIME
-	cout << endl << "comparison & matching: ";
+	cout << endl << "comparison & match: ";
 #endif
 		enumerateDualEdgesComp(ctrComp);
 		computeCompPairsAndMatch(ctrComp, ctrImage);
@@ -189,7 +189,7 @@ void Dimension2::computeImagePairs(vector<Cube>& dualEdges, const uint8_t& k) {
 
 void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges, vector<Cube>& ctrImage) {
 #ifdef RUNTIME
-	cout << "barcode and matching ";
+	cout << "barcode and match ";
 	auto start = high_resolution_clock::now();
 #endif
 	ufComp.reset();

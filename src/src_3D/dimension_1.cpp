@@ -30,7 +30,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	enumerateEdges(ctr1, cgc1);
 
 #ifdef RUNTIME
-	cout << endl << "comparison: ";
+	cout << endl << "compari: ";
 #endif
 	computePairsComp(ctrComp);
 #if not defined(USE_APPARENT_PAIRS_COMP)
@@ -83,6 +83,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	cache.clear();
 	cache.reserve(min(config.cacheSize, ctrSize));
 	size_t numRecurse;
+	size_t numCached = 0;
 #endif
 #ifdef USE_EMERGENT_PAIRS
 	bool checkEmergentPair;
@@ -160,7 +161,10 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 						matchMap.emplace(pivot.index, pairs.back());
 					}
 #ifdef USE_CACHE
-					if (numRecurse >= config.minRecursionToCache) { addCache(ctr[i], workingBoundary, cachedColumnIdx); }
+					if (numRecurse >= config.minRecursionToCache) {
+						addCache(ctr[i], workingBoundary, cachedColumnIdx);
+						++numCached;
+					}
 #endif
 					break;
 				}
@@ -172,8 +176,11 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << duration.count() << " ms";
+#ifdef USE_CACHE
+	cout << " " << numCached << " cached columns";
+#endif
 #ifdef USE_EMERGENT_PAIRS
-	cout << " with " << numEmergentPairs << " emergent pairs";
+	cout << " " << numEmergentPairs << " emergent pairs";
 #endif
 #endif
 }
@@ -195,6 +202,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	cache.clear();
 	cache.reserve(min(config.cacheSize, ctrSize));
 	size_t numRecurse;
+	size_t numCached = 0;
 #endif
 #ifdef USE_EMERGENT_PAIRS
 	bool checkEmergentPair;
@@ -275,7 +283,10 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 						isPairedComp.emplace(ctr[i].index, true);
 					}
 #ifdef USE_CACHE
-					if (numRecurse >= config.minRecursionToCache) { addCache(ctr[i], workingBoundary, cachedColumnIdx); }
+					if (numRecurse >= config.minRecursionToCache) { 
+						addCache(ctr[i], workingBoundary, cachedColumnIdx);
+						++numCached;
+					}
 #endif
 					break;
 				}
@@ -288,18 +299,23 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 			}
 		}
 	}
+
 #if defined(USE_CLEARING_IMAGE) and not defined(USE_APPARENT_PAIRS_COMP)
 	if (shouldClear) {
 		auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.index == NONE; });
 		ctr.erase(newEnd, ctr.end());
 	}
 #endif
+
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << duration.count() << " ms";
+#ifdef USE_CACHE
+	cout << " " << numCached << " cached columns";
+#endif
 #ifdef USE_EMERGENT_PAIRS
-	cout << " with " << numEmergentPairs << " emergent pairs";
+	cout << " " << numEmergentPairs << " emergent pairs";
 #endif
 #endif
 }
@@ -326,6 +342,7 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 	cache.clear();
 	cache.reserve(min(config.cacheSize, ctrSize));
 	size_t numRecurse;
+	size_t numCached = 0;
 #endif
 #ifdef USE_EMERGENT_PAIRS
 	bool checkEmergentPair;
@@ -390,7 +407,10 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 					pivotColumnIndex.emplace(pivot.index, i);
 					if (isPairedComp[ctr[i].index]) { matchMapIm.emplace(ctr[i].index, pivot.index); }
 #ifdef USE_CACHE
-					if (numRecurse >= config.minRecursionToCache) { addCache(ctr[i], workingBoundary, cachedColumnIdx); }
+					if (numRecurse >= config.minRecursionToCache) {
+						addCache(ctr[i], workingBoundary, cachedColumnIdx);
+						++numCached;
+					}
 #endif
 					break;
 				}
@@ -403,18 +423,23 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 			}
 		}
 	}
+
 #ifdef USE_CLEARING_IMAGE
 	if (shouldClear) {
 		auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.index == NONE; });
 		ctr.erase(newEnd, ctr.end());
 	}
 #endif
+
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << duration.count() << " ms";
 #ifdef USE_EMERGENT_PAIRS
-	cout << " with " << numEmergentPairs << " emergent pairs";
+	cout << " " << numCached << " cached columns";
+#endif
+#ifdef USE_EMERGENT_PAIRS
+	cout << " " << numEmergentPairs << " emergent pairs";
 #endif
 #endif
 }
