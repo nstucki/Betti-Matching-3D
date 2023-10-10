@@ -34,7 +34,7 @@ namespace dim3 {
 		unordered_map<uint64_t, Pair> matchMap1;
 		unordered_map<uint64_t, uint64_t> matchMapIm0;
 		unordered_map<uint64_t, uint64_t> matchMapIm1;
-		unordered_map<uint64_t, uint64_t> pivotColumnIndex;
+		unordered_map<uint64_t, size_t> pivotColumnIndex;
 #ifdef USE_CACHE
 		unordered_map<uint64_t, CubeQueue> cache;
 #endif
@@ -47,8 +47,8 @@ namespace dim3 {
 		Cube popPivot(CubeQueue& column) const;
 		Cube getPivot(CubeQueue& column) const;
 #ifdef USE_CACHE
-		bool tryCache(const size_t& j, CubeQueue& workingBoundary) const;
-		void addCache(const index_t& i, CubeQueue& working_boundary, queue<index_t>& cachedColumnIdx);
+		bool columnIsCached(const Cube& column, CubeQueue& workingBoundary) const;
+		void addCache(const Cube& column, CubeQueue& working_boundary, queue<index_t>& cachedColumnIdx);
 #endif
 #if defined(USE_APPARENT_PAIRS) or defined(USE_APPARENT_PAIRS_COMP)
 		bool pivotIsApparentPair(const Cube& pivot, vector<Cube>& faces, 

@@ -67,9 +67,11 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	cout << "barcode ";
 	auto start = high_resolution_clock::now();
 #endif
+
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<uint64_t, Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
+
 	size_t ctrSize = ctr.size();
 	pivotColumnIndex.clear();
 	pivotColumnIndex.reserve(ctrSize);
@@ -105,7 +107,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 #endif
 		while (true) {
 #ifdef USE_CACHE
-			if (j != i) { cacheHit = tryCache(j, workingBoundary); }
+			if (j != i) { cacheHit = columnIsCached(ctr[j], workingBoundary); }
 #endif		
 			if (cacheHit) { pivot = getPivot(workingBoundary); }
 			else {
@@ -161,13 +163,14 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 						matchMap.emplace(pivot.index, pairs.back());
 					}
 #ifdef USE_CACHE
-					if (numRecurse >= config.minRecursionToCache) { addCache(i, workingBoundary, cachedColumnIdx); }
+					if (numRecurse >= config.minRecursionToCache) { addCache(ctr[i], workingBoundary, cachedColumnIdx); }
 #endif
 					break;
 				}
 			} else { break; }
 		}
 	}
+
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
@@ -183,6 +186,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	cout << "barcode ";
 	auto start = high_resolution_clock::now();
 #endif
+
 	size_t ctrSize = ctr.size();
 	pivotColumnIndex.clear();
 	pivotColumnIndex.reserve(ctrSize);	
@@ -221,7 +225,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 #endif
 		while (true) {
 #ifdef USE_CACHE
-			if (j != i) { cacheHit = tryCache(j, workingBoundary); }
+			if (j != i) { cacheHit = columnIsCached(ctr[j], workingBoundary); }
 #endif
 			if (cacheHit) { pivot = getPivot(workingBoundary); } 
 			else {
@@ -277,7 +281,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 						isPairedComp.emplace(ctr[i].index, true);
 					}
 #ifdef USE_CACHE
-					if (numRecurse >= config.minRecursionToCache) { addCache(i, workingBoundary, cachedColumnIdx); }
+					if (numRecurse >= config.minRecursionToCache) { addCache(ctr[i], workingBoundary, cachedColumnIdx); }
 #endif
 					break;
 				}
@@ -311,9 +315,11 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 	cout << "barcode ";
 	auto start = high_resolution_clock::now();
 #endif
+
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	unordered_map<uint64_t, uint64_t>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
 	matchMapIm.reserve(pairsComp.size());
+
 	size_t ctrSize = ctr.size();
 	pivotColumnIndex.clear();
 	pivotColumnIndex.reserve(ctrSize);
@@ -351,7 +357,7 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 #endif
 		while (true) {
 #ifdef USE_CACHE
-			if (j != i) { cacheHit = tryCache(j, workingBoundary); }
+			if (j != i) { cacheHit = columnIsCached(ctr[j], workingBoundary); }
 #endif		
 			if (cacheHit) { pivot = getPivot(workingBoundary); }
 			else {
@@ -393,7 +399,7 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 					pivotColumnIndex.emplace(pivot.index, i);
 					if (isPairedComp[ctr[i].index]) { matchMapIm.emplace(ctr[i].index, pivot.index); }
 #ifdef USE_CACHE
-					if (numRecurse >= config.minRecursionToCache) { addCache(i, workingBoundary, cachedColumnIdx); }
+					if (numRecurse >= config.minRecursionToCache) { addCache(ctr[i], workingBoundary, cachedColumnIdx); }
 #endif
 					break;
 				}
@@ -510,8 +516,8 @@ Cube Dimension1::getPivot(CubeQueue& column) const {
 }
 
 #ifdef USE_CACHE
-bool Dimension1::tryCache(const size_t& j, CubeQueue& workingBoundary) const {
-	auto pair = cache.find(j);
+bool Dimension1::columnIsCached(const Cube& column, CubeQueue& workingBoundary) const {
+	auto pair = cache.find(column.index);
 	if (pair != cache.end()) {
 		auto cachedBoundary = pair->second;
 		while (!cachedBoundary.empty()) {
@@ -522,7 +528,7 @@ bool Dimension1::tryCache(const size_t& j, CubeQueue& workingBoundary) const {
 	} else { return false; }
 }
 
-void Dimension1::addCache(const index_t& i, CubeQueue& workingBoundary, queue<index_t>& cachedColumnIdx) {
+void Dimension1::addCache(const Cube& column, CubeQueue& workingBoundary, queue<index_t>& cachedColumnIdx) {
 	CubeQueue cleanWb;
 	Cube c;
 	while (!workingBoundary.empty()) {
@@ -531,8 +537,8 @@ void Dimension1::addCache(const index_t& i, CubeQueue& workingBoundary, queue<in
 		if (!workingBoundary.empty() && c == workingBoundary.top()) { workingBoundary.pop(); } 
 		else { cleanWb.push(c); }
 	}
-	cache.emplace(i, cleanWb);
-	cachedColumnIdx.push(i);
+	cache.emplace(column.index, cleanWb);
+	cachedColumnIdx.push(column.index);
 	if (cachedColumnIdx.size() > config.cacheSize) {
 		cache.erase(cachedColumnIdx.front());
 		cachedColumnIdx.pop();
