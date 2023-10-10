@@ -4,8 +4,9 @@
 #include <limits>
 #include <cstdint>
 
-//#define RUNTIME
-//#define COMPUTE_COMPARISON
+#define RUNTIME
+#define COMPUTE_COMPARISON
+//#define USE_REDUCTION_MATRIX
 #define USE_CACHE
 #define USE_APPARENT_PAIRS
 #define USE_APPARENT_PAIRS_COMP
