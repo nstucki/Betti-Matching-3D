@@ -30,7 +30,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	enumerateEdges(ctr1, cgc1);
 
 #ifdef RUNTIME
-	cout << endl << "compari: ";
+	cout << endl << "comparison: ";
 #endif
 	computePairsComp(ctrComp);
 #if not defined(USE_APPARENT_PAIRS_COMP)
@@ -78,6 +78,12 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	BoundaryEnumerator enumerator(cgc);
 	Cube pivot;
 	size_t j;
+#ifdef USE_REDUCTION_MATRIX
+	reductionMatrix.clear();
+	reductionMatrix.reserve(ctrSize);
+	vector<Cube> reductionColumn;
+	size_t numReductionColumns = 0;
+#endif
 #ifdef USE_CACHE
 	queue<index_t> cachedColumnIdx;
 	cache.clear();
@@ -113,24 +119,38 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 					break;
 				} else {
 					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+#ifdef USE_REDUCTION_MATRIX
+					reductionColumn.clear();
+#endif
 #ifdef USE_CACHE
 					++numRecurse;
 #endif
 					if (j != i) { continue; }
+#ifdef USE_REDUCTION_MATRIX
+					else { reductionColumn.push_back(coEnumeratorAP.nextCoface); }
+#endif
 				}
 #else			
 				enumerator.setBoundaryEnumerator(ctr[i]);
 				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
+#ifdef USE_REDUCTION_MATRIX
+				reductionColumn.clear();
+#endif
 #endif
 			} else {
+#ifdef USE_REDUCTION_MATRIX
+				reductionColumn.push_back(ctr[j]);
+#endif
 #ifdef USE_CACHE
 				if (!columnIsCached(ctr[j], workingBoundary)) {
+#endif
+#ifdef USE_REDUCTION_MATRIX
+					useReductionMatrix(ctr[j], workingBoundary, enumerator);
+#endif
 					enumerator.setBoundaryEnumerator(ctr[j]);
 					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
+#ifdef USE_CACHE
 				}
-#else
-				enumerator.setBoundaryEnumerator(ctr[j]);
-				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #endif
 			}
 			pivot = getPivot(workingBoundary);
@@ -139,6 +159,9 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 				faces.clear();
 				if (pivotIsApparentPair(pivot, faces, enumeratorAP, coEnumeratorAP)) {
 					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+#ifdef USE_REDUCTION_MATRIX
+					reductionColumn.push_back(coEnumeratorAP.nextCoface);
+#endif
 #ifdef USE_CACHE
 					++numRecurse;
 #endif
@@ -164,6 +187,13 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 					if (numRecurse >= config.minRecursionToCache) {
 						addCache(ctr[i], workingBoundary, cachedColumnIdx);
 						++numCached;
+						break;
+					}
+#endif
+#ifdef USE_REDUCTION_MATRIX
+					if (reductionColumn.size() > 0) {
+						reductionMatrix.emplace(ctr[i].index, reductionColumn);
+						++numReductionColumns;
 					}
 #endif
 					break;
@@ -176,11 +206,14 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << duration.count() << " ms";
+#ifdef USE_REDUCTION_MATRIX
+	cout << ", " << numReductionColumns << " reduction columns";
+#endif
 #ifdef USE_CACHE
-	cout << " " << numCached << " cached columns";
+	cout << ", " << numCached << " cached columns";
 #endif
 #ifdef USE_EMERGENT_PAIRS
-	cout << " " << numEmergentPairs << " emergent pairs";
+	cout << ", " << numEmergentPairs << " emergent pairs";
 #endif
 #endif
 }
@@ -197,6 +230,12 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	BoundaryEnumerator enumerator(cgcComp);
 	Cube pivot;
 	size_t j;
+#ifdef USE_REDUCTION_MATRIX
+	reductionMatrix.clear();
+	reductionMatrix.reserve(ctrSize);
+	vector<Cube> reductionColumn;
+	size_t numReductionColumns = 0;
+#endif
 #ifdef USE_CACHE
 	queue<index_t> cachedColumnIdx;
 	cache.clear();
@@ -235,24 +274,38 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 					break;
 				} else {
 					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+#ifdef USE_REDUCTION_MATRIX
+					reductionColumn.clear();
+#endif
 #ifdef USE_CACHE
 					++numRecurse;
 #endif
 					if (j != i) { continue; }
+#ifdef USE_REDUCTION_MATRIX
+					else { reductionColumn.push_back(coEnumeratorAP.nextCoface); }
+#endif
 				}
 #else			
 				enumerator.setBoundaryEnumerator(ctr[i]);
 				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
+#ifdef USE_REDUCTION_MATRIX
+				reductionColumn.clear();
+#endif
 #endif
 			} else {
+#ifdef USE_REDUCTION_MATRIX
+				reductionColumn.push_back(ctr[j]);
+#endif
 #ifdef USE_CACHE
 				if (!columnIsCached(ctr[j], workingBoundary)) {
+#endif
+#ifdef USE_REDUCTION_MATRIX
+					useReductionMatrix(ctr[j], workingBoundary, enumerator);
+#endif
 					enumerator.setBoundaryEnumerator(ctr[j]);
 					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
+#ifdef USE_CACHE
 				}
-#else
-				enumerator.setBoundaryEnumerator(ctr[j]);
-				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #endif
 			}
 			pivot = getPivot(workingBoundary);
@@ -261,6 +314,9 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 				faces.clear();
 				if (pivotIsApparentPair(pivot, faces, enumeratorAP, coEnumeratorAP)) {
 					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+#ifdef USE_REDUCTION_MATRIX
+					reductionColumn.push_back(coEnumeratorAP.nextCoface);
+#endif
 #ifdef USE_CACHE
 					++numRecurse;
 #endif
@@ -286,6 +342,13 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 					if (numRecurse >= config.minRecursionToCache) { 
 						addCache(ctr[i], workingBoundary, cachedColumnIdx);
 						++numCached;
+						break;
+					}
+#endif
+#ifdef USE_REDUCTION_MATRIX
+					if (reductionColumn.size() > 0) {
+						reductionMatrix.emplace(ctr[i].index, reductionColumn);
+						++numReductionColumns;
 					}
 #endif
 					break;
@@ -311,11 +374,14 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << duration.count() << " ms";
+#ifdef USE_REDUCTION_MATRIX
+	cout << ", " << numReductionColumns << " reduction columns";
+#endif
 #ifdef USE_CACHE
-	cout << " " << numCached << " cached columns";
+	cout << ", " << numCached << " cached columns";
 #endif
 #ifdef USE_EMERGENT_PAIRS
-	cout << " " << numEmergentPairs << " emergent pairs";
+	cout << ", " << numEmergentPairs << " emergent pairs";
 #endif
 #endif
 }
@@ -337,6 +403,12 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 	Cube pivot;
 	value_t birth;
 	size_t j;
+#ifdef USE_REDUCTION_MATRIX
+	reductionMatrix.clear();
+	reductionMatrix.reserve(ctrSize);
+	vector<Cube> reductionColumn;
+	size_t numReductionColumns = 0;
+#endif
 #ifdef USE_CACHE
 	queue<index_t> cachedColumnIdx;
 	cache.clear();
@@ -374,6 +446,9 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 					break;
 				} else {
 					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+#ifdef USE_REDUCTION_MATRIX
+					reductionColumn.clear();
+#endif
 #ifdef USE_CACHE
 					++numRecurse;
 #endif
@@ -382,16 +457,24 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 #else			
 				enumerator.setBoundaryEnumerator(ctr[i]);
 				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
+#ifdef USE_REDUCTION_MATRIX
+				reductionColumn.clear();
+#endif
 #endif
 			} else {
+#ifdef USE_REDUCTION_MATRIX
+				reductionColumn.push_back(ctr[j]);
+#endif
 #ifdef USE_CACHE
 				if (!columnIsCached(ctr[j], workingBoundary)) {
+#endif
+#ifdef USE_REDUCTION_MATRIX
+					useReductionMatrix(ctr[j], workingBoundary, enumerator);
+#endif
 					enumerator.setBoundaryEnumerator(ctr[j]);
 					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
+#ifdef USE_CACHE
 				}
-#else
-				enumerator.setBoundaryEnumerator(ctr[j]);
-				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #endif
 			}
 			pivot = getPivot(workingBoundary);
@@ -410,6 +493,13 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 					if (numRecurse >= config.minRecursionToCache) {
 						addCache(ctr[i], workingBoundary, cachedColumnIdx);
 						++numCached;
+						break;
+					}
+#endif
+#ifdef USE_REDUCTION_MATRIX
+					if (reductionColumn.size() > 0) {
+						reductionMatrix.emplace(ctr[i].index, reductionColumn);
+						++numReductionColumns;
 					}
 #endif
 					break;
@@ -435,11 +525,14 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << duration.count() << " ms";
-#ifdef USE_EMERGENT_PAIRS
-	cout << " " << numCached << " cached columns";
+#ifdef USE_REDUCTION_MATRIX
+	cout << ", " << numReductionColumns << " reduction columns";
+#endif
+#ifdef USE_CACHE
+	cout << ", " << numCached << " cached columns";
 #endif
 #ifdef USE_EMERGENT_PAIRS
-	cout << " " << numEmergentPairs << " emergent pairs";
+	cout << ", " << numEmergentPairs << " emergent pairs";
 #endif
 #endif
 }
@@ -448,6 +541,7 @@ void Dimension1::computeMatching() {
 #ifdef RUNTIME
 	auto start = high_resolution_clock::now();
 #endif
+
 	uint64_t birthIndex0;
 	uint64_t birthIndex1;
 	for (Pair& pair : pairsComp) {
@@ -465,6 +559,7 @@ void Dimension1::computeMatching() {
 			}
 		}
 	}
+
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
@@ -474,9 +569,10 @@ void Dimension1::computeMatching() {
 
 void Dimension1::enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc) const {
 #ifdef RUNTIME
-	cout << ", enumeration ";
+	cout << "; enumeration ";
 	auto start = high_resolution_clock::now();
 #endif
+
 	edges.clear();
 	edges.reserve(cgc.getNumberOfCubes(1));
 	value_t birth;
@@ -501,7 +597,9 @@ void Dimension1::enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& c
 			}
 		}
 	}
+
 	sort(edges.begin(), edges.end(), CubeComparator());
+
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
@@ -530,6 +628,28 @@ Cube Dimension1::getPivot(CubeQueue& column) const {
 	if (result.index != NONE) { column.push(result); }
 	return result;
 }
+
+#ifdef USE_REDUCTION_MATRIX
+void Dimension1::useReductionMatrix(const Cube& column, CubeQueue& workingBoundary, 
+										BoundaryEnumerator& enumerator) const {
+	auto pair = reductionMatrix.find(column.index);
+	if (pair != reductionMatrix.end()) {
+		auto reductionColumns = pair->second;
+		for (auto reductionColumn = reductionColumns.rbegin(), last = reductionColumns.rend();
+				reductionColumn != last; ++reductionColumn) {
+#ifdef USE_CACHE
+			if (!columnIsCached(*reductionColumn, workingBoundary)) {
+#endif
+				useReductionMatrix(*reductionColumn, workingBoundary, enumerator);
+				enumerator.setBoundaryEnumerator(*reductionColumn);
+				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
+#ifdef USE_CACHE
+			}
+#endif
+		}
+	}
+}
+#endif
 
 #ifdef USE_CACHE
 bool Dimension1::columnIsCached(const Cube& column, CubeQueue& workingBoundary) const {

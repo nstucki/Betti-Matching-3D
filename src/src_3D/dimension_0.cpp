@@ -35,7 +35,7 @@ void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
     computePairs(ctr1, 1);
 
 #ifdef RUNTIME
-	cout << endl << "comparison & image 0 & image 1 & matching: ";
+	cout << endl << "comparison & image 0 & image 1 & match: ";
 #endif
 #ifndef USE_CLEARING_DIM0
 	enumerateEdges(cgcComp, ctrComp);
@@ -82,7 +82,7 @@ void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 
 void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 #ifdef RUNTIME
-	cout << "barcodes & matching ";
+	cout << "barcodes & match ";
 	auto start = high_resolution_clock::now();
 #endif
 	uf0.reset();

@@ -35,6 +35,9 @@ namespace dim3 {
 		unordered_map<uint64_t, uint64_t> matchMapIm0;
 		unordered_map<uint64_t, uint64_t> matchMapIm1;
 		unordered_map<uint64_t, size_t> pivotColumnIndex;
+#ifdef USE_REDUCTION_MATRIX
+		unordered_map<uint64_t, vector<Cube>> reductionMatrix;
+#endif
 #ifdef USE_CACHE
 		unordered_map<uint64_t, CubeQueue> cache;
 #endif
@@ -46,6 +49,9 @@ namespace dim3 {
 		void enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc) const;
 		Cube popPivot(CubeQueue& column) const;
 		Cube getPivot(CubeQueue& column) const;
+#ifdef USE_REDUCTION_MATRIX
+		void useReductionMatrix(const Cube& column, CubeQueue& workingBoundary, BoundaryEnumerator& enumerator) const;
+#endif
 #ifdef USE_CACHE
 		bool columnIsCached(const Cube& column, CubeQueue& workingBoundary) const;
 		void addCache(const Cube& column, CubeQueue& working_boundary, queue<index_t>& cachedColumnIdx);

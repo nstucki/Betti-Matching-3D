@@ -109,11 +109,11 @@ void Dimension2::enumerateDualEdges(vector<Cube>& dualEdges, const CubicalGridCo
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms with " << dualEdges.size() << " columns to reduce";
+	cout << duration.count() << " ms, " << dualEdges.size() << " columns to reduce";
 #ifdef USE_APPARENT_PAIRS
-	cout << " and " << numApparentPairs << " apparent pairs";
+	cout << ", " << numApparentPairs << " apparent pairs";
 #endif
-	cout << ", ";
+	cout << "; ";
 #endif
 }
 
@@ -138,7 +138,7 @@ void Dimension2::enumerateDualEdgesComp(vector<Cube>& dualEdges) const {
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms with " << dualEdges.size() << " columns to reduce, ";
+	cout << duration.count() << " ms, " << dualEdges.size() << " columns to reduce; ";
 #endif
 }
 
@@ -192,6 +192,7 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges, vector<Cube>&
 	cout << "barcode and match ";
 	auto start = high_resolution_clock::now();
 #endif
+
 	ufComp.reset();
 	vector<index_t> boundaryIndices;
 	index_t parentIdx0;
@@ -239,15 +240,20 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges, vector<Cube>&
 #endif
 		}
 	}
+
 	auto new_end = std::remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& cube){ return cube.index == NONE; });
 	dualEdges.erase(new_end, dualEdges.end());
 #ifdef USE_APPARENT_PAIRS_COMP
 	reverse(ctrImage.begin(), ctrImage.end());
 #endif
+
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << duration.count() << " ms";
+#ifdef USE_APPARENT_PAIRS_COMP
+	cout << ", " << numApparentPairs << " apparent pairs";
+#endif
 #endif
 }
 
