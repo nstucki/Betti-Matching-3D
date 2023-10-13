@@ -121,13 +121,12 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 #ifdef USE_EMERGENT_PAIRS
 				if (isEmergentPair(ctr[i], pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP)) {
 					pivotColumnIndex.emplace(pivot.index, i);
+#ifdef RUNTIME
 					++numEmergentPairs;
+#endif
 					break;
 				} else {
 					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
-#ifdef USE_REDUCTION_MATRIX
-					reductionColumn.clear();
-#endif
 #ifdef USE_CACHE
 					++numRecurse;
 #endif
@@ -139,13 +138,10 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 #else			
 				enumerator.setBoundaryEnumerator(ctr[i]);
 				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
-#ifdef USE_REDUCTION_MATRIX
-				reductionColumn.clear();
-#endif
 #endif
 			} else {
 #ifdef USE_REDUCTION_MATRIX
-				reductionColumn.push_back(j);
+				reductionColumn.push_back(ctr[j]);
 #endif
 #ifdef USE_CACHE
 				if (!columnIsCached(ctr[j], workingBoundary)) {
@@ -192,14 +188,19 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 #ifdef USE_CACHE
 					if (numRecurse >= config.minRecursionToCache) {
 						addCache(ctr[i], workingBoundary, cachedColumnIdx);
+#ifdef RUNTIME
 						++numCached;
+#endif
 						break;
 					}
 #endif
 #ifdef USE_REDUCTION_MATRIX
 					if (reductionColumn.size() > 0) {
 						reductionMatrix.emplace(ctr[i].index, reductionColumn);
+						reductionColumn.clear();
+#ifdef RUNTIME
 						++numReductionColumns;
+#endif
 					}
 #endif
 					break;
@@ -282,13 +283,12 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 #ifdef USE_EMERGENT_PAIRS
 				if (isEmergentPairComp(ctr[i], pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP)) {
 					pivotColumnIndex.emplace(pivot.index, i);
+#ifdef RUNTIME
 					++numEmergentPairs;
+#endif
 					break;
 				} else {
 					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
-#ifdef USE_REDUCTION_MATRIX
-					reductionColumn.clear();
-#endif
 #ifdef USE_CACHE
 					++numRecurse;
 #endif
@@ -300,9 +300,6 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 #else			
 				enumerator.setBoundaryEnumerator(ctr[i]);
 				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
-#ifdef USE_REDUCTION_MATRIX
-				reductionColumn.clear();
-#endif
 #endif
 			} else {
 #ifdef USE_REDUCTION_MATRIX
@@ -353,14 +350,19 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 #ifdef USE_CACHE
 					if (numRecurse >= config.minRecursionToCache) { 
 						addCache(ctr[i], workingBoundary, cachedColumnIdx);
+#ifdef RUNTIME
 						++numCached;
+#endif
 						break;
 					}
 #endif
 #ifdef USE_REDUCTION_MATRIX
 					if (reductionColumn.size() > 0) {
 						reductionMatrix.emplace(ctr[i].index, reductionColumn);
+						reductionColumn.clear();
+#ifdef RUNTIME
 						++numReductionColumns;
+#endif
 					}
 #endif
 					break;
@@ -460,13 +462,12 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 				if (isEmergentPairImage(ctr[i], pivot, j, faces, checkEmergentPair, cgc, enumerator)) {
 					pivotColumnIndex.emplace(pivot.index, i);
 					if (isPairedComp[ctr[i].index]) { matchMapIm.emplace(ctr[i].index, pivot.index); }
+#ifdef RUNTIME
 					++numEmergentPairs;
+#endif
 					break;
 				} else {
 					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
-#ifdef USE_REDUCTION_MATRIX
-					reductionColumn.clear();
-#endif
 #ifdef USE_CACHE
 					++numRecurse;
 #endif
@@ -475,9 +476,6 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 #else			
 				enumerator.setBoundaryEnumerator(ctr[i]);
 				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
-#ifdef USE_REDUCTION_MATRIX
-				reductionColumn.clear();
-#endif
 #endif
 			} else {
 #ifdef USE_REDUCTION_MATRIX
@@ -510,14 +508,19 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 #ifdef USE_CACHE
 					if (numRecurse >= config.minRecursionToCache) {
 						addCache(ctr[i], workingBoundary, cachedColumnIdx);
+#ifdef RUNTIME
 						++numCached;
+#endif
 						break;
 					}
 #endif
 #ifdef USE_REDUCTION_MATRIX
 					if (reductionColumn.size() > 0) {
 						reductionMatrix.emplace(ctr[i].index, reductionColumn);
+						reductionColumn.clear();
+#ifdef RUNTIME
 						++numReductionColumns;
+#endif
 					}
 #endif
 					break;
