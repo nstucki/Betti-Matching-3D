@@ -146,11 +146,11 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 #ifdef USE_CACHE
 				if (!columnIsCached(ctr[j], workingBoundary)) {
 #endif
+					enumerator.setBoundaryEnumerator(ctr[j]);
+					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #ifdef USE_REDUCTION_MATRIX
 					useReductionMatrix(ctr[j], workingBoundary, enumerator);
 #endif
-					enumerator.setBoundaryEnumerator(ctr[j]);
-					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #ifdef USE_CACHE
 				}
 #endif
@@ -308,11 +308,11 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 #ifdef USE_CACHE
 				if (!columnIsCached(ctr[j], workingBoundary)) {
 #endif
+					enumerator.setBoundaryEnumerator(ctr[j]);
+					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #ifdef USE_REDUCTION_MATRIX
 					useReductionMatrix(ctr[j], workingBoundary, enumerator);
 #endif
-					enumerator.setBoundaryEnumerator(ctr[j]);
-					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #ifdef USE_CACHE
 				}
 #endif
@@ -484,11 +484,11 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 #ifdef USE_CACHE
 				if (!columnIsCached(ctr[j], workingBoundary)) {
 #endif
+					enumerator.setBoundaryEnumerator(ctr[j]);
+					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #ifdef USE_REDUCTION_MATRIX
 					useReductionMatrix(ctr[j], workingBoundary, enumerator);
 #endif
-					enumerator.setBoundaryEnumerator(ctr[j]);
-					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #ifdef USE_CACHE
 				}
 #endif
@@ -655,15 +655,14 @@ void Dimension1::useReductionMatrix(const Cube& column, CubeQueue& workingBounda
 										BoundaryEnumerator& enumerator) const {
 	auto pair = reductionMatrix.find(column.index);
 	if (pair != reductionMatrix.end()) {
-		auto reductionColumns = pair->second;
-		for (auto reductionColumn = reductionColumns.rbegin(), last = reductionColumns.rend();
-				reductionColumn != last; ++reductionColumn) {
+		auto reductionColumn = pair->second;
+		for (Cube& row : reductionColumn) {
 #ifdef USE_CACHE
-			if (!columnIsCached(*reductionColumn, workingBoundary)) {
+			if (!columnIsCached(row, workingBoundary)) {
 #endif
-				useReductionMatrix(*reductionColumn, workingBoundary, enumerator);
-				enumerator.setBoundaryEnumerator(*reductionColumn);
+				enumerator.setBoundaryEnumerator(row);
 				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
+				useReductionMatrix(row, workingBoundary, enumerator);
 #ifdef USE_CACHE
 			}
 #endif
