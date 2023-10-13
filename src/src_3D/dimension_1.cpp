@@ -82,18 +82,24 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	reductionMatrix.clear();
 	reductionMatrix.reserve(ctrSize);
 	vector<Cube> reductionColumn;
+#ifdef RUNTIME
 	size_t numReductionColumns = 0;
+#endif
 #endif
 #ifdef USE_CACHE
 	queue<index_t> cachedColumnIdx;
 	cache.clear();
 	cache.reserve(min(config.cacheSize, ctrSize));
 	size_t numRecurse;
+#ifdef RUNTIME
 	size_t numCached = 0;
+#endif
 #endif
 #ifdef USE_EMERGENT_PAIRS
 	bool checkEmergentPair;
+#ifdef RUNTIME
 	size_t numEmergentPairs = 0;
+#endif
 #endif
 #if defined(USE_APPARENT_PAIRS) or defined(USE_EMERGENT_PAIRS)
 	vector<Cube> faces;
@@ -139,7 +145,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 #endif
 			} else {
 #ifdef USE_REDUCTION_MATRIX
-				reductionColumn.push_back(ctr[j]);
+				reductionColumn.push_back(j);
 #endif
 #ifdef USE_CACHE
 				if (!columnIsCached(ctr[j], workingBoundary)) {
@@ -234,18 +240,24 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	reductionMatrix.clear();
 	reductionMatrix.reserve(ctrSize);
 	vector<Cube> reductionColumn;
+#ifdef RUNTIME
 	size_t numReductionColumns = 0;
+#endif
 #endif
 #ifdef USE_CACHE
 	queue<index_t> cachedColumnIdx;
 	cache.clear();
 	cache.reserve(min(config.cacheSize, ctrSize));
 	size_t numRecurse;
+#ifdef RUNTIME
 	size_t numCached = 0;
+#endif
 #endif
 #ifdef USE_EMERGENT_PAIRS
 	bool checkEmergentPair;
+#ifdef RUNTIME
 	size_t numEmergentPairs = 0;
+#endif
 #endif
 #if defined(USE_APPARENT_PAIRS_COMP) or defined(USE_EMERGENT_PAIRS)
 	vector<Cube> faces;
@@ -407,18 +419,24 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 	reductionMatrix.clear();
 	reductionMatrix.reserve(ctrSize);
 	vector<Cube> reductionColumn;
+#ifdef RUNTIME
 	size_t numReductionColumns = 0;
+#endif
 #endif
 #ifdef USE_CACHE
 	queue<index_t> cachedColumnIdx;
 	cache.clear();
 	cache.reserve(min(config.cacheSize, ctrSize));
 	size_t numRecurse;
+#ifdef RUNTIME
 	size_t numCached = 0;
+#endif
 #endif
 #ifdef USE_EMERGENT_PAIRS
 	bool checkEmergentPair;
+#ifdef RUNTIME
 	size_t numEmergentPairs = 0;
+#endif
 #endif
 #ifdef USE_EMERGENT_PAIRS
 	vector<Cube> faces;

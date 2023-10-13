@@ -5,12 +5,12 @@
 #include <cstdint>
 
 #define RUNTIME
-#define COMPUTE_COMPARISON
-#define USE_APPARENT_PAIRS
+//#define COMPUTE_COMPARISON
+//#define USE_REDUCTION_MATRIX
 #define USE_APPARENT_PAIRS_COMP
+#define USE_APPARENT_PAIRS
 #define USE_EMERGENT_PAIRS
 #define USE_CACHE
-#define USE_REDUCTION_MATRIX
 #define USE_CLEARING_IMAGE
 #define USE_CLEARING_DIM0
 
@@ -36,7 +36,7 @@ struct Config {
 
 	value_t threshold = numeric_limits<value_t>::infinity();
 
-	size_t minRecursionToCache = 20;
+	size_t minRecursionToCache = 1;
 	size_t cacheSize = numeric_limits<size_t>::max();
 
 	bool print = false;
