@@ -87,9 +87,9 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 #endif
 #endif
 #ifdef USE_CACHE
-	queue<index_t> cachedColumnIdx;
 	cache.clear();
 	cache.reserve(min(config.cacheSize, ctrSize));
+	queue<uint64_t> cachedColumnIdx;
 	size_t numRecurse;
 #ifdef RUNTIME
 	size_t numCached = 0;
@@ -246,9 +246,9 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 #endif
 #endif
 #ifdef USE_CACHE
-	queue<index_t> cachedColumnIdx;
 	cache.clear();
 	cache.reserve(min(config.cacheSize, ctrSize));
+	queue<uint64_t> cachedColumnIdx;
 	size_t numRecurse;
 #ifdef RUNTIME
 	size_t numCached = 0;
@@ -426,9 +426,9 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 #endif
 #endif
 #ifdef USE_CACHE
-	queue<index_t> cachedColumnIdx;
 	cache.clear();
 	cache.reserve(min(config.cacheSize, ctrSize));
+	queue<uint64_t> cachedColumnIdx;
 	size_t numRecurse;
 #ifdef RUNTIME
 	size_t numCached = 0;
@@ -651,8 +651,7 @@ Cube Dimension1::getPivot(CubeQueue& column) const {
 }
 
 #ifdef USE_REDUCTION_MATRIX
-void Dimension1::useReductionMatrix(const Cube& column, CubeQueue& workingBoundary, 
-										BoundaryEnumerator& enumerator) const {
+void Dimension1::useReductionMatrix(const Cube& column, CubeQueue& workingBoundary, BoundaryEnumerator& enumerator) const {
 	auto pair = reductionMatrix.find(column.index);
 	if (pair != reductionMatrix.end()) {
 		auto reductionColumn = pair->second;
@@ -684,7 +683,7 @@ bool Dimension1::columnIsCached(const Cube& column, CubeQueue& workingBoundary) 
 	} else { return false; }
 }
 
-void Dimension1::addCache(const Cube& column, CubeQueue& workingBoundary, queue<index_t>& cachedColumnIdx) {
+void Dimension1::addCache(const Cube& column, CubeQueue& workingBoundary, queue<uint64_t>& cachedColumnIdx) {
 	CubeQueue cleanWb;
 	Cube c;
 	while (!workingBoundary.empty()) {

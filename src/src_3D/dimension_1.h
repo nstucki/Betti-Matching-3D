@@ -54,7 +54,7 @@ namespace dim3 {
 #endif
 #ifdef USE_CACHE
 		bool columnIsCached(const Cube& column, CubeQueue& workingBoundary) const;
-		void addCache(const Cube& column, CubeQueue& working_boundary, queue<index_t>& cachedColumnIdx);
+		void addCache(const Cube& column, CubeQueue& working_boundary, queue<uint64_t>& cachedColumnIdx);
 #endif
 #if defined(USE_APPARENT_PAIRS) or defined(USE_APPARENT_PAIRS_COMP)
 		bool pivotIsApparentPair(const Cube& pivot, vector<Cube>& faces, 
