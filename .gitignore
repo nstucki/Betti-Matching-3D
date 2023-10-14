@@ -16,4 +16,4 @@ cmake_install.cmake
 BettiMatching
 Makefile
 test
-inputs
+test/inputs.ipynb
