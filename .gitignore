@@ -3,6 +3,8 @@ venv
 build
 build-3D
 build-nD
+Release
+Debug
 .vscode
 CMakeFiles
 CMakeCache.txt
@@ -14,3 +16,4 @@ cmake_install.cmake
 BettiMatching
 Makefile
 test
+inputs
