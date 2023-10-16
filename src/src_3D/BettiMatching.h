@@ -6,14 +6,13 @@
 namespace dim3 {
     class BettiMatching {
         public:
-        BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<value_t> comparison, vector<index_t> shape,
-                        Config& config);
+        BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<value_t> comparison, vector<index_t> shape, Config& config);
         BettiMatching(BettiMatching &&other);
         void computeMatching();
         void computeVoxels();
+        tuple<set<vector<index_t>>, set<vector<index_t>>> getMatchedRepresentativeCycle(const uint8_t& dim, const size_t& index);
+        set<vector<index_t>> getUnmatchedRepresentativeCycle(const uint8_t& dim, const size_t& index, const uint8_t& input);
         void printResult();
-
-        // Read-only properties
         const vector<vector<VoxelMatch>> &matched = _matched;
         const vector<vector<VoxelPair>> &unmatched0 = _unmatched0;
         const vector<vector<VoxelPair>> &unmatched1 = _unmatched1;

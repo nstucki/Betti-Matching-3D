@@ -16,6 +16,7 @@ Dimension1::Dimension1(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), pairs0(_pairs0), pairs1(_pairs1),
 						pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1) {}
 
+
 void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp, vector<Cube>& ctrImage) {
 #ifdef RUNTIME
 	cout << endl << "input 0: ";
@@ -61,6 +62,141 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #endif
 	computeMatching();
 }
+
+
+set<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) {
+	set<vector<index_t>> reprCycle;
+	vector<Cube> ctr;
+	enumerateColumnsToReduce(ctr, cgc);
+	size_t ctrSize = ctr.size();
+	pivotColumnIndex.clear();
+	pivotColumnIndex.reserve(ctrSize);
+	BoundaryEnumerator enumerator(cgc);
+	Cube pivot;
+	size_t j;
+#ifdef USE_REDUCTION_MATRIX
+	reductionMatrix.clear();
+	reductionMatrix.reserve(ctrSize);
+	vector<Cube> reductionColumn;
+#endif
+#ifdef USE_CACHE
+	cache.clear();
+	cache.reserve(min(config.cacheSize, ctrSize));
+	queue<uint64_t> cachedColumnIdx;
+	size_t numRecurse;
+#endif
+#ifdef USE_EMERGENT_PAIRS
+	bool checkEmergentPair;
+#endif
+#ifdef USE_EMERGENT_PAIRS
+	vector<Cube> faces;
+	BoundaryEnumerator enumeratorAP(cgc);
+	CoboundaryEnumerator coEnumeratorAP(cgc);
+#endif
+
+	for (size_t i = 0; i < ctrSize; ++i) {
+		if (pivot == pair.birth) { break; }
+		CubeQueue workingBoundary;
+		j = i;
+#ifdef USE_CACHE
+		numRecurse = 0;
+#endif
+#ifdef USE_EMERGENT_PAIRS
+		checkEmergentPair = true;
+#endif
+		while (true) {
+			if (j == i) {
+#ifdef USE_EMERGENT_PAIRS
+				if (isEmergentPair(ctr[i], pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP)) {
+					pivotColumnIndex.emplace(pivot.index, i);
+					break;
+				} else {
+					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+#ifdef USE_CACHE
+					++numRecurse;
+#endif
+					if (j != i) { continue; }
+#ifdef USE_REDUCTION_MATRIX
+					else { reductionColumn.push_back(coEnumeratorAP.nextCoface); }
+#endif
+				}
+#else			
+				enumerator.setBoundaryEnumerator(ctr[i]);
+				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
+#endif
+			} else {
+#ifdef USE_REDUCTION_MATRIX
+				reductionColumn.push_back(ctr[j]);
+#endif
+#ifdef USE_CACHE
+				if (!columnIsCached(ctr[j], workingBoundary)) {
+#endif
+					enumerator.setBoundaryEnumerator(ctr[j]);
+					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
+#ifdef USE_REDUCTION_MATRIX
+					useReductionMatrix(ctr[j], workingBoundary, enumerator);
+#endif
+#ifdef USE_CACHE
+				}
+#endif
+			}
+			pivot = getPivot(workingBoundary);
+			if (pivot.index != NONE) {
+				auto it = pivotColumnIndex.find(pivot.index);
+				if (it != pivotColumnIndex.end()) {
+					j = it->second;
+#ifdef USE_CACHE
+					++numRecurse;
+#endif
+					continue;
+				} else {
+					if (pivot == pair.birth) {
+						Cube c;
+						while (!workingBoundary.empty()) {
+							c = workingBoundary.top();
+							workingBoundary.pop();
+							if (!workingBoundary.empty() && c == workingBoundary.top()) { workingBoundary.pop(); } 
+							else {
+								reprCycle.insert({c.x(),c.y(),c.z()});
+								switch(c.type()) {
+									case 0: 
+										reprCycle.insert({c.x()+1,c.y(),c.z()});
+										break;
+
+									case 1:
+										reprCycle.insert({c.x(),c.y()+1,c.z()});
+										break;
+
+									case 2:
+										reprCycle.insert({c.x(),c.y(),c.z()+1});
+										break;
+								}
+								
+							}
+						}
+						break;
+					}
+					pivotColumnIndex.emplace(pivot.index, i);
+#ifdef USE_CACHE
+					if (numRecurse >= config.minRecursionToCache) {
+						addCache(ctr[i], workingBoundary, cachedColumnIdx);
+						break;
+					}
+#endif
+#ifdef USE_REDUCTION_MATRIX
+					if (reductionColumn.size() > 0) {
+						reductionMatrix.emplace(ctr[i].index, reductionColumn);
+						reductionColumn.clear();
+					}
+#endif
+					break;
+				}
+			} else { break; }
+		}
+	}
+	return reprCycle;
+}
+
 
 void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 #ifdef RUNTIME
@@ -627,6 +763,24 @@ void Dimension1::enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& c
 	cout << duration.count() << " ms";
 #endif
 }
+
+
+void Dimension1::enumerateColumnsToReduce(vector<Cube>& ctr, const CubicalGridComplex& cgc) const {
+	ctr.reserve(cgc.getNumberOfCubes(2));
+	value_t birth;
+	for (index_t x = 0; x < cgc.shape[0]; ++x) {
+		for (index_t y = 0; y < cgc.shape[1]; ++y) {
+			for (index_t z = 0; z < cgc.shape[2]; ++z) {
+				for (uint8_t type = 0; type < 3; ++type) {
+					birth = cgc.getBirth(x, y, z, type, 2);
+					if (birth < config.threshold) { ctr.push_back(Cube(birth, x, y, z, type)); }
+				}
+			}
+		}
+	}
+	sort(ctr.begin(), ctr.end(), CubeComparator());
+}
+
 
 Cube Dimension1::popPivot(CubeQueue& column) const {
     if (column.empty()) { return Cube(); } else {

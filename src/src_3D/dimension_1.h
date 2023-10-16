@@ -17,36 +17,15 @@ namespace dim3 {
 					const Config& config, vector<Pair>& pairs0, vector<Pair>& pairs1, vector<Pair>& pairsComp,
 					vector<Match>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1);
 		void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp, vector<Cube>& ctrImage);
+		set<vector<index_t>> getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc);
 
 		private:
-		const CubicalGridComplex& cgc0;
-		const CubicalGridComplex& cgc1;
-		const CubicalGridComplex& cgcComp;
-		const Config& config;
-		vector<Pair>& pairs0;
-		vector<Pair>& pairs1;
-		vector<Pair>& pairsComp;
-		vector<Match>& matches;
-		unordered_map<uint64_t, bool>& isMatched0;
-		unordered_map<uint64_t, bool>& isMatched1;
-		unordered_map<uint64_t, bool> isPairedComp;
-		unordered_map<uint64_t, Pair> matchMap0;
-		unordered_map<uint64_t, Pair> matchMap1;
-		unordered_map<uint64_t, uint64_t> matchMapIm0;
-		unordered_map<uint64_t, uint64_t> matchMapIm1;
-		unordered_map<uint64_t, size_t> pivotColumnIndex;
-#ifdef USE_REDUCTION_MATRIX
-		unordered_map<uint64_t, vector<Cube>> reductionMatrix;
-#endif
-#ifdef USE_CACHE
-		unordered_map<uint64_t, CubeQueue> cache;
-#endif
-
 		void computePairs(const vector<Cube>& ctr, uint8_t k);
 		void computePairsComp(vector<Cube>& ctr);
 		void computePairsImage(vector<Cube>& ctr, uint8_t k);
 		void computeMatching();
 		void enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc) const;
+		void enumerateColumnsToReduce(vector<Cube>& ctr, const CubicalGridComplex& cgc) const;
 		Cube popPivot(CubeQueue& column) const;
 		Cube getPivot(CubeQueue& column) const;
 #ifdef USE_REDUCTION_MATRIX
@@ -71,6 +50,28 @@ namespace dim3 {
 								CoboundaryEnumerator& coEnumeratorAP) const; 
 		bool isEmergentPairImage(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
 									const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator) const;
+#endif
+		const CubicalGridComplex& cgc0;
+		const CubicalGridComplex& cgc1;
+		const CubicalGridComplex& cgcComp;
+		const Config& config;
+		vector<Pair>& pairs0;
+		vector<Pair>& pairs1;
+		vector<Pair>& pairsComp;
+		vector<Match>& matches;
+		unordered_map<uint64_t, bool>& isMatched0;
+		unordered_map<uint64_t, bool>& isMatched1;
+		unordered_map<uint64_t, bool> isPairedComp;
+		unordered_map<uint64_t, Pair> matchMap0;
+		unordered_map<uint64_t, Pair> matchMap1;
+		unordered_map<uint64_t, uint64_t> matchMapIm0;
+		unordered_map<uint64_t, uint64_t> matchMapIm1;
+		unordered_map<uint64_t, size_t> pivotColumnIndex;
+#ifdef USE_REDUCTION_MATRIX
+		unordered_map<uint64_t, vector<Cube>> reductionMatrix;
+#endif
+#ifdef USE_CACHE
+		unordered_map<uint64_t, CubeQueue> cache;
 #endif
 	};
 }

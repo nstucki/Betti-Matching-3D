@@ -84,6 +84,7 @@ int main(int argc, char** argv) {
 		cerr << "couldn't open file " << config.filename1 << endl;
 		exit(-1);
 	}
+
     vector<value_t> input0;
     vector<value_t> input1;
     vector<value_t> comparison;
@@ -111,6 +112,7 @@ int main(int argc, char** argv) {
 	if (dim == 0) {
 		cerr << "input of dimension 0" << endl;
 	}
+
 	else if (dim == 1) {
 #ifdef RUNTIME
 		cout << "initializing BettiMatching ... ";
@@ -122,7 +124,6 @@ int main(int argc, char** argv) {
 		duration = duration_cast<milliseconds>(stop - startTotal);
 		cout << duration.count() << " ms" << endl << endl;
 #endif
-
 #ifdef RUNTIME
 		cout << "computing Betti Matching ..." << endl;
 #endif
@@ -133,10 +134,10 @@ int main(int argc, char** argv) {
 		duration = duration_cast<milliseconds>(stop - startTotal);
 		cout << "total runtime: " << duration.count() << " ms" << endl << endl;
 #endif
-
 		if (config.print) { BM.printResult(); }
 		if (config.saveResult) {}
-    } 
+    }
+
 	else if (dim == 2) {
 #ifdef RUNTIME
         cout << "initializing BettiMatching ... ";
@@ -148,7 +149,6 @@ int main(int argc, char** argv) {
         duration = duration_cast<milliseconds>(stop - startTotal);
         cout << duration.count() << " ms" << endl << endl;
 #endif
-
 #ifdef RUNTIME
         cout << "computing Betti Matching ..." << endl;
 #endif
@@ -159,10 +159,10 @@ int main(int argc, char** argv) {
         duration = duration_cast<milliseconds>(stop - startTotal);
         cout << "total runtime: " << duration.count() << " ms" << endl << endl;
 #endif
-
         if (config.print) { BM.printResult(); }
         if (config.saveResult) {}
     }
+
     else if (dim == 3) {
 #ifdef RUNTIME
         cout << "initializing BettiMatching ... ";
@@ -174,7 +174,6 @@ int main(int argc, char** argv) {
         duration = duration_cast<milliseconds>(stop - startTotal);
         cout << duration.count() << " ms" << endl << endl;
 #endif
-
 #ifdef RUNTIME
         cout << "computing Betti Matching ..." << endl;
 #endif
@@ -185,10 +184,10 @@ int main(int argc, char** argv) {
         duration = duration_cast<milliseconds>(stop - startTotal);
         cout << "Betti Matching runtime: " << duration.count() << " ms" << endl << endl;
 #endif
-
         if (config.print) { BM.printResult(); }
         if (config.saveResult) {}
     }
+    
 	else {
 #ifdef RUNTIME
         cout << "initializing BettiMatching ... ";
@@ -200,7 +199,6 @@ int main(int argc, char** argv) {
         duration = duration_cast<milliseconds>(stop - startTotal);
         cout << duration.count() << " ms" << endl << endl;
 #endif
-
 #ifdef RUNTIME
         cout << "computing Betti Matching ..." << endl;
 #endif
@@ -211,7 +209,6 @@ int main(int argc, char** argv) {
         duration = duration_cast<milliseconds>(stop - startTotal);
         cout << "Betti Matching runtime: " << duration.count() << " ms" << endl << endl;
 #endif
-
         if (config.print) { BM.printResult(); }
         if (config.saveResult) {}		
 	}

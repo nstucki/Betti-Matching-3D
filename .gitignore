@@ -17,3 +17,4 @@ BettiMatching
 Makefile
 test
 test/inputs.ipynb
+test/test.ipynb

@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <set>
 
 using namespace std;
 
@@ -11,48 +12,59 @@ using namespace std;
 namespace dim3 {
 		class Cube {
 		public:
-		value_t birth;
-		uint64_t index;
-
 		Cube();
 		Cube(value_t birth, index_t x, index_t y, index_t z, uint8_t type);
 		Cube(const Cube& cube);
+		bool operator==(const Cube& rhs) const;
 		index_t x() const;
 		index_t y() const;
 		index_t z() const;
 		uint8_t type() const;
-		bool operator==(const Cube& rhs) const;
 		void print() const;
+		value_t birth;
+		uint64_t index;
 	};
+
 
 
 	struct CubeComparator{ bool operator()(const Cube& Cube1, const Cube& Cube2) const; };
 
 
+
 	class Pair {
 		public:
-		const Cube birth;
-		const Cube death;
-
 		Pair();
 		Pair(const Cube& birth, const Cube& death);
 		Pair(const Pair& pair);
 		bool operator==(const Pair &rhs) const;
 		void print() const;
+		const Cube birth;
+		const Cube death;
 	};
+
 
 
 	class Match {
 		public:
-		Pair pair0;
-		Pair pair1;
-
 		Match(Pair pair0, Pair pair1);
 		void print() const;
+		Pair pair0;
+		Pair pair1;
 	};
+
+
 
 	class CubicalGridComplex {
 		public:
+		CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& shape);
+		CubicalGridComplex(CubicalGridComplex &&other);
+		~CubicalGridComplex();
+		size_t getNumberOfCubes(const uint8_t& dim) const;
+		value_t getBirth(const index_t& x, const index_t& y, const index_t& z) const;
+		value_t getBirth(const index_t& x, const index_t& y, const index_t& z, const uint8_t& type, const uint8_t& dim) const;
+		vector<index_t> getParentVoxel(const Cube& c, const uint8_t& dim) const;
+		void printImage() const;
+		void printRepresentativeCycle(const set<vector<index_t>>& reprCycle) const;
 		const vector<index_t> shape;
 		const index_t m_x;
 		const index_t m_y;
@@ -62,20 +74,10 @@ namespace dim3 {
 		const index_t n_yz;
 		const index_t n_xyz;
 
-		CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& shape);
-		CubicalGridComplex(CubicalGridComplex &&other);
-		~CubicalGridComplex();
-		size_t getNumberOfCubes(const uint8_t& dim) const;
-		value_t getBirth(const index_t& x, const index_t& y, const index_t& z) const;
-		value_t getBirth(const index_t& x, const index_t& y, const index_t& z, const uint8_t& type, const uint8_t& dim) const;
-		vector<index_t> getParentVoxel(const Cube& c, const uint8_t& dim) const;
-		void printImage() const;
-
 		private:
-		value_t*** grid;
-
 		value_t*** allocateMemory() const;
 		void getGridFromVector(const vector<value_t>& vector);
+		value_t*** grid;
 	};
 
 

@@ -25,10 +25,12 @@ BettiMatching::BettiMatching(vector<value_t> input0, vector<value_t> input1, vec
     _unmatched1 = vector<vector<VoxelPair>>(3);
 }
 
+
 BettiMatching::BettiMatching(BettiMatching &&other) : cgc0(std::move(other.cgc0)), cgc1(std::move(other.cgc1)), cgcComp(std::move(other.cgcComp)),
                                                       config(other.config), pairs0(other.pairs0), pairs1(other.pairs1), pairsComp(other.pairsComp),
                                                       matches(other.matches), isMatched0(other.isMatched0), isMatched1(other.isMatched1),
                                                       _matched(other.matched), _unmatched0(other.unmatched0), _unmatched1(other.unmatched1) {}
+
 
 
 void BettiMatching::computeMatching() {
@@ -36,6 +38,7 @@ void BettiMatching::computeMatching() {
     vector<Cube> ctr1;
     vector<Cube> ctrComp;
     vector<Cube> ctrImage;
+
     {
 #ifdef RUNTIME
         cout << "dimension 2:";
@@ -49,6 +52,7 @@ void BettiMatching::computeMatching() {
         cout << endl << "total: " << duration.count() << " ms" << endl << endl;
 #endif
     }
+
     {
 #ifdef RUNTIME
         cout << "dimension 1:";
@@ -62,6 +66,7 @@ void BettiMatching::computeMatching() {
         cout << endl << "total: " << duration.count() << " ms" << endl << endl;
 #endif
     }
+
     { 
 #ifdef RUNTIME
         cout << "dimension 0:";
@@ -76,6 +81,7 @@ void BettiMatching::computeMatching() {
 #endif
     }
 }
+
 
 void BettiMatching::computeVoxels() {
 #ifdef RUNTIME
@@ -107,10 +113,70 @@ void BettiMatching::computeVoxels() {
 #endif
 }
 
+
+tuple<set<vector<index_t>>, set<vector<index_t>>> BettiMatching::getMatchedRepresentativeCycle(const uint8_t& dim, const size_t& index) {
+    tuple<set<vector<index_t>>, set<vector<index_t>>> reprCycles;
+    switch(dim) {
+        case 0: {
+            Dimension0 dim0(cgc0, cgc1, cgcComp, config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);
+            get<0>(reprCycles) = dim0.getRepresentativeCycle(matches[0][index].pair0, cgc0);
+            get<1>(reprCycles) = dim0.getRepresentativeCycle(matches[0][index].pair1, cgc1); 
+            break;
+        }
+
+        case 1: {
+            Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);
+            get<0>(reprCycles) = dim1.getRepresentativeCycle(matches[1][index].pair0, cgc0);
+            get<1>(reprCycles) = dim1.getRepresentativeCycle(matches[1][index].pair1, cgc1);
+            break;
+        }
+    }
+    return reprCycles;
+}
+
+
+set<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t& dim, const size_t& index, const uint8_t& input) {
+    const CubicalGridComplex& cgc = (input == 0) ? cgc0 : cgc1;
+    vector<vector<Pair>>& pairs = (input == 0) ? pairs0 : pairs1;
+    vector<unordered_map<uint64_t, bool>> isMatched = (input == 0) ? isMatched0 : isMatched1;
+
+    set<vector<index_t>> reprCycle;
+
+    size_t numPairs = pairs.size();
+    if (index > numPairs-1) { return reprCycle; }
+
+    size_t count = 0;
+    for (Pair& pair : pairs[dim]) {
+        if (!isMatched[dim][pair.birth.index]) {
+            if (count == index) {
+                switch(dim) {
+                    case 0: {
+                        Dimension0 dim0(cgc0, cgc1, cgcComp, config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);
+                        reprCycle = dim0.getRepresentativeCycle(pair, cgc);
+                        break;
+                    }
+
+                    case 1: {
+                        Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);
+                        reprCycle = dim1.getRepresentativeCycle(pair, cgc);
+                        break;
+                    }
+                }
+                break;
+            }
+            ++count;
+        }
+    }
+    
+    return reprCycle;
+}
+
+
 void BettiMatching::printResult() {
     index_t count;
+
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Input 0:" << endl << endl;
+    cout << "Input 0:" << endl;
     if (cgc0.shape[0] < 10 && cgc0.shape[1] < 10 && cgc0.shape[2] < 10) { cgc0.printImage(); }
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
@@ -120,8 +186,9 @@ void BettiMatching::printResult() {
             for (auto &pair : pairs0[d]) { pair.print(); cout << endl; }
         } else { cout << count << endl; }
     }
+
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Input 1:" << endl << endl; 
+    cout << "Input 1:" << endl; 
     if (cgc1.shape[0] < 10 && cgc1.shape[1] < 10 && cgc1.shape[2] < 10) { cgc1.printImage(); }
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
@@ -131,9 +198,10 @@ void BettiMatching::printResult() {
             for (auto &pair : pairs1[d]) { pair.print(); cout << endl; }
         } else { cout << count << endl; }
     }
+
 #ifdef COMPUTE_COMPARISON
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
-    cout << "Comparison:" << endl << endl; 
+    cout << "Comparison:" << endl; 
     if (cgcComp.shape[0] < 10 && cgcComp.shape[1] < 10 && cgcComp.shape[2] < 10) { cgcComp.printImage(); }
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
@@ -144,68 +212,72 @@ void BettiMatching::printResult() {
         } else { cout << count << endl; }
     }
 #endif
+
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
     cout << "Betti Matching:" << endl << endl;
-    cout << "matched cubes: " << endl;
+    cout << "matched: " << endl;
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = matches[d].size();
         if (0 < count && count < 10) {
             cout << endl;
-            for (auto &match : matches[d]) { match.print(); }
+            for (size_t i = 0; i < matches[d].size(); i++) {
+                matches[d][i].print();
+                _matched[d][i].print();
+                if (cgc0.shape[0] < 10 && cgc0.shape[1] < 10 && cgc0.shape[2] < 10) {
+                    pair<set<vector<index_t>>, set<vector<index_t>>> reprCycles = getMatchedRepresentativeCycle(d, i);
+                    cgc0.printRepresentativeCycle(get<0>(reprCycles));
+                    cout << endl;
+                    cgc1.printRepresentativeCycle(get<1>(reprCycles));
+                    cout << endl;
+                }
+            }
         } else { cout << count << endl; }
     }
-    cout << endl;
-    cout << "unmatched cubes in Input 0:" << endl;
+
+    size_t counter;
+    cout << endl << "unmatched in Input 0:" << endl;
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = 0;
         for (auto &pair : pairs0[d]) { if (!isMatched0[d][pair.birth.index]) { ++count; } }
         if (0 < count && count < 10) {
             cout << endl;
-            for (auto &pair : pairs0[d]) { if (!isMatched0[d][pair.birth.index]) { pair.print(); cout << endl; } }
+            counter = 0;
+            for (size_t i = 0; i < pairs0[d].size(); ++i) { 
+                if (!isMatched0[d][pairs0[d][i].birth.index]) {
+                    pairs0[d][i].print(); cout << endl;
+                    cout << counter << endl;
+                    _unmatched0[d][counter].print(); cout << endl;
+                    set<vector<index_t>> reprCycle = getUnmatchedRepresentativeCycle(d, counter, 0);
+                    cgc0.printRepresentativeCycle(reprCycle);
+                    cout << endl;
+                    ++counter;
+                    if (counter == count) { break; }
+                }
+            }
         } else { cout << count << endl; }
     }
-    cout << endl;
-    cout << "unmatched cubes in Input 1:" << endl;
+
+    cout << endl << "unmatched in Input 1:" << endl;
     for (uint8_t d = 0; d < 3; ++d) {
         cout << "dim " << unsigned(d) << ": ";
         count = 0;
-        for (auto &pair : pairs1[d]) {if (!isMatched1[d][pair.birth.index]) { ++count; } }
+        for (auto &pair : pairs1[d]) { if (!isMatched1[d][pair.birth.index]) { ++count; } }
         if (0 < count && count < 10) {
             cout << endl;
-            for (auto &pair : pairs1[d]) { if (!isMatched1[d][pair.birth.index]) { pair.print(); cout << endl; } }
+            counter = 0;
+            for (size_t i = 0; i < pairs1[d].size(); ++i) { 
+                if (!isMatched1[d][pairs1[d][i].birth.index]) {
+                    pairs1[d][i].print(); cout << endl;
+                    _unmatched1[d][counter].print(); cout << endl;
+                    set<vector<index_t>> reprCycle = getUnmatchedRepresentativeCycle(d, counter, 1);
+                    cgc1.printRepresentativeCycle(reprCycle);
+                    cout << endl;
+                    ++counter;
+                    if (counter == count) { break; }
+                 }
+            }
         } else { cout << count << endl; }
     }
-    cout << endl;
-    cout << "matched voxels:" << endl;
-    for (uint8_t d = 0; d < 3; ++d) {
-        cout << "dim " << unsigned(d) << ": ";
-        count = _matched[d].size();
-        if (0 < count && count < 10) {
-            cout << endl;
-            for (auto& match : _matched[d]) { match.print(); }
-        } else { cout << count << endl; }
-    }
-    cout << endl;
-    cout << "unmatched voxels in Input 0:" << endl;
-    for (uint8_t d = 0; d < 3; ++d) {
-        cout << "dim " << unsigned(d) << ": ";
-        count = _unmatched0[d].size();
-        if (0 < count && count < 10) {
-            cout << endl;
-            for (auto& pair : _unmatched0[d]) { pair.print(); cout << endl; }
-        } else { cout << count << endl; }
-    }
-    cout << endl;
-    cout << "unmatched voxels in Input 1:" << endl;
-    for (uint8_t d = 0; d < 3; ++d) {
-        cout << "dim " << unsigned(d) << ": ";
-        count = _unmatched1[d].size();
-        if (0 < count && count < 10) {
-            cout << endl;
-            for (auto& pair : _unmatched1[d]) { pair.print(); cout << endl; }
-        } else { cout << count << endl; }
-    }
-    cout << endl;
 }
