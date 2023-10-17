@@ -130,6 +130,13 @@ tuple<set<vector<index_t>>, set<vector<index_t>>> BettiMatching::getMatchedRepre
             get<1>(reprCycles) = dim1.getRepresentativeCycle(matches[1][index].pair1, cgc1);
             break;
         }
+
+        case 2: {
+            Dimension2 dim2(cgc0, cgc1, cgcComp, config, pairs0[2], pairs1[2], pairsComp[2], matches[2], isMatched0[2], isMatched1[2]);
+            get<0>(reprCycles) = dim2.getRepresentativeCycle(matches[2][index].pair0, cgc0);
+            get<1>(reprCycles) = dim2.getRepresentativeCycle(matches[2][index].pair1, cgc1);
+            break;
+        }
     }
     return reprCycles;
 }
@@ -151,14 +158,23 @@ set<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uint8_
             if (count == index) {
                 switch(dim) {
                     case 0: {
-                        Dimension0 dim0(cgc0, cgc1, cgcComp, config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);
+                        Dimension0 dim0(cgc0, cgc1, cgcComp, config, pairs0[0], pairs1[0], pairsComp[0], 
+                                        matches[0], isMatched0[0], isMatched1[0]);
                         reprCycle = dim0.getRepresentativeCycle(pair, cgc);
                         break;
                     }
 
                     case 1: {
-                        Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);
+                        Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1], pairsComp[1], 
+                                        matches[1], isMatched0[1], isMatched1[1]);
                         reprCycle = dim1.getRepresentativeCycle(pair, cgc);
+                        break;
+                    }
+
+                    case 2: {
+                        Dimension2 dim2(cgc0, cgc1, cgcComp, config, pairs0[2], pairs1[2], pairsComp[2], 
+                                        matches[2], isMatched0[2], isMatched1[2]);
+                        reprCycle = dim2.getRepresentativeCycle(pair, cgc);
                         break;
                     }
                 }
@@ -247,7 +263,6 @@ void BettiMatching::printResult() {
             for (size_t i = 0; i < pairs0[d].size(); ++i) { 
                 if (!isMatched0[d][pairs0[d][i].birth.index]) {
                     pairs0[d][i].print(); cout << endl;
-                    cout << counter << endl;
                     _unmatched0[d][counter].print(); cout << endl;
                     set<vector<index_t>> reprCycle = getUnmatchedRepresentativeCycle(d, counter, 0);
                     cgc0.printRepresentativeCycle(reprCycle);

@@ -88,14 +88,36 @@ set<vector<index_t>> Dimension2::getRepresentativeCycle(const Pair& pair, const 
 		if (parentIdx0 != parentIdx1) { birthIdx = uf.link(parentIdx0, parentIdx1); }
 	}
 
-	vector<vector<index_t>> reprCubes;
+	set<vector<index_t>> cubeCoordinates;
 	parentIdx0 = uf.find(pair.death.x()*cgc.m_yz + pair.death.y()*cgc.m_z + pair.death.z());
 	for (size_t i = 0; i < cgc.getNumberOfCubes(3); ++i) {
 		parentIdx1 = uf.find(i);
-		if (parentIdx0 == parentIdx1) { reprCubes.push_back(uf.getCoordinates(i)); }
+		if (parentIdx0 == parentIdx1) { cubeCoordinates.insert(uf.getCoordinates(i)); }
+	}
+
+	multiset<vector<index_t>> boundaryVertices;
+	vector<index_t> vertex;
+	for (const vector<index_t>& c : cubeCoordinates) {
+		for (uint8_t x = 0; x < 2; ++x) {
+			for (uint8_t y = 0; y < 2; ++y) {
+				for (uint8_t z = 0; z < 2; ++z) {
+					vertex = c;
+					vertex[0] += x;
+					vertex[1] += y;
+					vertex[2] += z;
+					boundaryVertices.insert(vertex);
+				}
+			}
+		}
 	}
 
 	set<vector<index_t>> reprCycle;
+	for (const vector<index_t>& vertex : boundaryVertices) {
+		auto lower = boundaryVertices.lower_bound(vertex);
+		auto upper = boundaryVertices.upper_bound(vertex);
+		int multiplicity = distance(lower, upper);
+		if (multiplicity < 8) { reprCycle.insert(vertex); }
+	}
 
 	return reprCycle;
 }

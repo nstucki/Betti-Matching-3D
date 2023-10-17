@@ -10,12 +10,18 @@ using namespace std;
 Cube::Cube() : birth(0), index(NONE) {}
 
 
-Cube::Cube(const Cube& cube) : birth(cube.birth), index(cube.index) {}
-
-
 Cube::Cube(value_t _birth, index_t _x, index_t _y, index_t _z, uint8_t _type) : birth(_birth) {
     index = ((uint64_t)_x << 44) | ((uint64_t)_y<<24) | ((uint64_t)_z<<4) | (uint64_t)_type;
 }
+
+
+Cube::Cube(value_t _birth, vector<index_t> coordinates, uint8_t _type) : birth(_birth) {
+    index = ((uint64_t)coordinates[0] << 44) | ((uint64_t)coordinates[1]<<24) | ((uint64_t)coordinates[2]<<4) | (uint64_t)_type;
+}
+
+
+Cube::Cube(const Cube& cube) : birth(cube.birth), index(cube.index) {}
+
 
 
 bool Cube::operator==(const Cube& rhs) const{ return (index == rhs.index); }

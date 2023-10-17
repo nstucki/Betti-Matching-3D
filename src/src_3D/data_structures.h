@@ -14,6 +14,7 @@ namespace dim3 {
 		public:
 		Cube();
 		Cube(value_t birth, index_t x, index_t y, index_t z, uint8_t type);
+		Cube(value_t birth, vector<index_t> coordinates, uint8_t type);
 		Cube(const Cube& cube);
 		bool operator==(const Cube& rhs) const;
 		index_t x() const;
