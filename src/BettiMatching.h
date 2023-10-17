@@ -7,14 +7,15 @@
 #include "src_3D/BettiMatching.h"
 #include "src_nD/BettiMatching.h"
 
-class BettiMatching
-{
+using namespace std;
+
+class BettiMatching {
 public:
-    BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<value_t> comparison, vector<index_t> shape, Config &config);
+    BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<index_t> shape, Config &config);
     BettiMatching(BettiMatching &&other);
-    std::tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>, vector<vector<VoxelPair>>> computeMatchingWithVoxels();
+    tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>, vector<vector<VoxelPair>>> computeMatchingWithVoxels();
 
 private:
-    std::optional<std::variant<dim1::BettiMatching, dim2::BettiMatching, dim3::BettiMatching, dimN::BettiMatching>> dimensionSpecificBettiMatching;
+    optional<variant<dim1::BettiMatching, dim2::BettiMatching, dim3::BettiMatching, dimN::BettiMatching>> dimensionSpecificBettiMatching;
     int dimension;
 };
