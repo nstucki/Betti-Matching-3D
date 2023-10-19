@@ -6,6 +6,10 @@
 #include <vector>
 #include <optional>
 #include <stdexcept>
+#include <iostream>
+
+using namespace std;
+using namespace std::chrono;
 
 
 
@@ -45,7 +49,7 @@ BettiMatching::BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1,
 
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - startTotal);
+	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << duration.count() << " ms" << endl << endl;
 #endif
 }
@@ -56,12 +60,17 @@ BettiMatching::BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1,
 
 
 void BettiMatching::computeMatching() {
+    if (computed) {
+#ifdef RUNTIME
+        cout << "already computed ..." << endl;
+#endif        
+        return;
+    }
+
 #ifdef RUNTIME
 	cout << "computing Betti Matching ..." << endl;
     auto start = high_resolution_clock::now();
 #endif
-
-    if (computed) { return; }
 
     switch (dimension) {
         case 1: {
@@ -96,8 +105,8 @@ void BettiMatching::computeMatching() {
     computed = true;
 
 #ifdef RUNTIME
-	stop = high_resolution_clock::now();
-	duration = duration_cast<milliseconds>(stop - startTotal);
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << "total runtime: " << duration.count() << " ms" << endl << endl;
 #endif
 }

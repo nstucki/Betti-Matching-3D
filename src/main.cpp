@@ -36,10 +36,10 @@ void print_usage_and_exit(int exit_code) {
 int main(int argc, char** argv) {
 #ifdef RUNTIME
     cout << endl << "reading config & images ... ";
-    auto startTotal = high_resolution_clock::now();
+    auto start = high_resolution_clock::now();
 #endif
-    Config config;
 
+    Config config;
     string filename0 = "";
 	string filename1 = "";
 	string matchedFilename = "matched.csv";
@@ -47,7 +47,6 @@ int main(int argc, char** argv) {
 	string unmatched1Filename = "unmatched_1.csv";
 	fileFormat format0;
 	fileFormat format1;
-
     bool print = false;
 	bool saveResult = false;
 
@@ -111,7 +110,7 @@ int main(int argc, char** argv) {
 
 #ifdef RUNTIME
     auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - startTotal);
+    auto duration = duration_cast<milliseconds>(stop - start);
     cout << "of shape (" << shape[0];
     for (uint8_t i = 1; i < shape.size(); i++) { cout << "," << shape[i]; }
     cout << ") ... " << duration.count() << " ms" << endl << endl;
