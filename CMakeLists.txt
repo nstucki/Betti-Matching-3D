@@ -32,6 +32,7 @@ pybind11_add_module(betti_matching
 
 add_executable(BettiMatching
     src/main.cpp
+    src/BettiMatching.cpp
     src/utils.cpp
     src/data_structures.cpp
     src/src_1D/BettiMatching.cpp

@@ -6,14 +6,12 @@
 namespace dim2 {
     class BettiMatching {
         public:
-        BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<value_t> comparison, vector<index_t> shape,
-                        Config& config);
-        BettiMatching(BettiMatching &&other);
+        BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1, vector<value_t>&& comparison, vector<index_t>&& shape,
+                        Config&& config);
+        BettiMatching(BettiMatching&& other);
         void computeMatching();
         void computeVoxels();
         void printResult();
-
-        // Read-only properties
         const vector<vector<VoxelMatch>> &matched = _matched;
         const vector<vector<VoxelPair>> &unmatched0 = _unmatched0;
         const vector<vector<VoxelPair>> &unmatched1 = _unmatched1;
@@ -31,6 +29,6 @@ namespace dim2 {
         vector<vector<VoxelMatch>> _matched;
         vector<vector<VoxelPair>> _unmatched0;
         vector<vector<VoxelPair>> _unmatched1;
-        Config& config;
+        Config config;
     };
 }

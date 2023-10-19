@@ -12,9 +12,9 @@ using namespace std;
 using namespace std::chrono;
 
 
-BettiMatching::BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<value_t> comparison, vector<index_t> shape,
-                                Config& _config) : 
-    cgc0(input0, shape), cgc1(input1, shape), cgcComp(comparison, shape), config(_config) {
+
+BettiMatching::BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1, vector<value_t>&& comparison, vector<index_t>&& shape,
+                                Config&& _config) : cgc0(input0, shape), cgc1(input1, shape), cgcComp(comparison, shape), config(_config) {
     pairs0 = vector<vector<Pair>>(2);
     pairs1 = vector<vector<Pair>>(2);
     pairsComp = vector<vector<Pair>>(2);
@@ -26,15 +26,19 @@ BettiMatching::BettiMatching(vector<value_t> input0, vector<value_t> input1, vec
     _unmatched1 = vector<vector<VoxelPair>>(2);
 }
 
-BettiMatching::BettiMatching(BettiMatching &&other) : cgc0(std::move(other.cgc0)), cgc1(std::move(other.cgc1)), cgcComp(std::move(other.cgcComp)),
-                                                      config(other.config), pairs0(other.pairs0), pairs1(other.pairs1), pairsComp(other.pairsComp),
-                                                      matches(other.matches), isMatched0(other.isMatched0), isMatched1(other.isMatched1),
-                                                      _matched(other.matched), _unmatched0(other.unmatched0), _unmatched1(other.unmatched1) {}
+
+BettiMatching::BettiMatching(BettiMatching&& other) : 
+    cgc0(std::move(other.cgc0)), cgc1(std::move(other.cgc1)), cgcComp(std::move(other.cgcComp)),
+    config(other.config), pairs0(other.pairs0), pairs1(other.pairs1), pairsComp(other.pairsComp),
+    matches(other.matches), isMatched0(other.isMatched0), isMatched1(other.isMatched1),
+    _matched(other.matched), _unmatched0(other.unmatched0), _unmatched1(other.unmatched1) {}
+
 
 void BettiMatching::computeMatching() {
     vector<Cube> ctr0;
     vector<Cube> ctr1;
     vector<Cube> ctrComp;
+
     {
 #ifdef RUNTIME
         cout << "dimension 1:";
@@ -48,6 +52,7 @@ void BettiMatching::computeMatching() {
         cout << endl << "total: " << duration.count() << " ms" << endl << endl;
 #endif
     }
+
     { 
 #ifdef RUNTIME
         cout << "dimension 0:";
@@ -63,11 +68,13 @@ void BettiMatching::computeMatching() {
     }
 }
 
+
 void BettiMatching::computeVoxels() {
 #ifdef RUNTIME
     cout << "computing voxels ... ";
     auto start = high_resolution_clock::now();
 #endif
+
     for (uint8_t d = 0; d < 2; ++d) {
         for (auto& pair : pairs0[d]) {
             if (!isMatched0[d][pair.birth.index]) {
@@ -86,12 +93,14 @@ void BettiMatching::computeVoxels() {
                                                         cgc1.getParentVoxel(match.pair1.death, d+1))));
         }
     }
+
 #ifdef RUNTIME
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
     cout << duration.count() << " ms" << endl << endl;
 #endif
 }
+
 
 void BettiMatching::printResult() {
     index_t count;
@@ -117,6 +126,7 @@ void BettiMatching::printResult() {
             for (auto &pair : pairs1[d]) { pair.print(); cout << endl; }
         } else { cout << count << endl; }
     }
+
 #ifdef COMPUTE_COMPARISON
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
     cout << "Comparison" << endl << endl; 
@@ -130,6 +140,7 @@ void BettiMatching::printResult() {
         } else { cout << "number of pairs: " << count << endl; }
     }
 #endif
+
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
     cout << "Betti Matching:" << endl << endl;
     cout << "matched cubes: " << endl;

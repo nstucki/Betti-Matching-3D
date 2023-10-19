@@ -1,104 +1,113 @@
+#include "utils.h"
+#include "config.h"
+#include "data_structures.h"
+#include "BettiMatching.h"
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include <cassert>
 #include <utility>
 #include <string>
-#include "utils.h"
-#include "config.h"
-#include "data_structures.h"
-#include "BettiMatching.h"
 
+using namespace std;
 namespace py = pybind11;
 
-std::string repr_vector(const std::vector<index_t> shape)
-{
-    std::stringstream out_stream;
+
+
+string repr_vector(const std::vector<index_t> shape) {
+    stringstream out_stream;
     out_stream << "(";
-    std::for_each(shape.begin(), std::prev(shape.end()), [&out_stream, &shape](auto size)
-                  { out_stream << std::to_string(size) << ", "; });
+    for_each(shape.begin(), std::prev(shape.end()), [&out_stream, &shape](auto size)
+                { out_stream << std::to_string(size) << ", "; });
     out_stream << shape[shape.size() - 1] << ")";
     return out_stream.str();
 };
 
-PYBIND11_MODULE(betti_matching, m)
-{
-    py::class_<Config>(m, "Config")
-        .def(py::init<>())
-        .def_readwrite("filename_0", &Config::filename0)
-        .def_readwrite("filename_1", &Config::filename1)
-        .def_readwrite("matched_filename", &Config::matchedFilename)
-        .def_readwrite("unmatched_0_filename", &Config::unmatched0Filename)
-        .def_readwrite("unmatched_1_filename", &Config::unmatched1Filename)
-        .def_readwrite("format_0", &Config::format0)
-        .def_readwrite("format_1", &Config::format1)
-        .def_readwrite("threshold", &Config::threshold)
-        .def_readwrite("min_recursion_to_cache", &Config::minRecursionToCache)
-        .def_readwrite("cache_size", &Config::cacheSize);
 
+
+PYBIND11_MODULE(betti_matching, m) {
     py::class_<BettiMatching>(m, "BettiMatching")
-        .def(py::init([](py::array_t<value_t> &input0, py::array_t<value_t> &input1, Config &config) {
-                const vector<index_t> shape0(input0.shape(), input0.shape() + input0.ndim());
-                const vector<index_t> shape1(input1.shape(), input1.shape() + input1.ndim());
+        .def(py::init([](py::array_t<value_t>& input0, py::array_t<value_t>& input1) {
+                vector<index_t> shape0(input0.shape(), input0.shape() + input0.ndim());
+                vector<index_t> shape1(input1.shape(), input1.shape() + input1.ndim());
                 if (shape0 != shape1) {
                     throw invalid_argument("The shapes of the input volumes must agree. Got " + repr_vector(shape0)
                                             + " and " + repr_vector(shape1));
                 }
-                const vector<value_t> input0Vector(input0.mutable_data(), input0.mutable_data() + input0.size());
-                const vector<value_t> input1Vector(input1.mutable_data(), input1.mutable_data() + input1.size());
-                return BettiMatching(input0Vector, input1Vector, shape0, config); }))
+                vector<value_t> input0Vector(input0.mutable_data(), input0.mutable_data() + input0.size());
+                vector<value_t> input1Vector(input1.mutable_data(), input1.mutable_data() + input1.size());
+                Config config;
+                return BettiMatching(std::move(input0Vector), std::move(input1Vector), std::move(shape0), std::move(config));
+            }))
 
-        .def(py::init([](std::string input0_path, std::string input1_path, Config &config) {
+        .def(py::init([](string input0_path, string input1_path) {
                 vector<value_t> input0Vector;
                 vector<value_t> input1Vector;
                 vector<index_t> shape0;
                 vector<index_t> shape1;
-
                 readImage(input0_path, NUMPY, input0Vector, shape0);
                 readImage(input1_path, NUMPY, input1Vector, shape1);
-
                 if (shape0 != shape1) {
                     throw invalid_argument("The shapes of the tree input volumes must agree. Got " + repr_vector(shape0)
                                             + " and " + repr_vector(shape1));
                 }
-                return BettiMatching(input0Vector, input1Vector, shape0, config); }))
-        .def("compute_matching_with_voxels",
-             &BettiMatching::computeMatchingWithVoxels);
+                Config config;
+                return BettiMatching(std::move(input0Vector), std::move(input1Vector), std::move(shape0), std::move(config));
+            }))
 
-    m.def("compute_matching_with_voxels", [](py::array_t<value_t> &input0, py::array_t<value_t> &input1, Config &config) {
-        const vector<index_t> shape0(input0.shape(), input0.shape() + input0.ndim());
-        const vector<index_t> shape1(input1.shape(), input1.shape() + input1.ndim());
+        .def("compute_matching", &BettiMatching::computeMatching)
+
+        .def("get_matching", &BettiMatching::getMatching)
+
+        .def("get_matched_cycle", &BettiMatching::getMatchedRepresentativeCycle)
+
+        .def("get_unmatched_cycle", &BettiMatching::getUnmatchedRepresentativeCycle)
+
+        .def("print", &BettiMatching::printResult);
+
+
+    m.def("compute_matching", [](py::array_t<value_t>& input0, py::array_t<value_t>& input1) {
+        vector<index_t> shape0(input0.shape(), input0.shape() + input0.ndim());
+        vector<index_t> shape1(input1.shape(), input1.shape() + input1.ndim());
         if (shape0 != shape1) {
             throw invalid_argument("The shapes of the tree input volumes must agree. Got " + repr_vector(shape0)
                                     + " and " + repr_vector(shape1));
         }
-        const vector<value_t> input0Vector(input0.mutable_data(), input0.mutable_data() + input0.size());
-        const vector<value_t> input1Vector(input1.mutable_data(), input1.mutable_data() + input1.size());
-        return BettiMatching(input0Vector, input1Vector, shape0, config).computeMatchingWithVoxels();
+        vector<value_t> input0Vector(input0.mutable_data(), input0.mutable_data() + input0.size());
+        vector<value_t> input1Vector(input1.mutable_data(), input1.mutable_data() + input1.size());
+        Config config;
+        BettiMatching BM(std::move(input0Vector), std::move(input1Vector), std::move(shape0), std::move(config));
+        BM.computeMatching();
+        return BM.getMatching();
     });
 
-    m.def("compute_matching_with_voxels", [](std::string input0_path, std::string input1_path, Config &config) {
+
+    m.def("compute_matching", [](string input0_path, string input1_path) {
         vector<value_t> input0Vector;
         vector<value_t> input1Vector;
         vector<index_t> shape0;
         vector<index_t> shape1;
-
         readImage(input0_path, NUMPY, input0Vector, shape0);
         readImage(input1_path, NUMPY, input1Vector, shape1);
-
         if (shape0 != shape1) {
             throw invalid_argument("The shapes of the tree input volumes must agree. Got " + repr_vector(shape0)
                                     + " and " + repr_vector(shape1));
         }
-
-        return BettiMatching(input0Vector, input1Vector, shape0, config).computeMatchingWithVoxels();
+        Config config;
+        BettiMatching BM(std::move(input0Vector), std::move(input1Vector), std::move(shape0), std::move(config));
+        BM.computeMatching();
+        return BM.getMatching();
     });
+
 
     py::class_<VoxelMatch>(m, "VoxelMatch")
         .def_readonly("pair0", &VoxelMatch::pair0)
         .def_readonly("pair1", &VoxelMatch::pair1)
-        .def("__repr__", [](VoxelMatch &self)
-             { return "VoxelMatch(pair0=(birth=" + repr_vector(self.pair0.birth) + ", death=" + repr_vector(self.pair0.death) + "), pair1=(birth=" + repr_vector(self.pair1.birth) + ", death=" + repr_vector(self.pair1.death) + ")"; });
+        .def("__repr__", [](VoxelMatch &self) {
+            return "VoxelMatch(pair0=(birth=" + repr_vector(self.pair0.birth) + ", death=" + repr_vector(self.pair0.death)
+                    + "), pair1=(birth=" + repr_vector(self.pair1.birth) + ", death=" + repr_vector(self.pair1.death) + ")"; });
+
 
     py::class_<VoxelPair>(m, "VoxelPair")
         .def_readonly("birth", &VoxelPair::birth)

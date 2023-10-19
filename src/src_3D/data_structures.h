@@ -58,7 +58,7 @@ namespace dim3 {
 	class CubicalGridComplex {
 		public:
 		CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& shape);
-		CubicalGridComplex(CubicalGridComplex &&other);
+		CubicalGridComplex(CubicalGridComplex&& other);
 		~CubicalGridComplex();
 		size_t getNumberOfCubes(const uint8_t& dim) const;
 		value_t getBirth(const index_t& x, const index_t& y, const index_t& z) const;

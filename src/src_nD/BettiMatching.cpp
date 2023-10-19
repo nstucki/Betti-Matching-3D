@@ -11,9 +11,9 @@ using namespace std;
 using namespace std::chrono;
 
 
-BettiMatching::BettiMatching(vector<value_t> input0, vector<value_t> input1, vector<value_t> comparison, vector<index_t> shape,
-                                Config& _config) : 
-    cgc0(input0, shape), cgc1(input1, shape), cgcComp(comparison, shape), config(_config) {
+
+BettiMatching::BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1, vector<value_t>&& comparison, vector<index_t>&& shape,
+                                Config&& _config) : cgc0(input0, shape), cgc1(input1, shape), cgcComp(comparison, shape), config(_config) {
     dim = shape.size();
     pairs0 = vector<vector<Pair>>(dim);
     pairs1 = vector<vector<Pair>>(dim);
@@ -24,10 +24,12 @@ BettiMatching::BettiMatching(vector<value_t> input0, vector<value_t> input1, vec
     _unmatched1 = vector<vector<VoxelPair>>(dim);
 }
 
+
 void BettiMatching::computeMatching() {
     vector<Cube> ctr0;
     vector<Cube> ctr1;
     vector<Cube> ctrComp;
+
     {
 #ifdef RUNTIME
         cout << "dimension " << dim-1 << ":";
@@ -42,6 +44,7 @@ void BettiMatching::computeMatching() {
         cout << endl << "total: " << duration.count() << " ms" << endl << endl;
 #endif
     }
+
     {
 #ifdef RUNTIME
         auto start = high_resolution_clock::now();
@@ -54,6 +57,7 @@ void BettiMatching::computeMatching() {
         cout << endl << "total: " << duration.count() << " ms" << endl << endl;
 #endif
     }
+
     { 
 #ifdef RUNTIME
         cout << "dimension 0:";
@@ -69,11 +73,13 @@ void BettiMatching::computeMatching() {
     }
 }
 
+
 void BettiMatching::computeVoxels() {
 #ifdef RUNTIME
     cout << "computing voxels ... ";
     auto start = high_resolution_clock::now();
 #endif
+
     for (uint8_t d = 0; d < dim; ++d) {
         for (auto& pair : pairs0[d]) {
             if (!isMatched0[cgc0.getCubeIndex(pair.birth)]) {
@@ -92,6 +98,7 @@ void BettiMatching::computeVoxels() {
                                                         cgc1.getParentVoxel(match.pair1.death))));
         }
     }
+
 #ifdef RUNTIME
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
@@ -121,6 +128,7 @@ void BettiMatching::printResult() {
             for (auto &pair : pairs1[d]) { pair.print(); cout << endl; }
         } else { cout << count << endl; }
     }
+
 #ifdef COMPUTE_COMPARISON
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
     cout << "Comparison" << endl << endl; 
@@ -133,6 +141,7 @@ void BettiMatching::printResult() {
         } else { cout << "number of pairs: " << count << endl; }
     }
 #endif
+
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;
     cout << "Betti Matching:" << endl << endl;
     cout << "matched cubes: " << endl;
