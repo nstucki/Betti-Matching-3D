@@ -15,7 +15,7 @@ namespace py = pybind11;
 
 
 
-string repr_vector(const std::vector<index_t> shape) {
+string repr_vector(const vector<index_t> shape) {
     stringstream out_stream;
     out_stream << "(";
     for_each(shape.begin(), std::prev(shape.end()), [&out_stream, &shape](auto size)
@@ -58,13 +58,13 @@ PYBIND11_MODULE(betti_matching, m) {
 
         .def("compute_matching", &BettiMatching::computeMatching)
 
+        .def("print", &BettiMatching::printResult)
+
         .def("get_matching", &BettiMatching::getMatching)
 
         .def("get_matched_cycle", &BettiMatching::getMatchedRepresentativeCycle)
 
-        .def("get_unmatched_cycle", &BettiMatching::getUnmatchedRepresentativeCycle)
-
-        .def("print", &BettiMatching::printResult);
+        .def("get_unmatched_cycle", &BettiMatching::getUnmatchedRepresentativeCycle);
 
 
     m.def("compute_matching", [](py::array_t<value_t>& input0, py::array_t<value_t>& input1) {

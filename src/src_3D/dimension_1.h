@@ -17,7 +17,7 @@ namespace dim3 {
 					const Config& config, vector<Pair>& pairs0, vector<Pair>& pairs1, vector<Pair>& pairsComp,
 					vector<Match>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1);
 		void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp, vector<Cube>& ctrImage);
-		set<vector<index_t>> getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc);
+		vector<vector<index_t>> getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc);
 
 		private:
 		void computePairs(const vector<Cube>& ctr, uint8_t k);

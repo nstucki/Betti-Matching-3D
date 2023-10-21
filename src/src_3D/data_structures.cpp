@@ -232,7 +232,7 @@ void CubicalGridComplex::printImage() const {
 }
 
 
-void CubicalGridComplex::printRepresentativeCycle(const set<vector<index_t>>& reprCycle) const {
+void CubicalGridComplex::printRepresentativeCycle(const vector<vector<index_t>>& reprCycle) const {
 	for (index_t y = 0; y < shape[1]; ++y) {
 		for (index_t x = 0; x < shape[0]; ++x) {
 			for (index_t z = 0; z < shape[2]; ++z) {

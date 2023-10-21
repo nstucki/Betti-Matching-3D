@@ -11,9 +11,9 @@ namespace dim3 {
         BettiMatching(BettiMatching&& other);
         void computeMatching();
         void computeVoxels();
-        tuple<set<vector<index_t>>, set<vector<index_t>>> getMatchedRepresentativeCycle(const uint8_t& dim, const size_t& index);
-        set<vector<index_t>> getUnmatchedRepresentativeCycle(const uint8_t& dim, const size_t& index, const uint8_t& input);
         void printResult();
+        tuple<vector<vector<index_t>>, vector<vector<index_t>>> getMatchedRepresentativeCycle(const uint8_t& dim, const size_t& index);
+        vector<vector<index_t>> getUnmatchedRepresentativeCycle(const uint8_t& dim, const size_t& index, const uint8_t& input);
         const vector<vector<VoxelMatch>> &matched = _matched;
         const vector<vector<VoxelPair>> &unmatched0 = _unmatched0;
         const vector<vector<VoxelPair>> &unmatched1 = _unmatched1;

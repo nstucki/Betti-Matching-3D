@@ -64,8 +64,8 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 }
 
 
-set<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) {
-	set<vector<index_t>> reprCycle;
+vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) {
+	vector<vector<index_t>> reprCycle;
 	vector<Cube> ctr;
 	enumerateColumnsToReduce(ctr, cgc);
 	size_t ctrSize = ctr.size();
@@ -74,6 +74,7 @@ set<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, const 
 	BoundaryEnumerator enumerator(cgc);
 	Cube pivot;
 	size_t j;
+	vector<index_t> vertex;
 #ifdef USE_REDUCTION_MATRIX
 	reductionMatrix.clear();
 	reductionMatrix.reserve(ctrSize);
@@ -157,18 +158,22 @@ set<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, const 
 							workingBoundary.pop();
 							if (!workingBoundary.empty() && c == workingBoundary.top()) { workingBoundary.pop(); } 
 							else {
-								reprCycle.insert({c.x(),c.y(),c.z()});
+								vertex = {c.x(), c.y(), c.z()};
+								if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); }
 								switch(c.type()) {
-									case 0: 
-										reprCycle.insert({c.x()+1,c.y(),c.z()});
+									case 0:
+										vertex = {c.x()+1, c.y(), c.z()};
+										if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); }
 										break;
 
 									case 1:
-										reprCycle.insert({c.x(),c.y()+1,c.z()});
+										vertex = {c.x(), c.y()+1, c.z()};
+										if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); }
 										break;
 
 									case 2:
-										reprCycle.insert({c.x(),c.y(),c.z()+1});
+										vertex = {c.x(), c.y(), c.z()+1};
+										if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); }
 										break;
 								}
 								
@@ -194,6 +199,7 @@ set<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, const 
 			} else { break; }
 		}
 	}
+
 	return reprCycle;
 }
 

@@ -30,6 +30,9 @@ pybind11_add_module(betti_matching
     src/src_nD/enumerators.cpp
 )
 
+# add_library(betti_matching MODULE src/BettiMatching.cpp)
+# target_link_libraries(betti_matching PRIVATE pybind11::module)
+
 add_executable(BettiMatching
     src/main.cpp
     src/BettiMatching.cpp

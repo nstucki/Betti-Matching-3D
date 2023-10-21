@@ -71,7 +71,7 @@ void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 }
 
 
-set<vector<index_t>> Dimension2::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
+vector<vector<index_t>> Dimension2::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
 	vector<Cube> dualEdges;
 	enumerateDualEdges(dualEdges, cgc);
 	UnionFindDual uf(cgc);
@@ -111,12 +111,12 @@ set<vector<index_t>> Dimension2::getRepresentativeCycle(const Pair& pair, const 
 		}
 	}
 
-	set<vector<index_t>> reprCycle;
+	vector<vector<index_t>> reprCycle;
 	for (const vector<index_t>& vertex : boundaryVertices) {
 		auto lower = boundaryVertices.lower_bound(vertex);
 		auto upper = boundaryVertices.upper_bound(vertex);
 		int multiplicity = distance(lower, upper);
-		if (multiplicity < 8) { reprCycle.insert(vertex); }
+		if (multiplicity < 8) { if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); } }
 	}
 
 	return reprCycle;

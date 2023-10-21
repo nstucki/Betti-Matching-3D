@@ -45,7 +45,7 @@ void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 }
 
 
-set<vector<index_t>> Dimension0::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
+vector<vector<index_t>> Dimension0::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
 	vector<Cube> edges;
 	enumerateEdges(edges, cgc);
 	UnionFind uf(cgc);
@@ -62,11 +62,15 @@ set<vector<index_t>> Dimension0::getRepresentativeCycle(const Pair& pair, const 
 		if (parentIdx0 != parentIdx1) { birthIdx = uf.link(parentIdx0, parentIdx1); }
 	}
 
-	set<vector<index_t>> reprCycle;
+	vector<vector<index_t>> reprCycle;
+	vector<index_t> vertex;
 	parentIdx0 = uf.find(pair.birth.x()*cgc.n_yz + pair.birth.y()*cgc.shape[2] + pair.birth.z());
 	for (size_t i = 0; i < cgc.getNumberOfCubes(0); ++i) {
 		parentIdx1 = uf.find(i);
-		if (parentIdx0 == parentIdx1) { reprCycle.insert(uf.getCoordinates(i)); }
+		if (parentIdx0 == parentIdx1) { 
+			vertex = uf.getCoordinates(i);
+			if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); }
+		}
 	}
 
 	return reprCycle;
