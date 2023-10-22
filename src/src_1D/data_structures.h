@@ -61,6 +61,7 @@ namespace dim1 {
 		value_t getBirth(const index_t& x, const uint8_t& dim) const;
 		index_t getParentVoxel(const Cube& c, const uint8_t& dim) const;
 		void printImage() const;
+		void printRepresentativeCycle(const vector<vector<index_t>>& reprCycle) const;
 		const vector<index_t> shape;
 		const index_t m_x;
 

@@ -6,17 +6,24 @@ using namespace dim1;
 using namespace std;
 
 
+
 Cube::Cube() : birth(0), index(NONE) {}
+
 
 Cube::Cube(const Cube& cube) : birth(cube.birth), index(cube.index) {}
 
+
 Cube::Cube(value_t _birth, index_t x) : birth(_birth), index(x) {}
 
-index_t Cube::x() const { return index; }
 
 bool Cube::operator==(const Cube& rhs) const{ return (index == rhs.index); }
 
+
+index_t Cube::x() const { return index; }
+
+
 void Cube::print() const { cout << "(" << birth << "," << x() << ")"; }
+
 
 
 bool CubeComparator::operator()(const Cube& cube1, const Cube& cube2) const{
@@ -25,36 +32,47 @@ bool CubeComparator::operator()(const Cube& cube1, const Cube& cube2) const{
 }
 
 
+
 Pair::Pair() {}
+
 
 Pair::Pair(const Cube& _birth, const Cube& _death) : birth(_birth), death(_death) {}
 
+
 Pair::Pair(const Pair& pair) : birth(pair.birth), death(pair.death) {}
 
+
 bool Pair::operator==(const Pair &rhs) const { return (birth == rhs.birth && death == rhs.death); }
+
 
 void Pair::print() const { cout << "("; birth.print(); cout << ";"; death.print(); cout << ")"; }
 
 
+
 Match::Match(Pair _pair0, Pair _pair1) : pair0(_pair0), pair1(_pair1) {}
+
 
 void Match::print() const { pair0.print(); cout << " <-> "; pair1.print(); cout << endl; }
 
 
-CubicalGridComplex::CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& _shape) : shape(_shape), m_x(shape[0]-1) {
-	getGridFromVector(image); }
 
-CubicalGridComplex::CubicalGridComplex(CubicalGridComplex &&other) : m_x(other.m_x), shape(std::move(other.shape))
-{
+CubicalGridComplex::CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& _shape) : shape(_shape), m_x(shape[0]-1) {
+	getGridFromVector(image);
+}
+
+
+CubicalGridComplex::CubicalGridComplex(CubicalGridComplex &&other) : m_x(other.m_x), shape(std::move(other.shape)) {
 	grid = other.grid;
 	other.grid = nullptr;
 }
+
 
 CubicalGridComplex::~CubicalGridComplex() {
 	if (grid != nullptr) {
 		delete[] grid;
 	}
 }
+
 
 size_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
 	switch (dim) {
@@ -68,7 +86,9 @@ size_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
 	return -1;
 }
 
+
 value_t CubicalGridComplex::getBirth(const index_t& x) const { return grid[x+1]; }
+
 
 value_t CubicalGridComplex::getBirth(const index_t& x, const uint8_t& dim) const {
 	switch (dim) {
@@ -81,6 +101,7 @@ value_t CubicalGridComplex::getBirth(const index_t& x, const uint8_t& dim) const
 	cerr << "birth not found!" << endl;
 	return INFTY;
 }
+
 
 index_t CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8_t& dim) const {
 	index_t x = cube.x();
@@ -97,6 +118,7 @@ index_t CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8_t& dim)
 	return -1;
 }
 
+
 void CubicalGridComplex::printImage() const {
     value_t birth;
     for (index_t x = 0; x < shape[0]; ++x) {
@@ -107,11 +129,22 @@ void CubicalGridComplex::printImage() const {
 	cout << endl << endl;
 }
 
+
+void CubicalGridComplex::printRepresentativeCycle(const vector<vector<index_t>>& reprCycle) const {
+	for (index_t x = 0; x < shape[0]; ++x) {
+		auto it = find(reprCycle.begin(), reprCycle.end(), vector<index_t>{x});
+		if (it != reprCycle.end()) { cout << "1 "; }
+		else { cout << "0 "; }   
+	}
+}
+
+
 value_t* CubicalGridComplex::allocateMemory() const {
 	value_t* g = new value_t[shape[0]+2];
 	if (g == NULL) { cerr << "out of memory!" << endl; }
 	return g;
 }
+
 
 void CubicalGridComplex::getGridFromVector(const vector<value_t>& vec) {
 	size_t counter = 0;
@@ -123,6 +156,7 @@ void CubicalGridComplex::getGridFromVector(const vector<value_t>& vec) {
 }
 
 
+
 UnionFind::UnionFind(const CubicalGridComplex& _cgc) : cgc(_cgc) {
 	size_t n = cgc.getNumberOfCubes(0);
 	parent.reserve(n);
@@ -132,6 +166,7 @@ UnionFind::UnionFind(const CubicalGridComplex& _cgc) : cgc(_cgc) {
 		birthtime.push_back(cgc.getBirth(x));
 	}
 }
+
 
 index_t UnionFind::find(index_t x) {
 	index_t y = x, z = parent[y];
@@ -147,6 +182,7 @@ index_t UnionFind::find(index_t x) {
 	}
 	return z;
 }
+
 
 index_t UnionFind::link(index_t x, index_t y) {
 	if (birthtime[x] > birthtime[y]) {
@@ -166,10 +202,14 @@ index_t UnionFind::link(index_t x, index_t y) {
 	}
 }
 
+
 value_t UnionFind::getBirth(const index_t& idx) const { return birthtime[idx]; }
+
 
 index_t UnionFind::getCoordinate(index_t idx) const { return idx; }
 
+
 vector<index_t> UnionFind::getBoundaryIndices(const Cube& edge) const { return {edge.x(),edge.x()+1}; }
+
 
 void UnionFind::reset() { for (size_t i = 0; i < parent.size(); ++i) { parent[i] = i; } }

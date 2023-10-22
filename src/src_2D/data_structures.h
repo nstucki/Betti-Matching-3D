@@ -53,12 +53,6 @@ namespace dim2 {
 
 	class CubicalGridComplex {
 		public:
-		const vector<index_t> shape;
-		const index_t m_x;
-		const index_t m_y;
-		const index_t m_xy;
-		const index_t n_xy;
-
 		CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& shape);
 		CubicalGridComplex(CubicalGridComplex &&other);
 		~CubicalGridComplex();
@@ -67,12 +61,17 @@ namespace dim2 {
 		value_t getBirth(const index_t& x, const index_t& y, const uint8_t& type, const uint8_t& dim) const;
 		vector<index_t> getParentVoxel(const Cube& c, const uint8_t& dim) const;
 		void printImage() const;
+		void printRepresentativeCycle(const vector<vector<index_t>>& reprCycle) const;
+		const vector<index_t> shape;
+		const index_t m_x;
+		const index_t m_y;
+		const index_t m_xy;
+		const index_t n_xy;
 
 		private:
-		value_t** grid;
-
 		value_t** allocateMemory() const;
 		void getGridFromVector(const vector<value_t>& vector);
+		value_t** grid;
 	};
 
 
