@@ -206,3 +206,63 @@ void BettiMatching::printResult() {
     }
     cout << endl;
 }
+
+
+tuple<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatchedRepresentativeCycle(const uint8_t& dim, const size_t& index) {
+    tuple<vector<vector<index_t>>, vector<vector<index_t>>> reprCycles;
+    switch(dim) {
+        case 0: {
+            Dimension0 dim0(cgc0, cgc1, cgcComp, config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);
+            get<0>(reprCycles) = dim0.getRepresentativeCycle(matches[0][index].pair0, cgc0);
+            get<1>(reprCycles) = dim0.getRepresentativeCycle(matches[0][index].pair1, cgc1); 
+            break;
+        }
+
+        case 1: {
+            Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);
+            get<0>(reprCycles) = dim1.getRepresentativeCycle(matches[1][index].pair0, cgc0);
+            get<1>(reprCycles) = dim1.getRepresentativeCycle(matches[1][index].pair1, cgc1);
+            break;
+        }
+    }
+    return reprCycles;
+}
+
+
+vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t& dim, const size_t& index, const uint8_t& input) {
+    const CubicalGridComplex& cgc = (input == 0) ? cgc0 : cgc1;
+    vector<vector<Pair>>& pairs = (input == 0) ? pairs0 : pairs1;
+    vector<unordered_map<uint64_t, bool>> isMatched = (input == 0) ? isMatched0 : isMatched1;
+
+    vector<vector<index_t>> reprCycle;
+
+    size_t numPairs = pairs.size();
+    if (index > numPairs-1) { return reprCycle; }
+
+    size_t count = 0;
+    for (Pair& pair : pairs[dim]) {
+        if (!isMatched[dim][pair.birth.index]) {
+            if (count == index) {
+                switch(dim) {
+                    case 0: {
+                        Dimension0 dim0(cgc0, cgc1, cgcComp, config, pairs0[0], pairs1[0], pairsComp[0], 
+                                        matches[0], isMatched0[0], isMatched1[0]);
+                        reprCycle = dim0.getRepresentativeCycle(pair, cgc);
+                        break;
+                    }
+
+                    case 1: {
+                        Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1], pairsComp[1], 
+                                        matches[1], isMatched0[1], isMatched1[1]);
+                        reprCycle = dim1.getRepresentativeCycle(pair, cgc);
+                        break;
+                    }
+                }
+                break;
+            }
+            ++count;
+        }
+    }
+    
+    return reprCycle;
+}

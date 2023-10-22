@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 
+
 namespace dim1 {
     class BettiMatching {
         public:
@@ -12,6 +13,8 @@ namespace dim1 {
         void computeMatching();
         void computeVoxels();
         void printResult();
+        tuple<vector<vector<index_t>>, vector<vector<index_t>>> getMatchedRepresentativeCycle(const uint8_t& dim, const size_t& index);
+        vector<vector<index_t>> getUnmatchedRepresentativeCycle(const uint8_t& dim, const size_t& index, const uint8_t& input);
         const vector<VoxelMatch> &matched = _matched;
         const vector<VoxelPair> &unmatched0 = _unmatched0;
         const vector<VoxelPair> &unmatched1 = _unmatched1;
@@ -20,12 +23,12 @@ namespace dim1 {
         CubicalGridComplex cgc0;
         CubicalGridComplex cgc1;
         CubicalGridComplex cgcComp;
-        vector<Pair> pairs0;
-        vector<Pair> pairs1;
-        vector<Pair> pairsComp;
-        vector<Match> matches;
-        unordered_map<uint64_t, bool> isMatched0;
-        unordered_map<uint64_t, bool> isMatched1;
+        vector<vector<Pair>> pairs0;
+        vector<vector<Pair>> pairs1;
+        vector<vector<Pair>> pairsComp;
+        vector<vector<Match>> matches;
+        vector<unordered_map<uint64_t, bool>> isMatched0;
+        vector<unordered_map<uint64_t, bool>> isMatched1;
         vector<VoxelMatch> _matched;
         vector<VoxelPair> _unmatched0;
         vector<VoxelPair> _unmatched1;

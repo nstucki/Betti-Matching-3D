@@ -3,6 +3,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(bettiMatching)
 
+#set(Python_VIRTUALENV FIRST)
+
 find_package(pybind11 REQUIRED)
 pybind11_add_module(betti_matching
     src/_BettiMatching.cpp

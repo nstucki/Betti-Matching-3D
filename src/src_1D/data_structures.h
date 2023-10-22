@@ -8,6 +8,7 @@
 using namespace std;
 
 
+
 namespace dim1 {
 	class Cube {
 		public:
@@ -23,37 +24,35 @@ namespace dim1 {
 	};
 
 
+
 	struct CubeComparator{ bool operator()(const Cube& Cube1, const Cube& Cube2) const; };
+
 
 
 	class Pair {
 		public:
-		const Cube birth;
-		const Cube death;
-
 		Pair();
 		Pair(const Cube& birth, const Cube& death);
 		Pair(const Pair& pair);
 		bool operator==(const Pair &rhs) const;
 		void print() const;
+		const Cube birth;
+		const Cube death;
 	};
 
 
 	class Match {
 		public:
-		Pair pair0;
-		Pair pair1;
-
 		Match(Pair pair0, Pair pair1);
 		void print() const;
+		Pair pair0;
+		Pair pair1;
 	};
+
 
 
 	class CubicalGridComplex {
 		public:
-		const vector<index_t> shape;
-		const index_t m_x;
-
 		CubicalGridComplex(const vector<value_t>& image, const vector<index_t>& shape);
 		CubicalGridComplex(CubicalGridComplex &&other);
 		~CubicalGridComplex();
@@ -62,12 +61,13 @@ namespace dim1 {
 		value_t getBirth(const index_t& x, const uint8_t& dim) const;
 		index_t getParentVoxel(const Cube& c, const uint8_t& dim) const;
 		void printImage() const;
+		const vector<index_t> shape;
+		const index_t m_x;
 
 		private:
-		value_t* grid;
-
 		value_t* allocateMemory() const;
 		void getGridFromVector(const vector<value_t>& vector);
+		value_t* grid;
 	};
 
 
