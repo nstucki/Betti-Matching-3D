@@ -13,7 +13,7 @@ namespace dim3 {
         void computeVoxels();
         void printResult();
         tuple<vector<vector<index_t>>, vector<vector<index_t>>> getMatchedRepresentativeCycle(const uint8_t& dim, const size_t& index);
-        vector<vector<index_t>> getUnmatchedRepresentativeCycle(const uint8_t& dim, const size_t& index, const uint8_t& input);
+        vector<vector<index_t>> getUnmatchedRepresentativeCycle(const uint8_t& input, const uint8_t& dim, const size_t& index);
         const vector<vector<VoxelMatch>> &matched = _matched;
         const vector<vector<VoxelPair>> &unmatched0 = _unmatched0;
         const vector<vector<VoxelPair>> &unmatched1 = _unmatched1;

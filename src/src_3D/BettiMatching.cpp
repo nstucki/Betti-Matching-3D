@@ -252,7 +252,7 @@ tuple<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatche
 }
 
 
-vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t& dim, const size_t& index, const uint8_t& input) {
+vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t& input, const uint8_t& dim, const size_t& index) {
     const CubicalGridComplex& cgc = (input == 0) ? cgc0 : cgc1;
     vector<vector<Pair>>& pairs = (input == 0) ? pairs0 : pairs1;
     vector<unordered_map<uint64_t, bool>> isMatched = (input == 0) ? isMatched0 : isMatched1;
