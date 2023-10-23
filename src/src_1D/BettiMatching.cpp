@@ -187,9 +187,10 @@ vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uin
     const CubicalGridComplex& cgc = (input == 0) ? cgc0 : cgc1;
     vector<vector<Pair>>& pairs = (input == 0) ? pairs0 : pairs1;
     vector<unordered_map<uint64_t, bool>> isMatched = (input == 0) ? isMatched0 : isMatched1;
+
     vector<vector<index_t>> reprCycle;
-    size_t numPairs = pairs.size();
     
+    size_t numPairs = pairs[dim].size();
     if (index > numPairs-1) { return reprCycle; }
 
     size_t count = 0;

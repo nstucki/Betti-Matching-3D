@@ -267,7 +267,7 @@ vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uin
 
     vector<vector<index_t>> reprCycle;
 
-    size_t numPairs = pairs.size();
+    size_t numPairs = pairs[dim].size();
     if (index > numPairs-1) { return reprCycle; }
 
     size_t count = 0;
