@@ -21,27 +21,37 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #ifdef RUNTIME
 	cout << endl << "input 0: ";
 #endif
+
 	computePairs(ctr0, 0);
+#ifdef USE_CLEARING_DIM0
 	enumerateEdges(ctr0, cgc0);
+#endif
 
 #ifdef RUNTIME
 	cout << endl << "input 1: ";
 #endif
+
 	computePairs(ctr1, 1);
+#ifdef USE_CLEARING_DIM0
 	enumerateEdges(ctr1, cgc1);
+#endif
 
 #ifdef RUNTIME
 	cout << endl << "comparison: ";
 #endif
+
 	computePairsComp(ctrComp);
-#if not defined(USE_APPARENT_PAIRS_COMP)
+#ifdef USE_CLEARING_DIM0
+#ifndef USE_APPARENT_PAIRS_COMP
 	ctrImage = ctrComp;
 #endif
 	enumerateEdges(ctrComp, cgcComp);
+#endif
 
 #ifdef RUNTIME
 	cout << endl << "image 0: ";
 #endif
+
 #if defined(USE_APPARENT_PAIRS_COMP) or defined(USE_CLEARING_DIM0)
 	computePairsImage(ctrImage, 0);
 #else
@@ -51,6 +61,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #ifdef RUNTIME
 	cout << endl << "image 1: ";
 #endif
+
 #if defined(USE_APPARENT_PAIRS_COMP) or defined(USE_CLEARING_DIM0)
 	computePairsImage(ctrImage, 1);
 #else
@@ -60,6 +71,7 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #ifdef RUNTIME
 	cout << endl << "matching: ";
 #endif
+
 	computeMatching();
 }
 
@@ -487,7 +499,9 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 					pivotColumnIndex.emplace(pivot.index, i);
 					if (pivot.birth != ctr[i].birth) {
 						pairsComp.push_back(Pair(pivot, ctr[i]));
+#ifdef USE_ISPAIRED
 						isPairedComp.emplace(ctr[i].index, true);
+#endif
 					}
 #ifdef USE_CACHE
 					if (numRecurse >= config.minRecursionToCache) { 
@@ -603,7 +617,13 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 #ifdef USE_EMERGENT_PAIRS
 				if (isEmergentPairImage(ctr[i], pivot, j, faces, checkEmergentPair, cgc, enumerator)) {
 					pivotColumnIndex.emplace(pivot.index, i);
-					if (isPairedComp[ctr[i].index]) { matchMapIm.emplace(ctr[i].index, pivot.index); }
+#ifdef USE_ISPAIRED
+					if (isPairedComp[ctr[i].index]) {
+#endif
+						matchMapIm.emplace(ctr[i].index, pivot.index);
+#ifdef USE_ISPAIRED
+					}
+#endif
 #ifdef RUNTIME
 					++numEmergentPairs;
 #endif
@@ -646,7 +666,13 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 					continue;
 				} else {
 					pivotColumnIndex.emplace(pivot.index, i);
-					if (isPairedComp[ctr[i].index]) { matchMapIm.emplace(ctr[i].index, pivot.index); }
+#ifdef USE_ISPAIRED
+					if (isPairedComp[ctr[i].index]) {
+#endif
+						matchMapIm.emplace(ctr[i].index, pivot.index);
+#ifdef USE_ISPAIRED
+					}
+#endif
 #ifdef USE_CACHE
 					if (numRecurse >= config.minRecursionToCache) {
 						addCache(ctr[i], workingBoundary, cachedColumnIdx);
@@ -729,6 +755,7 @@ void Dimension1::computeMatching() {
 	cout << duration.count() << " ms";
 #endif
 }
+
 
 void Dimension1::enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc) const {
 #ifdef RUNTIME

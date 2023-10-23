@@ -61,7 +61,9 @@ namespace dim3 {
 		vector<Match>& matches;
 		unordered_map<uint64_t, bool>& isMatched0;
 		unordered_map<uint64_t, bool>& isMatched1;
+#ifdef USE_ISPAIRED
 		unordered_map<uint64_t, bool> isPairedComp;
+#endif
 		unordered_map<uint64_t, Pair> matchMap0;
 		unordered_map<uint64_t, Pair> matchMap1;
 		unordered_map<uint64_t, uint64_t> matchMapIm0;
