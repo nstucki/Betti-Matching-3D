@@ -88,6 +88,7 @@ void BettiMatching::computeVoxels() {
     cout << "computing voxels ... ";
     auto start = high_resolution_clock::now();
 #endif
+
     for (uint8_t d = 0; d < 3; ++d) {
         for (auto& pair : pairs0[d]) {
             if (!isMatched0[d][pair.birth.index]) {
@@ -102,10 +103,11 @@ void BettiMatching::computeVoxels() {
         for (auto& match : matches[d]) {
             _matched[d].push_back(VoxelMatch(VoxelPair(cgc0.getParentVoxel(match.pair0.birth, d),
                                                         cgc0.getParentVoxel(match.pair0.death, d+1)), 
-                                            VoxelPair(cgc1.getParentVoxel(match.pair1.birth, d),
-                                                        cgc1.getParentVoxel(match.pair1.death, d+1))));
+                                                VoxelPair(cgc1.getParentVoxel(match.pair1.birth, d),
+                                                            cgc1.getParentVoxel(match.pair1.death, d+1))));
         }
     }
+
 #ifdef RUNTIME
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
@@ -190,7 +192,7 @@ void BettiMatching::printResult() {
                 if (!isMatched0[d][pairs0[d][i].birth.index]) {
                     pairs0[d][i].print(); cout << endl;
                     _unmatched0[d][counter].print(); cout << endl;
-                    vector<vector<index_t>> reprCycle = getUnmatchedRepresentativeCycle(d, counter, 0);
+                    vector<vector<index_t>> reprCycle = getUnmatchedRepresentativeCycle(0, d, counter);
                     cgc0.printRepresentativeCycle(reprCycle);
                     cout << endl;
                     ++counter;
@@ -212,7 +214,7 @@ void BettiMatching::printResult() {
                 if (!isMatched1[d][pairs1[d][i].birth.index]) {
                     pairs1[d][i].print(); cout << endl;
                     _unmatched1[d][counter].print(); cout << endl;
-                    vector<vector<index_t>> reprCycle = getUnmatchedRepresentativeCycle(d, counter, 1);
+                    vector<vector<index_t>> reprCycle = getUnmatchedRepresentativeCycle(1, d, counter);
                     cgc1.printRepresentativeCycle(reprCycle);
                     cout << endl;
                     ++counter;

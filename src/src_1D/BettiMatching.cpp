@@ -141,7 +141,7 @@ void BettiMatching::printResult() {
             if (!isMatched0[0][pairs0[0][i].birth.index]) {
                 pairs0[0][i].print(); cout << endl;
                 _unmatched0[counter].print(); cout << endl;
-                vector<vector<index_t>> reprCycle = getUnmatchedRepresentativeCycle(0, counter, 0);
+                vector<vector<index_t>> reprCycle = getUnmatchedRepresentativeCycle(0, 0, counter);
                 cgc0.printRepresentativeCycle(reprCycle);
                 cout << endl;
                 ++counter;
@@ -161,7 +161,7 @@ void BettiMatching::printResult() {
             if (!isMatched1[0][pairs1[0][i].birth.index]) {
                 pairs1[0][i].print(); cout << endl;
                 _unmatched1[counter].print(); cout << endl;
-                vector<vector<index_t>> reprCycle = getUnmatchedRepresentativeCycle(0, counter, 1);
+                vector<vector<index_t>> reprCycle = getUnmatchedRepresentativeCycle(1, 0, counter);
                 cgc1.printRepresentativeCycle(reprCycle);
                 cout << endl;
                 ++counter;

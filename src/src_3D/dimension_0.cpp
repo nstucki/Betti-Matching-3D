@@ -87,6 +87,7 @@ void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 	UnionFind& uf = (k == 0) ? uf0 : uf1; 
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<index_t, Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
+	
 	uf.reset();
 	vector<index_t> boundaryIndices(2);
 	index_t parentIdx0;

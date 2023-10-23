@@ -172,6 +172,8 @@ tuple<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatche
     tuple<vector<vector<index_t>>, vector<vector<index_t>>> repCycles;
     switch (dimension) {
         case 1: {
+            dim1::BettiMatching& bettiMatching = std::get<dim1::BettiMatching>(dimensionSpecificBettiMatching.value());
+            repCycles = bettiMatching.getMatchedRepresentativeCycle(dim, index);
             return repCycles;
         }
 
@@ -198,6 +200,8 @@ vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const siz
     vector<vector<index_t>> repCycle;
     switch (dimension) {
         case 1: {
+            dim1::BettiMatching& bettiMatching = std::get<dim1::BettiMatching>(dimensionSpecificBettiMatching.value());
+            repCycle = bettiMatching.getUnmatchedRepresentativeCycle(dim, index, input);
             return repCycle;
         }
 
