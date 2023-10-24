@@ -57,6 +57,7 @@ vector<vector<index_t>> Dimension0::getRepresentativeCycle(const Pair& pair, con
 	}
 
 	vector<vector<index_t>> reprCycle;
+	reprCycle.push_back(cgc.getParentVoxel(pair.birth, 0));
 	vector<index_t> vertex;
 	parentIdx0 = uf.find(pair.birth.x()*cgc.shape[1] + pair.birth.y());
 	for (size_t i = 0; i < cgc.getNumberOfCubes(0); ++i) {
@@ -66,6 +67,7 @@ vector<vector<index_t>> Dimension0::getRepresentativeCycle(const Pair& pair, con
 			if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); }
 		}
 	}
+	reprCycle.push_back(cgc.getParentVoxel(pair.death, 1));
 
 	return reprCycle;
 }

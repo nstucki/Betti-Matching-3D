@@ -154,7 +154,7 @@ void BettiMatching::printResult() {
                 matches[d][i].print();
                 _matched[d][i].print();
                 if (cgc0.shape[0] < 10 && cgc0.shape[1] < 10 && cgc0.shape[2] < 10) {
-                    pair<vector<vector<index_t>>, vector<vector<index_t>>> reprCycles = getMatchedRepresentativeCycle(d, i);
+                    pair<vector<vector<index_t>>, vector<vector<index_t>>> reprCycles = getMatchedRepresentativeCycles(d, i);
                     cgc0.printRepresentativeCycle(get<0>(reprCycles));
                     cout << endl;
                     cgc1.printRepresentativeCycle(get<1>(reprCycles));
@@ -211,8 +211,11 @@ void BettiMatching::printResult() {
 }
 
 
-tuple<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatchedRepresentativeCycle(const uint8_t& dim, const size_t& index) {
+tuple<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatchedRepresentativeCycles(const uint8_t& dim, const size_t& index) {
     tuple<vector<vector<index_t>>, vector<vector<index_t>>> reprCycles;
+
+    if (index >= matched[dim].size()) { return reprCycles; }
+
     switch(dim) {
         case 0: {
             Dimension0 dim0(cgc0, cgc1, cgcComp, config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);

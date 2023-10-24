@@ -13,15 +13,16 @@ using namespace std::chrono;
 
 
 
-BettiMatching::BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1, vector<index_t>&& shape, Config&& config) : 
-    dimension(shape.size()), computed(false) {
+BettiMatching::BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1, vector<index_t>&& _shape, Config&& config) : 
+    shape(_shape), dimension(shape.size()), computed(false) {
 #ifdef RUNTIME
     cout << "initializing BettiMatching ... ";
 	auto start = high_resolution_clock::now();
 #endif
 
     vector<value_t> comparison;
-    transform(input0.begin(), input0.end(), input1.begin(), back_inserter(comparison), [](value_t a, value_t b) { return min(a, b); });
+    transform(input0.begin(), input0.end(), input1.begin(), back_inserter(comparison),
+                [](value_t a, value_t b) { return min(a, b); });
     
     switch (dimension) {
         case 0:
@@ -56,7 +57,8 @@ BettiMatching::BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1,
 
 
 BettiMatching::BettiMatching(BettiMatching&& other) : 
-    dimension(other.dimension), dimensionSpecificBettiMatching(std::move(other.dimensionSpecificBettiMatching)) {}
+    shape(other.shape), dimensionSpecificBettiMatching(std::move(other.dimensionSpecificBettiMatching)),
+    dimension(other.dimension), computed(other.computed) {}
 
 
 void BettiMatching::computeMatching() {
@@ -168,24 +170,24 @@ std::tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>, vector<vector<
 }
 
 
-tuple<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatchedRepresentativeCycle(const size_t& dim, const size_t& index) {
+tuple<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatchedRepresentativeCycles(const size_t& dim, const size_t& index) {
     tuple<vector<vector<index_t>>, vector<vector<index_t>>> repCycles;
     switch (dimension) {
         case 1: {
             dim1::BettiMatching& bettiMatching = std::get<dim1::BettiMatching>(dimensionSpecificBettiMatching.value());
-            repCycles = bettiMatching.getMatchedRepresentativeCycle(dim, index);
+            repCycles = bettiMatching.getMatchedRepresentativeCycles(dim, index);
             return repCycles;
         }
 
         case 2: {
             dim2::BettiMatching& bettiMatching = std::get<dim2::BettiMatching>(dimensionSpecificBettiMatching.value());
-            repCycles = bettiMatching.getMatchedRepresentativeCycle(dim, index);
+            repCycles = bettiMatching.getMatchedRepresentativeCycles(dim, index);
             return repCycles;
         }
 
         case 3: {
             dim3::BettiMatching& bettiMatching = std::get<dim3::BettiMatching>(dimensionSpecificBettiMatching.value());
-            repCycles = bettiMatching.getMatchedRepresentativeCycle(dim, index);
+            repCycles = bettiMatching.getMatchedRepresentativeCycles(dim, index);
             return repCycles;
         }
 

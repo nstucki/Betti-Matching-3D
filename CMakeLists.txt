@@ -1,11 +1,17 @@
 # CMakeLists.txt
 
 cmake_minimum_required(VERSION 3.5)
-project(bettiMatching)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(Python_VIRTUALENV FIRST)
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release")
+endif()
 
-#set(Python_VIRTUALENV FIRST)
+project(BettiMatching)
 
 find_package(pybind11 REQUIRED)
+
 pybind11_add_module(betti_matching
     src/_BettiMatching.cpp
     src/BettiMatching.cpp

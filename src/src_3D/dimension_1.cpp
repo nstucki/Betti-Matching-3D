@@ -78,6 +78,8 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 
 vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) {
 	vector<vector<index_t>> reprCycle;
+	reprCycle.push_back(cgc.getParentVoxel(pair.birth, 1));
+	
 	vector<Cube> ctr;
 	enumerateColumnsToReduce(ctr, cgc);
 	size_t ctrSize = ctr.size();
@@ -211,6 +213,8 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 			} else { break; }
 		}
 	}
+
+	reprCycle.push_back(cgc.getParentVoxel(pair.death, 2));
 
 	return reprCycle;
 }

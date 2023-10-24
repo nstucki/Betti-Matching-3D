@@ -237,8 +237,10 @@ void CubicalGridComplex::printRepresentativeCycle(const vector<vector<index_t>>&
 		for (index_t x = 0; x < shape[0]; ++x) {
 			for (index_t z = 0; z < shape[2]; ++z) {
 				auto it = find(reprCycle.begin(), reprCycle.end(), vector<index_t>{x,y,z});
-				if (it != reprCycle.end()) { cout << "1 "; }
-				else { cout << "0 "; }   
+				if (it == reprCycle.begin()) { cout << "2  "; }
+				else if (it == reprCycle.end()-1) { cout << "-1 "; }
+				else if (it != reprCycle.end()) { cout << "1  "; }
+				else { cout << "0  "; }     
 			}
 			cout << "  ";
 		}

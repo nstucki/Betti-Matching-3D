@@ -53,7 +53,6 @@ int main(int argc, char** argv) {
     for (int i = 1; i < argc; ++i) {
 		const string arg(argv[i]);
 		if (arg == "--help" || arg == "-h") { print_usage_and_exit(0); }
-        else if (arg == "--threshold" || arg == "-t") { config.threshold = stoi(argv[++i]); }
         else if (arg == "--min_recursion_to_cache" || arg == "-mc") { config.minRecursionToCache = stoi(argv[++i]); } 
         else if (arg == "--cache_size" || arg == "-c") { config.cacheSize = stoi(argv[++i]); } 
         else if (arg == "--print" || arg == "-p") { print = true; } 

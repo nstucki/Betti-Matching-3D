@@ -82,12 +82,14 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 	}
 
 	vector<vector<index_t>> reprCycle;
+	reprCycle.push_back(cgc.getParentVoxel(pair.birth, 1));
 	for (const vector<index_t>& vertex : boundaryVertices) {
 		auto lower = boundaryVertices.lower_bound(vertex);
 		auto upper = boundaryVertices.upper_bound(vertex);
 		int multiplicity = distance(lower, upper);
 		if (multiplicity < 8) { if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); } }
 	}
+	reprCycle.push_back(cgc.getParentVoxel(pair.death, 2));
 
 	return reprCycle;
 }

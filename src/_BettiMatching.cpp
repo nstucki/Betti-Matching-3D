@@ -56,13 +56,15 @@ PYBIND11_MODULE(betti_matching, m) {
                 return BettiMatching(std::move(input0Vector), std::move(input1Vector), std::move(shape0), std::move(config));
             }))
 
+        .def_readwrite("shape", &BettiMatching::shape)
+
         .def("compute_matching", &BettiMatching::computeMatching)
 
         .def("print", &BettiMatching::printResult)
 
         .def("get_matching", &BettiMatching::getMatching)
 
-        .def("get_matched_cycle", &BettiMatching::getMatchedRepresentativeCycle)
+        .def("get_matched_cycles", &BettiMatching::getMatchedRepresentativeCycles)
 
         .def("get_unmatched_cycle", &BettiMatching::getUnmatchedRepresentativeCycle);
 
