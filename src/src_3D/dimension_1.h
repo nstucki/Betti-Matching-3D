@@ -41,16 +41,17 @@ namespace dim3 {
 		Cube1Map<Pair> matchMap1;
 		Cube1Map<uint64_t> matchMapIm0;
 		Cube1Map<uint64_t> matchMapIm1;
-		Cube1Map<uint64_t> pivotColumnIndex;
-		vector<std::optional<vector<Cube>>> cache;
+		Cube1Map<uint64_t> pivotColumnIndex0;
+		Cube1Map<uint64_t> pivotColumnIndex1;
+		Cube1Map<uint64_t> pivotColumnIndexComp;
 
 		void computePairs(const vector<Cube>& ctr, uint8_t k);
 		void computePairsComp(vector<Cube>& ctr);
 		void computeImagePairs(vector<Cube>& ctr, uint8_t k);
 		void computeMatching();
-		void enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const;
+		void enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges, Cube1Map<uint64_t> &pivotColumnIndex) const;
 		Cube popPivot(CubeQueue& column) const;
 		Cube getPivot(CubeQueue& column) const;
-		void addCache(const index_t& i, CubeQueue& working_boundary);
+		void addCache(const index_t& i, CubeQueue& working_boundary, vector<std::optional<vector<Cube>>> &cache);
 	};
 }

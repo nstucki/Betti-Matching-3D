@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
+#include <future>
 
 using namespace dim3;
 using namespace std::chrono;
@@ -26,69 +27,84 @@ Dimension1::Dimension1(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						matchMap1(_cgc0.shape),
 						matchMapIm0(_cgc0.shape),
 						matchMapIm1(_cgc0.shape),
-						pivotColumnIndex(_cgc0.shape)
+						pivotColumnIndex0(_cgc0.shape),
+						pivotColumnIndex1(_cgc0.shape),
+						pivotColumnIndexComp(_cgcComp.shape)
 						// isMatched0(_isMatched0), isMatched1(_isMatched1), isMatchedComp(cgc0.shape[0] * cgc0.shape[1] * cgc0.shape[2] * 3, false)
 						{}
 
 void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
 
 
+	auto input0Future = std::async([this, &ctr0]() {
 #ifdef RUNTIME
-	cout << endl << "input 0: ";
+		cout << endl << "input 0: ";
 #endif
-	computePairs(ctr0, 0);
+		computePairs(ctr0, 0);
 #ifdef USE_CLEARING_DIM0
-	ctr0.clear();
-	enumerateEdges(cgc0, ctr0);
+		ctr0.clear();
+		enumerateEdges(cgc0, ctr0, pivotColumnIndex0);
 #endif
+	});
 
+	auto input1Future = std::async([this, &ctr1]() {
 #ifdef RUNTIME
-	cout << endl << "input 1: ";
+		cout << endl << "input 1: ";
 #endif
-	pivotColumnIndex.clear();
-	cache.clear();
-
-
-	computePairs(ctr1, 1);
+		computePairs(ctr1, 1);
 #ifdef USE_CLEARING_DIM0
-	ctr1.clear();
-	enumerateEdges(cgc1, ctr1);
+		ctr1.clear();
+		enumerateEdges(cgc1, ctr1, pivotColumnIndex1);
 #endif
+	});
 
+	auto inputCompFuture = std::async([this, &ctrComp]() {
 #ifdef RUNTIME
-	cout << endl << "comparison: ";
+		cout << endl << "comparison: ";
 #endif
-	pivotColumnIndex.clear();
-	cache.clear();
-	computePairsComp(ctrComp);
+		computePairsComp(ctrComp);
 #ifdef USE_CLEARING_DIM0
-	vector<Cube> ctrImage = ctrComp;
-	ctrComp.clear();
-	enumerateEdges(cgcComp, ctrComp);
-#endif
-
-#ifdef RUNTIME
-	cout << endl << "image 0: ";
-#endif
-	pivotColumnIndex.clear();
-	cache.clear();
-#ifdef USE_CLEARING_DIM0
-	computeImagePairs(ctrImage, 0);
+		vector<Cube> ctrImage = ctrComp;
+		ctrComp.clear();
+		enumerateEdges(cgcComp, ctrComp, pivotColumnIndexComp);
+		return ctrImage;
 #else
-	computeImagePairs(ctrComp, 0); 
+	return std::optional<vector<Cube>>();
 #endif
 
+	});
+
+	input0Future.wait();
+	input1Future.wait();
+	auto ctrImage = inputCompFuture.get();
+
+	auto input0AndComparisonFuture = std::async([this, &ctrImage, &ctrComp](){
 #ifdef RUNTIME
-	cout << endl << "image 1: ";
+		cout << endl << "image 0: ";
 #endif
-	pivotColumnIndex.clear();
-	cache.clear();
+		pivotColumnIndex0.clear();
 #ifdef USE_CLEARING_DIM0
-	computeImagePairs(ctrImage, 1);
+		computeImagePairs(ctrImage, 0);
 #else
-	computeImagePairs(ctrComp, 1); 
+		computeImagePairs(ctrComp, 0);
 #endif
+	});
+
+	auto input1AndComparisonFuture = std::async([this, &ctrImage, &ctrComp](){
+#ifdef RUNTIME
+		cout << endl << "image 1: ";
+#endif
+		pivotColumnIndex1.clear();
+#ifdef USE_CLEARING_DIM0
+		computeImagePairs(ctrImage, 1);
+#else
+		computeImagePairs(ctrComp, 1);
+#endif
+	});
 	
+	input0AndComparisonFuture.wait();
+	input1AndComparisonFuture.wait();
+
 #ifdef RUNTIME
 	cout << endl << "matching: ";
 #endif
@@ -103,11 +119,12 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	Cube1Map<Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
+	auto &pivotColumnIndex = (k == 0) ? pivotColumnIndex0 : pivotColumnIndex1;
 
 	size_t ctrSize = ctr.size();
 	// pivotColumnIndex.reserve(ctrSize);
 	// cache.reserve(min(config.cacheSize, ctrSize));
-	cache = vector<std::optional<vector<Cube>>>(ctrSize);
+	vector<std::optional<vector<Cube>>> cache = vector<std::optional<vector<Cube>>>(ctrSize);
 	BoundaryEnumerator enumerator(cgc);
 	Cube pivot;
 	queue<index_t> cachedColumnIdx;
@@ -176,7 +193,7 @@ void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
 					continue;
 				} else {
 					if (numRecurse >= config.minRecursionToCache) {
-                        addCache(i, workingBoundary);
+                        addCache(i, workingBoundary, cache);
 						cachedColumnIdx.push(i);
 						// if (cachedColumnIdx.size() > config.cacheSize) {
 						// 	cache.erase(cachedColumnIdx.front());
@@ -211,8 +228,9 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 	size_t ctrSize = ctr.size();
 	// pivotColumnIndex.reserve(ctrSize);	
 	// cache.reserve(min(config.cacheSize, ctrSize));
-	cache = vector<std::optional<vector<Cube>>>(ctrSize);
+	vector<std::optional<vector<Cube>>> cache = vector<std::optional<vector<Cube>>>(ctrSize);
 	BoundaryEnumerator enumerator = BoundaryEnumerator(cgcComp);
+	auto &pivotColumnIndex = pivotColumnIndexComp;
 	Cube pivot;
 	queue<index_t> cachedColumnIdx;
 	size_t numRecurse;
@@ -282,7 +300,7 @@ void Dimension1::computePairsComp(vector<Cube>& ctr) {
 					continue;
 				} else {
 					if (numRecurse >= config.minRecursionToCache) {
-                        addCache(i, workingBoundary);
+                        addCache(i, workingBoundary, cache);
 						cachedColumnIdx.push(i);
 						// if (cachedColumnIdx.size() > config.cacheSize) {
 						// 	cache.erase(cachedColumnIdx.front());
@@ -324,12 +342,13 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 #endif
 	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	auto& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
+	auto &pivotColumnIndex = (k == 0) ? pivotColumnIndex0 : pivotColumnIndex1;
 
 	size_t ctrSize = ctr.size();
 	// pivotColumnIndex.reserve(ctrSize);
 	// cache.reserve(min(config.cacheSize, ctrSize));
 	// matchMapIm.reserve(pairsComp.size());
-	cache = vector<std::optional<vector<Cube>>>(ctrSize);
+	vector<std::optional<vector<Cube>>> cache = vector<std::optional<vector<Cube>>>(ctrSize);
 	BoundaryEnumerator enumerator = BoundaryEnumerator(cgc);
 	Cube pivot;
 	value_t birth;
@@ -406,7 +425,7 @@ void Dimension1::computeImagePairs(vector<Cube>& ctr, uint8_t k) {
 					continue;
 				} else {
 					if (numRecurse >= config.minRecursionToCache) {
-                        addCache(i, workingBoundary);
+                        addCache(i, workingBoundary, cache);
 						cachedColumnIdx.push(i);
 						// if (cachedColumnIdx.size() > config.cacheSize) {
 						// 	cache.erase(cachedColumnIdx.front());
@@ -468,7 +487,7 @@ void Dimension1::computeMatching() {
 #endif
 }
 
-void Dimension1::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges) const {
+void Dimension1::enumerateEdges(const CubicalGridComplex& cgc, vector<Cube>& edges, Cube1Map<uint64_t> &pivotColumnIndex) const {
 #ifdef RUNTIME
 	cout << ", enumeration ";
 	auto start = high_resolution_clock::now();
@@ -529,7 +548,7 @@ Cube Dimension1::getPivot(CubeQueue& column) const {
 	return result;
 }
 
-void Dimension1::addCache(const index_t& i, CubeQueue& workingBoundary) {
+void Dimension1::addCache(const index_t& i, CubeQueue& workingBoundary, vector<std::optional<vector<Cube>>> &cache) {
 	std::vector<Cube> cleanWb;
 	while (!workingBoundary.empty()) {
 		Cube c = workingBoundary.top();

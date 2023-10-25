@@ -3,6 +3,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(bettiMatching)
 
+find_package(Threads REQUIRED)
+
 find_package(pybind11 REQUIRED)
 pybind11_add_module(betti_matching
     src/_BettiMatching.cpp
@@ -62,3 +64,7 @@ CXX_EXTENSIONS OFF
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+
+target_link_libraries(BettiMatching Threads::Threads)
