@@ -47,12 +47,12 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
 	vector<Cube> dualEdges;
 	enumerateDualEdges(dualEdges, cgc);
+
 	UnionFindDual uf(cgc);
 	vector<index_t> boundaryIndices(2);
 	index_t parentIdx0;
 	index_t parentIdx1;
 	index_t birthIdx;
-
 	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge) {
 		if (*edge == pair.birth) { break; }
 		boundaryIndices = uf.getBoundaryIndices(*edge);
@@ -63,7 +63,7 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 
 	set<vector<index_t>> cubeCoordinates;
 	parentIdx0 = uf.find(pair.death.x()*cgc.m_y + pair.death.y());
-	for (size_t i = 0; i < cgc.getNumberOfCubes(3); ++i) {
+	for (size_t i = 0; i < cgc.getNumberOfCubes(2); ++i) {
 		parentIdx1 = uf.find(i);
 		if (parentIdx0 == parentIdx1) { cubeCoordinates.insert(uf.getCoordinates(i)); }
 	}
@@ -87,7 +87,7 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 		auto lower = boundaryVertices.lower_bound(vertex);
 		auto upper = boundaryVertices.upper_bound(vertex);
 		int multiplicity = distance(lower, upper);
-		if (multiplicity < 8) { if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); } }
+		if (multiplicity < 4) { if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); } }
 	}
 	reprCycle.push_back(cgc.getParentVoxel(pair.death, 2));
 
@@ -139,7 +139,6 @@ void Dimension1::computeImagePairs(vector<Cube>& dualEdges, const uint8_t& k) {
 	index_t birthIdxComp;
 	value_t birth;
 	vector<index_t> birthCoordinates(2);
-
 	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge) {
 		boundaryIndices = uf.getBoundaryIndices(*edge);
 		parentIdx0 = uf.find(boundaryIndices[0]);
