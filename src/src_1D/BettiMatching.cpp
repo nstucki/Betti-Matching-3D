@@ -172,8 +172,8 @@ void BettiMatching::printResult() {
 }
 
 
-tuple<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatchedRepresentativeCycles(const uint8_t& dim, const size_t& index) {
-    tuple<vector<vector<index_t>>, vector<vector<index_t>>> reprCycles;
+pair<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatchedRepresentativeCycles(const uint8_t& dim, const size_t& index) {
+    pair<vector<vector<index_t>>, vector<vector<index_t>>> reprCycles;
 
     if (index >= matches[dim].size()) { return reprCycles; }
 
