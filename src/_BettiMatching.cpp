@@ -151,7 +151,7 @@ PYBIND11_MODULE(betti_matching, m)
         // vector<py::array_t<double>> all_target_matches_death_coordinates; // vector of size batch_size, elements of shape (M_k, 3)
         // vector<py::array_t<double>> all_prediction_unmatched_birth_coordinates; // vector of size batch_size, elements of shape (L_k, 3)
         // vector<py::array_t<double>> all_prediction_unmatched_death_coordinates; // vector of size batch_size, elements of shape (L_k, 3)
-        vector<std::tuple<py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>>> resultArrays;
+        vector<std::tuple<py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>>> resultArrays;
 
         for (auto &result : results) {
             auto matches_by_dimension = std::get<0>(result);
@@ -168,13 +168,19 @@ PYBIND11_MODULE(betti_matching, m)
             size_t matches_coordinates_stride[2]{num_dimensions * sizeof(int64_t), sizeof(int64_t)};
             size_t prediction_unmatched_coordinates_shape[2]{num_prediction_unmatched, num_dimensions};
             size_t prediction_unmatched_stride[2]{num_dimensions * sizeof(int64_t), sizeof(int64_t)};
+            size_t matches_dimensions_shape[1]{num_matches};
+            size_t matches_dimensions_stride[1]{sizeof(int64_t)};
+            size_t prediction_unmatched_dimensions_shape[1]{num_prediction_unmatched};
+            size_t prediction_unmatched_dimensions_stride[1]{sizeof(int64_t)};
             
             py::array_t<int64_t> prediction_matches_birth_coordinates(matches_coordinates_shape, matches_coordinates_stride); // shape (N_k, 3)
             py::array_t<int64_t> prediction_matches_death_coordinates(matches_coordinates_shape, matches_coordinates_stride); // shape (N_k, 3)
-            py::array_t<int64_t> target_matches_birth_coordinates(matches_coordinates_shape, matches_coordinates_stride); // shape (M_k, 3)
-            py::array_t<int64_t> target_matches_death_coordinates(matches_coordinates_shape, matches_coordinates_stride); // shape (M_k, 3)
+            py::array_t<int64_t> target_matches_birth_coordinates(matches_coordinates_shape, matches_coordinates_stride); // shape (N_k, 3)
+            py::array_t<int64_t> target_matches_death_coordinates(matches_coordinates_shape, matches_coordinates_stride); // shape (N_k, 3)
             py::array_t<int64_t> prediction_unmatched_birth_coordinates(prediction_unmatched_coordinates_shape, prediction_unmatched_stride); // shape (L_k, 3)
             py::array_t<int64_t> prediction_unmatched_death_coordinates(prediction_unmatched_coordinates_shape, prediction_unmatched_stride); // shape (L_k, 3)
+            py::array_t<int64_t> matches_dimensions(matches_dimensions_shape, matches_dimensions_stride); // shape (N_k,)
+            py::array_t<int64_t> prediction_unmatched_dimensions(prediction_unmatched_dimensions_shape, prediction_unmatched_dimensions_stride); // shape (L_k,)
 
             auto prediction_matches_birth_coordinates_view = prediction_matches_birth_coordinates.mutable_unchecked();
             auto prediction_matches_death_coordinates_view = prediction_matches_death_coordinates.mutable_unchecked();
@@ -182,8 +188,11 @@ PYBIND11_MODULE(betti_matching, m)
             auto target_matches_death_coordinates_view = target_matches_death_coordinates.mutable_unchecked();
             auto prediction_unmatched_birth_coordinates_view = prediction_unmatched_birth_coordinates.mutable_unchecked();
             auto prediction_unmatched_death_coordinates_view = prediction_unmatched_death_coordinates.mutable_unchecked();
+            auto matches_dimensions_view = matches_dimensions.mutable_unchecked();
+            auto prediction_unmatched_dimensions_view = prediction_unmatched_dimensions.mutable_unchecked();
 
             int i = 0;
+            int dimension_of_current_match = 0;
             for (auto &matches_in_dimension : matches_by_dimension) {
                 for (auto &match : matches_in_dimension) {
                     for (int d = 0; d < num_dimensions; d++) {
@@ -192,27 +201,35 @@ PYBIND11_MODULE(betti_matching, m)
                         target_matches_birth_coordinates_view(i, d) = match.pair1.birth[d];
                         target_matches_death_coordinates_view(i, d) = match.pair1.death[d];
                     }
+                    matches_dimensions_view(i) = dimension_of_current_match;
                     i += 1;
                 }
+                dimension_of_current_match += 1;
             }
             i = 0;
+            dimension_of_current_match = 0;
             for (auto &unmatched_in_dimension : prediction_unmatched_by_dimension) {
                 for (auto &unmatched : unmatched_in_dimension) {
                     for (int d = 0; d < num_dimensions; d++) {
                         prediction_unmatched_birth_coordinates_view(i, d) = unmatched.birth[d];
                         prediction_unmatched_death_coordinates_view(i, d) = unmatched.death[d];
                     }
+                    prediction_unmatched_dimensions_view(i) = dimension_of_current_match;
                     i += 1;
                 }
+                dimension_of_current_match += 1;
             }
 
-            std::tuple<py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>> resultsTuple = {
-                std::move(prediction_matches_birth_coordinates),
-                std::move(prediction_matches_death_coordinates),
-                std::move(target_matches_birth_coordinates),
-                std::move(target_matches_death_coordinates),
-                std::move(prediction_unmatched_birth_coordinates),
-                std::move(prediction_unmatched_death_coordinates)};
+            std::tuple<py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>, py::array_t<int64_t>>
+                resultsTuple = {
+                    std::move(prediction_matches_birth_coordinates),
+                    std::move(prediction_matches_death_coordinates),
+                    std::move(target_matches_birth_coordinates),
+                    std::move(target_matches_death_coordinates),
+                    std::move(prediction_unmatched_birth_coordinates),
+                    std::move(prediction_unmatched_death_coordinates),
+                    std::move(matches_dimensions),
+                    std::move(prediction_unmatched_dimensions)};
             resultArrays.emplace_back(resultsTuple);
         }
         return resultArrays;
