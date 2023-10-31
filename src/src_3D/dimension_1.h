@@ -20,9 +20,14 @@ class Dimension1 {
 	vector<vector<index_t>> getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc);
 
 	private:
-	void computePairs(const vector<Cube>& ctr, uint8_t k);
+	enum ComputePairsMode { INPUT_PAIRS, COMPARISON_PAIRS, IMAGE_PAIRS };
+
+	void computePairs(vector<Cube>& ctr, uint8_t k);
 	void computePairsComp(vector<Cube>& ctr);
 	void computePairsImage(vector<Cube>& ctr, uint8_t k);
+
+	template <ComputePairsMode computePairsMode>
+	void computePairsUnified(vector<Cube>& ctr, uint8_t k);
 	void computeMatching();
 	void enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc) const;
 	void enumerateColumnsToReduce(vector<Cube>& ctr, const CubicalGridComplex& cgc) const;
@@ -50,6 +55,11 @@ class Dimension1 {
 							CoboundaryEnumerator& coEnumeratorAP) const; 
 	bool isEmergentPairImage(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
 								const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator) const;
+
+	template <ComputePairsMode computePairsMode>
+	bool isEmergentPairUnified(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
+								const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
+								CoboundaryEnumerator& coEnumeratorAP) const;
 #endif
 	const CubicalGridComplex& cgc0;
 	const CubicalGridComplex& cgc1;
