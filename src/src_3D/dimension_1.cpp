@@ -15,7 +15,9 @@ Dimension1::Dimension1(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, vector<Match>& _matches, 
 						unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1) : 
 						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), pairs0(_pairs0), pairs1(_pairs1),
-						pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1) {}
+						pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1),
+						matchMap0(_cgc0.shape), matchMap1(_cgc0.shape), matchMapIm0(_cgc0.shape), matchMapIm1(_cgc0.shape),
+						pivotColumnIndex(_cgc0.shape) {}
 
 
 void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp, vector<Cube>& ctrImage) {
@@ -85,7 +87,6 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 	enumerateColumnsToReduce(ctr, cgc);
 	size_t ctrSize = ctr.size();
 	pivotColumnIndex.clear();
-	pivotColumnIndex.reserve(ctrSize);
 	BoundaryEnumerator enumerator(cgc);
 	Cube pivot;
 	size_t j;
@@ -159,8 +160,8 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 			pivot = getPivot(workingBoundary);
 			if (pivot.index != NONE) {
 				auto it = pivotColumnIndex.find(pivot.index);
-				if (it != pivotColumnIndex.end()) {
-					j = it->second;
+				if (it.has_value()) {
+					j = *it;
 #ifdef USE_CACHE
 					++numRecurse;
 #endif
@@ -243,15 +244,15 @@ void Dimension1::computeMatching() {
 	for (Pair& pair : pairsComp) {
 		auto find0 = matchMapIm0.find(pair.death.index);
 		auto find1 = matchMapIm1.find(pair.death.index);
-		if (find0 != matchMapIm0.end() && find1 != matchMapIm1.end()) {
-			birthIndex0 = find0->second;
-			birthIndex1 = find1->second;
+		if (find0.has_value() && find1.has_value()) {
+			birthIndex0 = *find0;
+			birthIndex1 = *find1;
 			auto find0 = matchMap0.find(birthIndex0);
 			auto find1 = matchMap1.find(birthIndex1);
-			if (find0 != matchMap0.end() && find1 != matchMap1.end()) {
-				matches.push_back(Match(find0->second, find1->second));
-				isMatched0.emplace(find0->second.birth.index, true);
-				isMatched1.emplace(find1->second.birth.index, true);
+			if (find0.has_value() && find1.has_value()) {
+				matches.push_back(Match(*find0, *find1));
+				isMatched0.emplace(find0->birth.index, true);
+				isMatched1.emplace(find1->birth.index, true);
 			}
 		}
 	}
@@ -285,7 +286,7 @@ void Dimension1::enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& c
 #ifdef USE_CLEARING_DIM0
 						cube = Cube(birth, x, y, z, type);
 						auto find = pivotColumnIndex.find(cube.index);
-						if (find == pivotColumnIndex.end()) { edges.push_back(cube); }
+						if (!find.has_value()) { edges.push_back(cube); }
 #else
 						edges.push_back(Cube(birth, x, y, z, type));
 #endif
@@ -405,9 +406,9 @@ bool Dimension1::isEmergentPair(const Cube& column, Cube& pivot, size_t& j, vect
 		if (checkEmergentPair && enumerator.nextFace.birth == column.birth) {
 			auto pair = pivotColumnIndex.find(enumerator.nextFace.index);
 #ifdef USE_APPARENT_PAIRS
-			if (pair != pivotColumnIndex.end()) {
+			if (pair.has_value()) {
 				checkEmergentPair = false;
-				j = pair->second;
+				j = *pair;
 			} else if (pivotOfColumnIsApparentPair(enumerator.nextFace, column, faces, enumeratorAP, coEnumeratorAP)) {
 				checkEmergentPair = false;
 			} else {
@@ -415,9 +416,9 @@ bool Dimension1::isEmergentPair(const Cube& column, Cube& pivot, size_t& j, vect
 				return true;
 			}
 #else
-			if (pair != pivotColumnIndex.end()) {
+			if (pair.has_value()) {
 				checkEmergentPair = false;
-				j = pair->second;
+				j = *pair;
 			} else {
 				pivot = enumerator.nextFace;
 				return true;
@@ -438,9 +439,9 @@ bool Dimension1::isEmergentPairComp(const Cube& column, Cube& pivot, size_t& j, 
 		if (checkEmergentPair && enumerator.nextFace.birth == column.birth) {
 			auto pair = pivotColumnIndex.find(enumerator.nextFace.index);
 #ifdef USE_APPARENT_PAIRS_COMP
-			if (pair != pivotColumnIndex.end()) {
+			if (pair.has_value()) {
 				checkEmergentPair = false;
-				j = pair->second;
+				j = *pair;
 			} else if (pivotOfColumnIsApparentPair(enumerator.nextFace, column, faces, enumeratorAP, coEnumeratorAP)) {
 				checkEmergentPair = false;
 			} else {
@@ -448,9 +449,9 @@ bool Dimension1::isEmergentPairComp(const Cube& column, Cube& pivot, size_t& j, 
 				return true;
 			}
 #else
-			if (pair != pivotColumnIndex.end()) {
+			if (pair.has_value()) {
 				checkEmergentPair = false;
-				j = pair->second;
+				j = *pair;
 			} else {
 				pivot = enumerator.nextFace;
 				return true;
@@ -470,9 +471,9 @@ bool Dimension1::isEmergentPairImage(const Cube& column, Cube& pivot, size_t& j,
 	while (enumerator.hasPreviousFace()) {
 		if (checkEmergentPair && enumerator.nextFace.birth == birth) {
 			auto pair = pivotColumnIndex.find(enumerator.nextFace.index);
-			if (pair != pivotColumnIndex.end()) {
+			if (pair.has_value()) {
 				checkEmergentPair = false;
-				j = pair->second;
+				j = *pair;
 			} else {
 				pivot = enumerator.nextFace;
 				return true;
@@ -551,8 +552,8 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 #endif
     const CubicalGridComplex& cgc = (computePairsMode == COMPARISON_PAIRS) ? cgcComp : ((k == 0) ? cgc0 : cgc1);
     vector<Pair>& pairs = (computePairsMode == COMPARISON_PAIRS) ? pairsComp : ((k == 0) ? pairs0 : pairs1);
-    unordered_map<uint64_t, Pair>& matchMap = (computePairsMode == INPUT_PAIRS) ? ((k == 0) ? matchMap0 : matchMap1) : matchMap0;
-    unordered_map<uint64_t, uint64_t>& matchMapIm = (computePairsMode == IMAGE_PAIRS) ? ((k==0) ? matchMapIm0 : matchMapIm1) : matchMapIm0;
+    CubeMap<1, Pair>& matchMap = (computePairsMode == INPUT_PAIRS) ? ((k == 0) ? matchMap0 : matchMap1) : matchMap0;
+    CubeMap<1, uint64_t>& matchMapIm = (computePairsMode == IMAGE_PAIRS) ? ((k==0) ? matchMapIm0 : matchMapIm1) : matchMapIm0;
 
     const bool useApparentPairs = 
 #ifdef USE_APPARENT_PAIRS
@@ -569,7 +570,6 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 
 	size_t ctrSize = ctr.size();
 	pivotColumnIndex.clear();
-	pivotColumnIndex.reserve(ctrSize);
 	BoundaryEnumerator enumerator(cgc);
 	Cube pivot;
 	size_t j;
@@ -690,8 +690,8 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 #endif
 			if (pivot.index != NONE) {
 				auto pair = pivotColumnIndex.find(pivot.index);
-				if (pair != pivotColumnIndex.end()) {
-					j = pair->second;
+				if (pair.has_value()) {
+					j = *pair;
 #ifdef USE_CACHE
 					++numRecurse;
 #endif

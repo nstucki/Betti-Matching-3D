@@ -3,6 +3,7 @@
 #include "../config.h"
 
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 using namespace std;
@@ -39,8 +40,8 @@ class Pair {
 	Pair(const Pair& pair);
 	bool operator==(const Pair &rhs) const;
 	void print() const;
-	const Cube birth;
-	const Cube death;
+	Cube birth;
+	Cube death;
 };
 
 
@@ -116,4 +117,72 @@ class UnionFindDual {
 	vector<value_t> birthtime;
 	const CubicalGridComplex& cgc;
 };
+
+template<int _dim, class _Tp>
+class CubeMap {
+	/// Datastructure to map cube indices to values efficiently via a 1-dimensional array by
+	/// mapping cube indices to (x,y,z,type) coordinates in a 4-dimensional space and representing
+	/// this as a 1-dimensional array.
+
+	public:
+	CubeMap(vector<index_t> shape);
+	void emplace(uint64_t cube_index, _Tp element);
+	const std::optional<_Tp>& find(uint64_t cube_index) const;
+	void clear();
+	optional<_Tp>& operator[](uint64_t cube_index);
+
+	private:
+	vector<std::optional<_Tp>> elements;
+	uint64_t computeCoordinateIndex(uint64_t cube_index) const;
+	vector<index_t> shape;
+	std::optional<_Tp> none = {};
+	static const int NUM_TYPES = (_dim == 1 || _dim == 2) ? 3 : 1;
+	const int stride_x_direction;
+	const int stride_y_direction;
+	const int stride_z_direction;
+};
+
+template<int _dim, class _Tp>
+CubeMap<_dim, _Tp>::CubeMap(vector<index_t> shape) : shape(shape), stride_x_direction(shape[1] * shape[2] * NUM_TYPES), stride_y_direction(shape[2] * NUM_TYPES), stride_z_direction(NUM_TYPES), elements(shape[0] * shape[1] * shape[2] * NUM_TYPES) {}
+
+template<int _dim, class _Tp>
+void CubeMap<_dim, _Tp>::emplace(uint64_t cube_index, _Tp element) {
+	if (cube_index != NONE) {
+		elements[computeCoordinateIndex(cube_index)] = element;
+	} else {
+		throw runtime_error("CubeMap::emplace may not be called with NONE magic number");
+	}
+}
+
+template<int _dim, class _Tp>
+const std::optional<_Tp>& CubeMap<_dim, _Tp>::find(uint64_t cube_index) const {
+	if (cube_index != NONE) {
+		return elements[computeCoordinateIndex(cube_index)];
+	}
+	return none;
+}
+
+template<int _dim, class _Tp>
+optional<_Tp>& CubeMap<_dim, _Tp>::operator[](uint64_t cube_index) {
+	if (cube_index != NONE) {
+		return elements[computeCoordinateIndex(cube_index)];
+	}
+	throw runtime_error("CubeMap subscript operator may not be called with NONE magic number");
+}
+
+template<int _dim, class _Tp>
+uint64_t CubeMap<_dim, _Tp>::computeCoordinateIndex(uint64_t cube_index) const {
+	int x = (cube_index >> 44) & 0xfffff;
+	int y = (cube_index >> 24) & 0xfffff;
+	int z = (cube_index >> 4) & 0xfffff;
+	int type = (_dim == 1 || _dim == 2) ? (cube_index & 0xf) : 0;
+
+	return x * stride_x_direction + y * stride_y_direction + z * stride_z_direction + type;
+}
+
+template<int _dim, class _Tp>
+void CubeMap<_dim, _Tp>::clear() {
+	elements.clear();
+	elements.resize(shape[0] * shape[1] * shape[2] * NUM_TYPES);
+}
 }
