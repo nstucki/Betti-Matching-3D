@@ -14,6 +14,7 @@
 #define USE_CACHE
 #define USE_CLEARING_IMAGE
 #define USE_CLEARING_DIM0
+#define USE_STABLE_SORT_OR_STABLE_PARTITION // enables stable sort/binary input sorting optimization in dim3 edge enumeration methods
 
 typedef uint32_t index_t;
 typedef double value_t;

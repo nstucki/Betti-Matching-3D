@@ -142,6 +142,9 @@ void Dimension2::enumerateDualEdges(vector<Cube>& dualEdges, const CubicalGridCo
 	size_t numApparentPairs = 0;
 #endif
 #endif
+#ifdef USE_STABLE_SORT_OR_STABLE_PARTITION
+	bool binaryInputs = true;
+#endif
 
 	for (index_t x = 0; x < cgc.shape[0]; ++x) {
 		for (index_t y = 0; y < cgc.shape[1]; ++y) {
@@ -156,17 +159,32 @@ void Dimension2::enumerateDualEdges(vector<Cube>& dualEdges, const CubicalGridCo
 							++numApparentPairs;
 #endif
 						}
-						else { dualEdges.push_back(dualEdge); }
+						else {
+							dualEdges.push_back(dualEdge);
+#ifdef USE_STABLE_SORT_OR_STABLE_PARTITION
+							if (binaryInputs && birth != 0 && birth != 1) binaryInputs = false;
+#endif
+						}
 #else
 						dualEdges.push_back(Cube(birth, x, y, z, type));
+#ifdef USE_STABLE_SORT_OR_STABLE_PARTITION
+						if (binaryInputs && birth != 0 && birth != 1) binaryInputs = false;
+#endif
 #endif
 					}
 				}
 			}
 		}
 	}
-
-	sort(dualEdges.begin(), dualEdges.end(), CubeComparator());
+#ifdef USE_STABLE_SORT_OR_STABLE_PARTITION
+	if (binaryInputs) {
+		std::stable_partition(dualEdges.begin(), dualEdges.end(), [](Cube &cube) { return cube.birth == 0; });
+	} else {
+		std::stable_sort(dualEdges.begin(), dualEdges.end(), [](const Cube &cube1, const Cube &cube2) { return cube1.birth < cube2.birth; });
+	}
+#else
+	std::sort(dualEdges.begin(), dualEdges.end(), CubeComparator());
+#endif
 
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
@@ -188,19 +206,33 @@ void Dimension2::enumerateDualEdgesComp(vector<Cube>& dualEdges) const {
 
 	dualEdges.reserve(cgcComp.getNumberOfCubes(2));
 	value_t birth;
+#ifdef USE_STABLE_SORT_OR_STABLE_PARTITION
+	bool binaryInputs = true;
+#endif
 	for (index_t x = 0; x < cgcComp.shape[0]; ++x) {
 		for (index_t y = 0; y < cgcComp.shape[1]; ++y) {
 			for (index_t z = 0; z < cgcComp.shape[2]; ++z) {
 				for (uint8_t type = 0; type < 3; ++type) {
 					birth = cgcComp.getBirth(x, y, z, type, 2);
-					if (birth < config.threshold) { dualEdges.push_back(Cube(birth, x, y, z, type)); }
+					if (birth < config.threshold) {
+						dualEdges.push_back(Cube(birth, x, y, z, type));
+#ifdef USE_STABLE_SORT_OR_STABLE_PARTITION
+						if (binaryInputs && birth != 0 && birth != 1) binaryInputs = false;
+#endif
+					}
 				}
 			}
 		}
 	}
-
-	sort(dualEdges.begin(), dualEdges.end(), CubeComparator());
-
+#ifdef USE_STABLE_SORT_OR_STABLE_PARTITION
+	if (binaryInputs) {
+		std::stable_partition(dualEdges.begin(), dualEdges.end(), [](Cube &cube) { return cube.birth == 0; });
+	} else {
+		std::stable_sort(dualEdges.begin(), dualEdges.end(), [](const Cube &cube1, const Cube &cube2) { return cube1.birth < cube2.birth; });
+	}
+#else
+	std::sort(dualEdges.begin(), dualEdges.end(), CubeComparator());
+#endif
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
