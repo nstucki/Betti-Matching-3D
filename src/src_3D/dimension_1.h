@@ -65,13 +65,13 @@ class Dimension1 {
 #ifdef USE_ISPAIRED
 	unordered_map<uint64_t, bool> isPairedComp;
 #endif
-	unordered_map<uint64_t, Pair> matchMap0;
-	unordered_map<uint64_t, Pair> matchMap1;
-	unordered_map<uint64_t, uint64_t> matchMapIm0;
-	unordered_map<uint64_t, uint64_t> matchMapIm1;
-	unordered_map<uint64_t, size_t> pivotColumnIndex;
+	CubeMap<1, Pair> matchMap0;
+	CubeMap<1, Pair> matchMap1;
+	CubeMap<1, uint64_t> matchMapIm0;
+	CubeMap<1, uint64_t> matchMapIm1;
+	CubeMap<1, size_t> pivotColumnIndex;
 #ifdef USE_REDUCTION_MATRIX
-	unordered_map<uint64_t, vector<Cube>> reductionMatrix;
+	CubeMap<2, vector<Cube>> reductionMatrix;
 #endif
 #ifdef USE_CACHE
 	unordered_map<uint64_t, CubeQueue> cache;
