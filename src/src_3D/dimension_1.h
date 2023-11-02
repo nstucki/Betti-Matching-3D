@@ -29,7 +29,7 @@ class Dimension1 {
 	template <ComputePairsMode computePairsMode>
 	void computePairsUnified(vector<Cube>& ctr, uint8_t k);
 	void computeMatching();
-	void enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc) const;
+	void enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc, CubeMap<1, size_t>& pivotColumnIndex) const;
 	void enumerateColumnsToReduce(vector<Cube>& ctr, const CubicalGridComplex& cgc) const;
 	Cube popPivot(CubeQueue& column) const;
 	Cube getPivot(CubeQueue& column) const;
@@ -49,17 +49,17 @@ class Dimension1 {
 #ifdef USE_EMERGENT_PAIRS
 	bool isEmergentPair(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
 						BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
-						CoboundaryEnumerator& coEnumeratorAP) const;
+						CoboundaryEnumerator& coEnumeratorAP, CubeMap<1, size_t>& pivotColumnIndex) const;
 	bool isEmergentPairComp(const Cube& column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair, 
 							BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
-							CoboundaryEnumerator& coEnumeratorAP) const; 
+							CoboundaryEnumerator& coEnumeratorAP, CubeMap<1, size_t>& pivotColumnIndex) const;
 	bool isEmergentPairImage(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
-								const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator) const;
+								const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator, CubeMap<1, size_t>& pivotColumnIndex) const;
 
 	template <ComputePairsMode computePairsMode>
 	bool isEmergentPairUnified(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
 								const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
-								CoboundaryEnumerator& coEnumeratorAP) const;
+								CoboundaryEnumerator& coEnumeratorAP, CubeMap<1, size_t>& pivotColumnIndex) const;
 #endif
 	const CubicalGridComplex& cgc0;
 	const CubicalGridComplex& cgc1;
@@ -78,7 +78,12 @@ class Dimension1 {
 	CubeMap<1, Pair> matchMap1;
 	CubeMap<1, uint64_t> matchMapIm0;
 	CubeMap<1, uint64_t> matchMapIm1;
-	CubeMap<1, size_t> pivotColumnIndex;
+
+	CubeMap<1, size_t> pivotColumnIndexInput0; // to be used for input 0 pairs
+	CubeMap<1, size_t> pivotColumnIndexInput1; // to be used for input 1 pairs
+	CubeMap<1, size_t> pivotColumnIndexComp; // to be used for comparison pairs
+	CubeMap<1, size_t> pivotColumnIndexImage0; // to be used for image pairs 0
+	CubeMap<1, size_t> pivotColumnIndexImage1; // to be used for image pairs 1
 #ifdef USE_REDUCTION_MATRIX
 	unordered_map<uint64_t, vector<Cube>> reductionMatrix;
 #endif
