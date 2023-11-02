@@ -610,10 +610,6 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 	vector<Cube> faces;
 	BoundaryEnumerator enumeratorAP(cgc);
 	CoboundaryEnumerator coEnumeratorAP(cgc);
-    // if ((computePairsMode == INPUT_PAIRS && useApparentPairs) || (computePairsMode == COMPARISON_PAIRS && useApparentPairsComp) || useEmergentPairs) {
-    //     if (computePairsMode == INPUT_PAIRS || computePairsMode == COMPARISON_PAIRS) {
-    //     }
-    // }
 	bool shouldClear;
     if (computePairsMode == COMPARISON_PAIRS) {
 #if defined (USE_CLEARING_IMAGE) and not defined(USE_APPARENT_PAIRS_COMP)
