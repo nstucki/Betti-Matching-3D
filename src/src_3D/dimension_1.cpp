@@ -565,18 +565,6 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 #else
         false;
 #endif
-    const bool useEmergentPairs = 
-#ifdef USE_EMERGENT_PAIRS
-        true;
-#else
-        false;
-#endif
-    const bool useIsPaired = 
-#ifdef USE_ISPAIRED
-        true;
-#else
-        false;
-#endif
 
 	size_t ctrSize = ctr.size();
 	pivotColumnIndex.clear();
@@ -710,7 +698,9 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 				} else {
 					pivotColumnIndex.emplace(pivot.index, i);
 					if (pivot.birth != ctr[i].birth) {
-						pairs.push_back(Pair(pivot, ctr[i]));
+                        if (computePairsMode == INPUT_PAIRS || computePairsMode == COMPARISON_PAIRS) {
+							pairs.push_back(Pair(pivot, ctr[i]));
+						}
                         if (computePairsMode == INPUT_PAIRS) { 
 						    matchMap.emplace(pivot.index, pairs.back());
                         }
