@@ -1,9 +1,10 @@
 #include "dimension_1.h"
 #include "enumerators.h"
 
-#include <iostream>
-#include <chrono>
 #include <algorithm>
+#include <chrono>
+#include <future>
+#include <iostream>
 #include <stdexcept>
 
 using namespace dim3;
@@ -26,60 +27,92 @@ Dimension1::Dimension1(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 
 
 void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp, vector<Cube>& ctrImage) {
+	auto processInput0 = [this, &ctr0]() {
 #ifdef RUNTIME
-	cout << endl << "input 0: ";
+		cout << endl << "input 0: ";
 #endif
-
-	computePairs(ctr0, 0);
+    	computePairs(ctr0, 0);
 #ifdef USE_CLEARING_DIM0
-	enumerateEdges(ctr0, cgc0, pivotColumnIndexInput0);
+    	enumerateEdges(ctr0, cgc0, pivotColumnIndexInput0);
 #endif
+	};
 
+	auto processInput1 = [this, &ctr1]() {
 #ifdef RUNTIME
-	cout << endl << "input 1: ";
+    	cout << endl << "input 1: ";
 #endif
 
-	computePairs(ctr1, 1);
+	    computePairs(ctr1, 1);
 #ifdef USE_CLEARING_DIM0
-	enumerateEdges(ctr1, cgc1, pivotColumnIndexInput1);
+    	enumerateEdges(ctr1, cgc1, pivotColumnIndexInput1);
 #endif
+	};
 
+	auto processComparison = [this, &ctrComp, &ctrImage]() {
 #ifdef RUNTIME
-	cout << endl << "comparison: ";
+    	cout << endl << "comparison: ";
 #endif
 
-	computePairsComp(ctrComp);
+	    computePairsComp(ctrComp);
 #ifdef USE_CLEARING_DIM0
 #ifndef USE_APPARENT_PAIRS_COMP
-	ctrImage = ctrComp;
+    	ctrImage = ctrComp;
 #endif
-	enumerateEdges(ctrComp, cgcComp, pivotColumnIndexComp);
+	    enumerateEdges(ctrComp, cgcComp, pivotColumnIndexComp);
 #endif
+	};
 
+	auto processImageInput0Comparison = [this, &ctrComp, &ctrImage]() {
 #ifdef RUNTIME
-	cout << endl << "image 0: ";
+    	cout << endl << "image 0: ";
 #endif
 
 #if defined(USE_APPARENT_PAIRS_COMP) or defined(USE_CLEARING_DIM0)
-	computePairsImage(ctrImage, 0);
+    	computePairsImage(ctrImage, 0);
 #else
-	computePairsImage(ctrComp, 0);
+    	computePairsImage(ctrComp, 0);
 #endif
+	};
 
+	auto processImageInput1Comparison = [this, &ctrComp, &ctrImage]() {
 #ifdef RUNTIME
-	cout << endl << "image 1: ";
+		cout << endl << "image 1: ";
 #endif
 
 #if defined(USE_APPARENT_PAIRS_COMP) or defined(USE_CLEARING_DIM0)
-	computePairsImage(ctrImage, 1);
+          computePairsImage(ctrImage, 1);
 #else
-	computePairsImage(ctrComp, 1); 
+          computePairsImage(ctrComp, 1);
 #endif
-	
+	};
+
+#ifdef PARALLELIZE_INDEPENDENT_BARCODES_DIM1
+	auto comparisonFuture = std::async(processComparison);
+	auto input0Future = std::async(processInput0);
+	auto input1Future = std::async(processInput1);
+#if defined(USE_APPARENT_PAIRS_COMP) or defined(USE_CLEARING_DIM0) or defined(USE_ISPAIRED)
+	comparisonFuture.wait();
+#endif
+	auto imageInput0ComparisonFuture = std::async(processImageInput0Comparison);
+	auto imageInput1ComparisonFuture = std::async(processImageInput1Comparison);
+	input0Future.wait();
+	input1Future.wait();
+	imageInput0ComparisonFuture.wait();
+	imageInput1ComparisonFuture.wait();
+#if not(defined(USE_APPARENT_PAIRS_COMP) or defined(USE_CLEARING_DIM0) or defined(USE_ISPAIRED))
+	comparisonFuture.wait();
+#endif
+#else
+	processInput0();
+	processInput1();
+	processComparison();
+	processImageInput0Comparison();
+	processImageInput1Comparison();
+#endif
+
 #ifdef RUNTIME
 	cout << endl << "matching: ";
 #endif
-
 	computeMatching();
 }
 
