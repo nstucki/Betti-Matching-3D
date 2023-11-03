@@ -12,9 +12,10 @@
 //#define USE_APPARENT_PAIRS
 #define USE_EMERGENT_PAIRS
 #define USE_CACHE
-#define USE_CLEARING_IMAGE
+//#define USE_CLEARING_IMAGE
 #define USE_CLEARING_DIM0
 #define USE_STABLE_SORT_OR_STABLE_PARTITION // enables stable sort/binary input sorting optimization in dim3 edge enumeration methods
+#define PARALLELIZE_INDEPENDENT_BARCODES_DIM1 // enables parallelization of independent barcode computations in dim3::Dimension1
 
 typedef uint32_t index_t;
 typedef double value_t;
@@ -26,6 +27,9 @@ enum fileFormat { DIPHA, PERSEUS, NUMPY };
 
 using namespace std;
 
+#if defined(PARALLELIZE_INDEPENDENT_BARCODES_DIM1) and defined(USE_CLEARING_IMAGE)
+	static_assert(false, "PARALLELIZE_INDEPENDENT_BARCODES_DIM1 is active alongside incompatible options (race conditions could occur!)");
+#endif
 
 
 struct Config {
