@@ -4,6 +4,7 @@
 #include <iostream>
 #include <chrono>
 #include <algorithm>
+#include <stdexcept>
 
 using namespace dim3;
 using namespace std::chrono;
@@ -486,7 +487,7 @@ template <Dimension1::ComputePairsMode computePairsMode>
 bool Dimension1::isEmergentPairUnified(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
 	const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
 	CoboundaryEnumerator& coEnumeratorAP) const {
-		if (computePairsMode == ComputePairsMode::COMPARISON_PAIRS) {
+		if (computePairsMode == ComputePairsMode::INPUT_PAIRS) {
 			return isEmergentPair(column, pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP);
 		}
 		if (computePairsMode == ComputePairsMode::COMPARISON_PAIRS) {
@@ -495,7 +496,7 @@ bool Dimension1::isEmergentPairUnified(const Cube&column, Cube& pivot, size_t& j
 		if (computePairsMode == ComputePairsMode::IMAGE_PAIRS) {
 			return isEmergentPairImage(column, pivot, j, faces, checkEmergentPair, cgc, enumerator);
 		}
-		return false; // never happens
+		throw runtime_error("Invalid template argument computePairsMode"); // never happens on valid usage
 	}
 #endif
 
