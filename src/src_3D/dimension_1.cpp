@@ -20,7 +20,7 @@ Dimension1::Dimension1(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 #ifdef USE_REDUCTION_MATRIX
 						reductionMatrix(_cgc0.shape),
 #endif
-						pivotColumnIndex(_cgc0.shape) {}
+						pivotColumnIndex(_cgc0.shape), cache(_cgc0.shape) {}
 
 
 void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp, vector<Cube>& ctrImage) {
@@ -100,7 +100,6 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 #endif
 #ifdef USE_CACHE
 	cache.clear();
-	cache.reserve(min(config.cacheSize, ctrSize));
 	queue<uint64_t> cachedColumnIdx;
 	size_t numRecurse;
 #endif
@@ -387,30 +386,28 @@ void Dimension1::useReductionMatrix(const Cube& column, CubeQueue& workingBounda
 
 #ifdef USE_CACHE
 bool Dimension1::columnIsCached(const Cube& column, CubeQueue& workingBoundary) const {
-	auto pair = cache.find(column.index);
-	if (pair != cache.end()) {
-		auto cachedBoundary = pair->second;
-		while (!cachedBoundary.empty()) {
-			workingBoundary.push(cachedBoundary.top());
-			cachedBoundary.pop();
+	auto& cachedBoundary = cache.find(column.index);
+	if (cachedBoundary.has_value()) {
+		for (auto &face : *cachedBoundary) {
+			workingBoundary.push(face);
 		}
 		return true;
 	} else { return false; }
 }
 
 void Dimension1::addCache(const Cube& column, CubeQueue& workingBoundary, queue<uint64_t>& cachedColumnIdx) {
-	CubeQueue cleanWb;
-	Cube c;
+	std::vector<Cube> cleanWb;
 	while (!workingBoundary.empty()) {
-		c = workingBoundary.top();
+		Cube c = workingBoundary.top();
 		workingBoundary.pop();
 		if (!workingBoundary.empty() && c == workingBoundary.top()) { workingBoundary.pop(); } 
-		else { cleanWb.push(c); }
+		else { cleanWb.emplace_back(c); }
 	}
-	cache.emplace(column.index, cleanWb);
+
+	cache[column.index] = std::move(cleanWb);
 	cachedColumnIdx.push(column.index);
 	if (cachedColumnIdx.size() > config.cacheSize) {
-		cache.erase(cachedColumnIdx.front());
+		cache[cachedColumnIdx.front()] = {};
 		cachedColumnIdx.pop();
 	}
 }
@@ -556,7 +553,6 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 #endif
 #ifdef USE_CACHE
 	cache.clear();
-	cache.reserve(min(config.cacheSize, ctrSize));
 	queue<uint64_t> cachedColumnIdx;
 	size_t numRecurse;
 #ifdef RUNTIME
