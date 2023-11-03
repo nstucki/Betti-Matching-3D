@@ -17,7 +17,6 @@ Dimension1::Dimension1(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), pairs0(_pairs0), pairs1(_pairs1),
 						pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1),
 						matchMap0(_cgc0.shape), matchMap1(_cgc0.shape), matchMapIm0(_cgc0.shape), matchMapIm1(_cgc0.shape),
-						cache(_cgc0.shape),
 						pivotColumnIndexInput0(_cgc0.shape),
 						pivotColumnIndexInput1(_cgc1.shape),
 						pivotColumnIndexComp(_cgcComp.shape),
@@ -104,7 +103,7 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 	vector<Cube> reductionColumn;
 #endif
 #ifdef USE_CACHE
-	cache.clear();
+	CubeMap<2, vector<Cube>> cache(cgc.shape);
 	queue<uint64_t> cachedColumnIdx;
 	size_t numRecurse;
 #endif
@@ -152,12 +151,16 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 				reductionColumn.push_back(ctr[j]);
 #endif
 #ifdef USE_CACHE
-				if (!columnIsCached(ctr[j], workingBoundary)) {
+				if (!columnIsCached(ctr[j], workingBoundary, cache)) {
 #endif
 					enumerator.setBoundaryEnumerator(ctr[j]);
 					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #ifdef USE_REDUCTION_MATRIX
-					useReductionMatrix(ctr[j], workingBoundary, enumerator);
+					useReductionMatrix(ctr[j], workingBoundary, enumerator
+#ifdef USE_CACHE
+										, cache
+#endif
+										);
 #endif
 #ifdef USE_CACHE
 				}
@@ -206,7 +209,7 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 					pivotColumnIndex.emplace(pivot.index, i);
 #ifdef USE_CACHE
 					if (numRecurse >= config.minRecursionToCache) {
-						addCache(ctr[i], workingBoundary, cachedColumnIdx);
+						addCache(ctr[i], workingBoundary, cachedColumnIdx, cache);
 						break;
 					}
 #endif
@@ -371,17 +374,25 @@ Cube Dimension1::getPivot(CubeQueue& column) const {
 }
 
 #ifdef USE_REDUCTION_MATRIX
-void Dimension1::useReductionMatrix(const Cube& column, CubeQueue& workingBoundary, BoundaryEnumerator& enumerator) const {
+void Dimension1::useReductionMatrix(const Cube& column, CubeQueue& workingBoundary, BoundaryEnumerator& enumerator
+#ifdef USE_CACHE
+									, CubeMap<2, vector<Cube>>& cache
+#endif
+									) const {
 	auto pair = reductionMatrix.find(column.index);
 	if (pair != reductionMatrix.end()) {
 		auto reductionColumn = pair->second;
 		for (Cube& row : reductionColumn) {
 #ifdef USE_CACHE
-			if (!columnIsCached(row, workingBoundary)) {
+			if (!columnIsCached(row, workingBoundary, cache)) {
 #endif
 				enumerator.setBoundaryEnumerator(row);
 				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
-				useReductionMatrix(row, workingBoundary, enumerator);
+				useReductionMatrix(row, workingBoundary, enumerator
+#ifdef USE_CACHE
+									, cache
+#endif
+									);
 #ifdef USE_CACHE
 			}
 #endif
@@ -391,7 +402,7 @@ void Dimension1::useReductionMatrix(const Cube& column, CubeQueue& workingBounda
 #endif
 
 #ifdef USE_CACHE
-bool Dimension1::columnIsCached(const Cube& column, CubeQueue& workingBoundary) const {
+bool Dimension1::columnIsCached(const Cube& column, CubeQueue& workingBoundary, CubeMap<2, vector<Cube>>& cache) const {
 	auto cachedBoundary = cache.find(column.index);
 	if (cachedBoundary.has_value()) {
 		for (auto &face : *cachedBoundary) {
@@ -401,7 +412,7 @@ bool Dimension1::columnIsCached(const Cube& column, CubeQueue& workingBoundary) 
 	} else { return false; }
 }
 
-void Dimension1::addCache(const Cube& column, CubeQueue& workingBoundary, queue<uint64_t>& cachedColumnIdx) {
+void Dimension1::addCache(const Cube& column, CubeQueue& workingBoundary, queue<uint64_t>& cachedColumnIdx, CubeMap<2, vector<Cube>>& cache) {
 	std::vector<Cube> cleanWb;
 	while (!workingBoundary.empty()) {
 		Cube c = workingBoundary.top();
@@ -609,7 +620,7 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 #endif
 #endif
 #ifdef USE_CACHE
-	cache.clear();
+	CubeMap<2, vector<Cube>> cache(cgc.shape);
 	queue<uint64_t> cachedColumnIdx;
 	size_t numRecurse;
 #ifdef RUNTIME
@@ -684,12 +695,16 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 				reductionColumn.push_back(ctr[j]);
 #endif
 #ifdef USE_CACHE
-				if (!columnIsCached(ctr[j], workingBoundary)) {
+				if (!columnIsCached(ctr[j], workingBoundary, cache)) {
 #endif
 					enumerator.setBoundaryEnumerator(ctr[j]);
 					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #ifdef USE_REDUCTION_MATRIX
-					useReductionMatrix(ctr[j], workingBoundary, enumerator);
+					useReductionMatrix(ctr[j], workingBoundary, enumerator
+#ifdef USE_CACHE
+									, cache
+#endif
+									);
 #endif
 #ifdef USE_CACHE
 				}
@@ -746,7 +761,7 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 					}
 #ifdef USE_CACHE
 					if (numRecurse >= config.minRecursionToCache) {
-						addCache(ctr[i], workingBoundary, cachedColumnIdx);
+						addCache(ctr[i], workingBoundary, cachedColumnIdx, cache);
 #ifdef RUNTIME
 						++numCached;
 #endif

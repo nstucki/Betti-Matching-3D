@@ -34,11 +34,15 @@ class Dimension1 {
 	Cube popPivot(CubeQueue& column) const;
 	Cube getPivot(CubeQueue& column) const;
 #ifdef USE_REDUCTION_MATRIX
-	void useReductionMatrix(const Cube& column, CubeQueue& workingBoundary, BoundaryEnumerator& enumerator) const;
+	void useReductionMatrix(const Cube& column, CubeQueue& workingBoundary, BoundaryEnumerator& enumerator
+#ifdef USE_CACHE
+							, CubeMap<2, vector<Cube>>& cache
+#endif
+							) const;
 #endif
 #ifdef USE_CACHE
-	bool columnIsCached(const Cube& column, CubeQueue& workingBoundary) const;
-	void addCache(const Cube& column, CubeQueue& workingBoundary, queue<uint64_t>& cachedColumnIdx);
+	bool columnIsCached(const Cube& column, CubeQueue& workingBoundary, CubeMap<2, vector<Cube>>& cache) const;
+	void addCache(const Cube& column, CubeQueue& workingBoundary, queue<uint64_t>& cachedColumnIdx, CubeMap<2, vector<Cube>>& cache);
 #endif
 #if defined(USE_APPARENT_PAIRS) or defined(USE_APPARENT_PAIRS_COMP)
 	bool pivotIsApparentPair(const Cube& pivot, vector<Cube>& faces, 
@@ -86,9 +90,6 @@ class Dimension1 {
 	CubeMap<1, size_t> pivotColumnIndexImage1; // to be used for image pairs 1
 #ifdef USE_REDUCTION_MATRIX
 	unordered_map<uint64_t, vector<Cube>> reductionMatrix;
-#endif
-#ifdef USE_CACHE
-	CubeMap<2, vector<Cube>> cache;
 #endif
 };
 }
