@@ -47,17 +47,8 @@ class Dimension1 {
 										BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator) const;
 #endif
 #ifdef USE_EMERGENT_PAIRS
-	bool isEmergentPair(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
-						BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
-						CoboundaryEnumerator& coEnumeratorAP) const;
-	bool isEmergentPairComp(const Cube& column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair, 
-							BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
-							CoboundaryEnumerator& coEnumeratorAP) const; 
-	bool isEmergentPairImage(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
-								const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator) const;
-
 	template <ComputePairsMode computePairsMode>
-	bool isEmergentPairUnified(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
+	bool isEmergentPair(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
 								const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
 								CoboundaryEnumerator& coEnumeratorAP) const;
 #endif

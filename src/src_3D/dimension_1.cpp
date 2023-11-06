@@ -123,7 +123,7 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 		while (true) {
 			if (j == i) {
 #ifdef USE_EMERGENT_PAIRS
-				if (isEmergentPair(ctr[i], pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP)) {
+				if (isEmergentPair<INPUT_PAIRS>(ctr[i], pivot, j, faces, checkEmergentPair, cgc, enumerator, enumeratorAP, coEnumeratorAP)) {
 					pivotColumnIndex.emplace(pivot.index, i);
 					break;
 				} else {
@@ -396,108 +396,62 @@ void Dimension1::addCache(const Cube& column, CubeQueue& workingBoundary, queue<
 #endif
 
 #ifdef USE_EMERGENT_PAIRS
-bool Dimension1::isEmergentPair(const Cube& column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair, 
-								BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
-								CoboundaryEnumerator& coEnumeratorAP) const {
-	faces.clear();
-	enumerator.setBoundaryEnumerator(column);
-	while (enumerator.hasPreviousFace()) {
-		if (checkEmergentPair && enumerator.nextFace.birth == column.birth) {
-			auto pair = pivotColumnIndex.find(enumerator.nextFace.index);
+template<Dimension1::ComputePairsMode computePairsMode>
+bool Dimension1::isEmergentPair(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
+		const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP,
+		CoboundaryEnumerator& coEnumeratorAP) const {
+    auto birth = (computePairsMode == IMAGE_PAIRS) ? cgc.getBirth(column.x(), column.y(), column.z(), column.type(), 2) : column.birth;
+
+    const bool useApparentPairs =
 #ifdef USE_APPARENT_PAIRS
-			if (pair != pivotColumnIndex.end()) {
-				checkEmergentPair = false;
-				j = pair->second;
-			} else if (pivotOfColumnIsApparentPair(enumerator.nextFace, column, faces, enumeratorAP, coEnumeratorAP)) {
-				checkEmergentPair = false;
-			} else {
-				pivot = enumerator.nextFace;
-				return true;
-			}
+        true;
 #else
-			if (pair != pivotColumnIndex.end()) {
-				checkEmergentPair = false;
-				j = pair->second;
-			} else {
-				pivot = enumerator.nextFace;
-				return true;
-			}
+        false;
 #endif
-		}
-		faces.push_back(enumerator.nextFace);
-	}
-	return false;
-}
-
-bool Dimension1::isEmergentPairComp(const Cube& column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair, 
-										BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
-										CoboundaryEnumerator& coEnumeratorAP) const {
-	faces.clear();
-	enumerator.setBoundaryEnumerator(column);
-	while (enumerator.hasPreviousFace()) {
-		if (checkEmergentPair && enumerator.nextFace.birth == column.birth) {
-			auto pair = pivotColumnIndex.find(enumerator.nextFace.index);
+    const bool useApparentPairsComp =
 #ifdef USE_APPARENT_PAIRS_COMP
-			if (pair != pivotColumnIndex.end()) {
-				checkEmergentPair = false;
-				j = pair->second;
-			} else if (pivotOfColumnIsApparentPair(enumerator.nextFace, column, faces, enumeratorAP, coEnumeratorAP)) {
-				checkEmergentPair = false;
-			} else {
-				pivot = enumerator.nextFace;
-				return true;
-			}
+        true;
 #else
-			if (pair != pivotColumnIndex.end()) {
-				checkEmergentPair = false;
-				j = pair->second;
-			} else {
-				pivot = enumerator.nextFace;
-				return true;
-			}
+        false;
 #endif
-		}
-		faces.push_back(enumerator.nextFace);
-	}
-	return false;
-}
 
-bool Dimension1::isEmergentPairImage(const Cube& column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair, 
-										const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator) const {
-	value_t birth = cgc.getBirth(column.x(), column.y(), column.z(), column.type(), 2);
 	faces.clear();
 	enumerator.setBoundaryEnumerator(column);
 	while (enumerator.hasPreviousFace()) {
 		if (checkEmergentPair && enumerator.nextFace.birth == birth) {
 			auto pair = pivotColumnIndex.find(enumerator.nextFace.index);
-			if (pair != pivotColumnIndex.end()) {
-				checkEmergentPair = false;
-				j = pair->second;
-			} else {
-				pivot = enumerator.nextFace;
-				return true;
-			}
+            if ((useApparentPairs && computePairsMode == INPUT_PAIRS)
+                    || (useApparentPairsComp && computePairsMode == COMPARISON_PAIRS)
+                    || computePairsMode == IMAGE_PAIRS) {
+				if (pair != pivotColumnIndex.end()) {
+                    checkEmergentPair = false;
+                    j = pair->second;
+                }
+#if defined(USE_APPARENT_PAIRS) or defined(USE_APPARENT_PAIRS_COMP)
+				else if ((computePairsMode == INPUT_PAIRS || computePairsMode == COMPARISON_PAIRS)
+                            && pivotOfColumnIsApparentPair(enumerator.nextFace, column, faces, enumeratorAP, coEnumeratorAP)) {
+                    checkEmergentPair = false;
+                }
+#endif
+				else {
+                    pivot = enumerator.nextFace;
+                    return true;
+                }
+            }
+            else if (computePairsMode == INPUT_PAIRS || computePairsMode == COMPARISON_PAIRS) {
+                if (pair != pivotColumnIndex.end()) {
+                    checkEmergentPair = false;
+                    j = pair->second;
+                } else {
+                    pivot = enumerator.nextFace;
+                    return true;
+                }
+            }
 		}
 		faces.push_back(enumerator.nextFace);
 	}
 	return false;
 }
-
-template <Dimension1::ComputePairsMode computePairsMode>
-bool Dimension1::isEmergentPairUnified(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
-	const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
-	CoboundaryEnumerator& coEnumeratorAP) const {
-		if (computePairsMode == ComputePairsMode::INPUT_PAIRS) {
-			return isEmergentPair(column, pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP);
-		}
-		if (computePairsMode == ComputePairsMode::COMPARISON_PAIRS) {
-			return isEmergentPairComp(column, pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP);
-		}
-		if (computePairsMode == ComputePairsMode::IMAGE_PAIRS) {
-			return isEmergentPairImage(column, pivot, j, faces, checkEmergentPair, cgc, enumerator);
-		}
-		throw runtime_error("Invalid template argument computePairsMode"); // never happens on valid usage
-	}
 #endif
 
 #if defined(USE_APPARENT_PAIRS) or defined(USE_APPARENT_PAIRS_COMP)
@@ -623,7 +577,7 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 		while (true) {
 			if (j == i) {
 #ifdef USE_EMERGENT_PAIRS
-				if (isEmergentPairUnified<computePairsMode>(ctr[i], pivot, j, faces, checkEmergentPair, cgc, enumerator, enumeratorAP, coEnumeratorAP)) {
+				if (isEmergentPair<computePairsMode>(ctr[i], pivot, j, faces, checkEmergentPair, cgc, enumerator, enumeratorAP, coEnumeratorAP)) {
 					pivotColumnIndex.emplace(pivot.index, i);
 
                     if (computePairsMode == IMAGE_PAIRS
