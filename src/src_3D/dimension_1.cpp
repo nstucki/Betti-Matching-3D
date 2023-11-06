@@ -698,25 +698,25 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 					continue;
 				} else {
 					pivotColumnIndex.emplace(pivot.index, i);
-					if (pivot.birth != ctr[i].birth) {
-                        if (computePairsMode == INPUT_PAIRS || computePairsMode == COMPARISON_PAIRS) {
+					if (computePairsMode == INPUT_PAIRS || computePairsMode == COMPARISON_PAIRS) {
+						if (pivot.birth != ctr[i].birth) {
 							pairs.push_back(Pair(pivot, ctr[i]));
+							if (computePairsMode == INPUT_PAIRS) {
+								matchMap.emplace(pivot.index, pairs.back());
+							}
+#ifdef USE_ISPAIRED
+							if (computePairsMode == COMPARISON_PAIRS) {
+								isPairedComp.emplace(ctr[i].index, true);
+							}
+#endif
 						}
-                        if (computePairsMode == INPUT_PAIRS) { 
-						    matchMap.emplace(pivot.index, pairs.back());
-                        }
-                        if (computePairsMode == COMPARISON_PAIRS) {
+					}
+					if (computePairsMode == IMAGE_PAIRS
 #ifdef USE_ISPAIRED
-    						isPairedComp.emplace(ctr[i].index, true);
+						&& isPairedComp[ctr[i].index]
 #endif
-                        }
-                        if (computePairsMode == IMAGE_PAIRS
-#ifdef USE_ISPAIRED
-						 	&& isPairedComp[ctr[i].index]
-#endif
-						) {
-                            matchMapIm.emplace(ctr[i].index, pivot.index);
-                        }
+					) {
+						matchMapIm.emplace(ctr[i].index, pivot.index);
 					}
 #ifdef USE_CACHE
 					if (numRecurse >= config.minRecursionToCache) {
