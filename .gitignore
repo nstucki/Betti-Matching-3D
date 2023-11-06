@@ -18,3 +18,5 @@ Makefile
 test
 test/inputs.ipynb
 test/test.ipynb
+out
+.cache/clangd/index
