@@ -739,39 +739,25 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 					break;
 				}
 			} else {
-                if (computePairsMode == COMPARISON_PAIRS) {
-#if defined(USE_CLEARING_IMAGE) and not defined(USE_APPARENT_PAIRS_COMP)
-                    ctr[i].index = NONE;
-                    shouldClear = true;
-#endif
-                }
-                if (computePairsMode == IMAGE_PAIRS) {
 #if defined(USE_CLEARING_IMAGE)
+                if ((computePairsMode == COMPARISON_PAIRS && !useApparentPairsComp) || computePairsMode == IMAGE_PAIRS) {
                     ctr[i].index = NONE;
                     shouldClear = true;
-#endif
                 }
+#endif
                 break;
             }
 		}
 	}
 
-if (computePairsMode == COMPARISON_PAIRS) {
-#if defined(USE_CLEARING_IMAGE) and not defined(USE_APPARENT_PAIRS_COMP)
-	if (shouldClear) {
-		auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.index == NONE; });
-		ctr.erase(newEnd, ctr.end());
+#if defined(USE_CLEARING_IMAGE)
+	if ((computePairsMode == COMPARISON_PAIRS && !useApparentPairsComp) || computePairsMode == IMAGE_PAIRS) {
+		if (shouldClear) {
+			auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.index == NONE; });
+			ctr.erase(newEnd, ctr.end());
+		}
 	}
 #endif
-}
-if (computePairsMode == IMAGE_PAIRS) {
-#ifdef USE_CLEARING_IMAGE
-	if (shouldClear) {
-		auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.index == NONE; });
-		ctr.erase(newEnd, ctr.end());
-	}
-#endif
-}
 
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
