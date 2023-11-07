@@ -28,6 +28,10 @@ struct BettiMatchingResult {
     py::array_t<int64_t> predictionUnmatchedDeathCoordinates;
     py::array_t<int64_t> numMatchesByDim;
     py::array_t<int64_t> numUnmatchedPredictionByDim;
+    // Optional return values if return_target_unmatched_pairs flag is set (not needed for Betti matching training loss)
+    std::optional<py::array_t<int64_t>> targetUnmatchedBirthCoordinates;
+    std::optional<py::array_t<int64_t>> targetUnmatchedDeathCoordinates;
+    std::optional<py::array_t<int64_t>> numUnmatchedTargetByDim;
 };
 
 string repr_vector(const vector<index_t> shape, std::tuple<string, string> parentheses = make_tuple("(", ")"), string separator = ", ") {
@@ -103,7 +107,8 @@ PYBIND11_MODULE(betti_matching, m) {
 
     m.def("compute_matching", [](
         vector<py::array_t<value_t>> inputs0,
-        vector<py::array_t<value_t>> inputs1
+        vector<py::array_t<value_t>> inputs1,
+        bool return_target_unmatched_pairs
     )
     {
         if (inputs0.size() != inputs1.size()) {
@@ -128,27 +133,41 @@ PYBIND11_MODULE(betti_matching, m) {
 
         // Write the results into numpy arrays
         for (auto &result : pairResults) {
-            auto matchesByDimension = std::get<0>(result);
-            auto predictionUnmatchedByDimension = std::get<1>(result);
+            auto& matchesByDimension = std::get<0>(result);
+            auto& predictionUnmatchedByDimension = std::get<1>(result);
+            auto& targetUnmatchedByDimension = std::get<2>(result);
 
             size_t numMatches = 0;
             size_t numPredictionUnmatched = 0;
+            size_t numTargetUnmatched = 0;
             for (size_t d = 0; d < numDimensions; d++) {
                 numMatches += matchesByDimension[d].size();
                 numPredictionUnmatched += predictionUnmatchedByDimension[d].size();
+                numTargetUnmatched += targetUnmatchedByDimension[d].size();
             }
 
-            // Shape (num matched in total, num dimensions)
+            // Shape: (num matched in total, num dimensions)
             py::array_t<int64_t> predictionMatchesBirthCoordinates({numMatches, numDimensions}, {numDimensions * sizeof(int64_t), sizeof(int64_t)});
             py::array_t<int64_t> predictionMatchesDeathCoordinates({numMatches, numDimensions}, {numDimensions * sizeof(int64_t), sizeof(int64_t)});
             py::array_t<int64_t> targetMatchesBirthCoordinates({numMatches, numDimensions}, {numDimensions * sizeof(int64_t), sizeof(int64_t)});
             py::array_t<int64_t> targetMatchesDeathCoordinates({numMatches, numDimensions}, {numDimensions * sizeof(int64_t), sizeof(int64_t)});
-            // Shape (num unmatched (prediction) in total, num dimensions)
+            // Shape: (num unmatched (prediction) in total, num dimensions)
             py::array_t<int64_t> predictionUnmatchedBirthCoordinates({numPredictionUnmatched, numDimensions}, {numDimensions * sizeof(int64_t), sizeof(int64_t)});
             py::array_t<int64_t> predictionUnmatchedDeathCoordinates({numPredictionUnmatched, numDimensions}, {numDimensions * sizeof(int64_t), sizeof(int64_t)});
-            // Shape (num dimensions,)
+            // Shape: (num unmatched (target) in total, num dimensions)
+            py::array_t<int64_t> targetUnmatchedBirthCoordinates;
+            py::array_t<int64_t> targetUnmatchedDeathCoordinates;
+            if (return_target_unmatched_pairs) {
+                targetUnmatchedBirthCoordinates = py::array_t<int64_t>({numTargetUnmatched, numDimensions}, {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+                targetUnmatchedDeathCoordinates = py::array_t<int64_t>({numTargetUnmatched, numDimensions}, {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+            }
+            // Shape: (num dimensions,)
             py::array_t<int64_t> numMatchesByDim({numDimensions}, {sizeof(int64_t)});
             py::array_t<int64_t> numUnmatchedPredictionByDim({numDimensions}, {sizeof(int64_t)});
+            py::array_t<int64_t> numUnmatchedTargetByDim;
+            if (return_target_unmatched_pairs) {
+                numUnmatchedTargetByDim = py::array_t<int64_t>({numDimensions}, {sizeof(int64_t)});
+            }
 
             auto predictionMatchesBirthCoordinatesView = predictionMatchesBirthCoordinates.mutable_unchecked();
             auto predictionMatchesDeathCoordinatesView = predictionMatchesDeathCoordinates.mutable_unchecked();
@@ -169,10 +188,9 @@ PYBIND11_MODULE(betti_matching, m) {
                         targetMatchesBirthCoordinatesView(i, d) = match.pair1.birth[d];
                         targetMatchesDeathCoordinatesView(i, d) = match.pair1.death[d];
                     }
-                    i += 1;
+                    i++;
                 }
-                numMatchesByDimView(currentDimension) = matchesInDimension.size();
-                currentDimension++;
+                numMatchesByDimView(currentDimension++) = matchesInDimension.size();
             }
             i = 0;
             currentDimension = 0;
@@ -182,24 +200,49 @@ PYBIND11_MODULE(betti_matching, m) {
                         predictionUnmatchedBirthCoordinatesView(i, d) = unmatched.birth[d];
                         predictionUnmatchedDeathCoordinatesView(i, d) = unmatched.death[d];
                     }
-                    i += 1;
+                    i++;
                 }
-                numUnmatchedPredictionByDimView(currentDimension) = unmatchedInDimension.size();
-                currentDimension += 1;
+                numUnmatchedPredictionByDimView(currentDimension++) = unmatchedInDimension.size();
+            }
+            if (return_target_unmatched_pairs) {
+                i = 0;
+                currentDimension = 0;
+                auto targetUnmatchedBirthCoordinatesView = targetUnmatchedBirthCoordinates.mutable_unchecked();
+                auto targetUnmatchedDeathCoordinatesView = targetUnmatchedDeathCoordinates.mutable_unchecked();
+                auto numUnmatchedTargetByDimView = numUnmatchedTargetByDim.mutable_unchecked();
+                for (auto &unmatchedInDimension : targetUnmatchedByDimension) {
+                    for (auto &unmatched : unmatchedInDimension) {
+                        for (int d = 0; d < numDimensions; d++) {
+                            targetUnmatchedBirthCoordinatesView(i, d) = unmatched.birth[d];
+                            targetUnmatchedDeathCoordinatesView(i, d) = unmatched.death[d];
+                        }
+                        i++;
+                    }
+                    numUnmatchedTargetByDimView(currentDimension++) = unmatchedInDimension.size();
+                }
             }
 
-            arrayResults.emplace_back(BettiMatchingResult{
-                std::move(predictionMatchesBirthCoordinates),
-                std::move(predictionMatchesDeathCoordinates),
-                std::move(targetMatchesBirthCoordinates),
-                std::move(targetMatchesDeathCoordinates),
-                std::move(predictionUnmatchedBirthCoordinates),
-                std::move(predictionUnmatchedDeathCoordinates),
-                std::move(numMatchesByDim),
-                std::move(numUnmatchedPredictionByDim)});
+            auto arrayResult = BettiMatchingResult{
+                predictionMatchesBirthCoordinates=std::move(predictionMatchesBirthCoordinates),
+                predictionMatchesDeathCoordinates=std::move(predictionMatchesDeathCoordinates),
+                targetMatchesBirthCoordinates=std::move(targetMatchesBirthCoordinates),
+                targetMatchesDeathCoordinates=std::move(targetMatchesDeathCoordinates),
+                predictionUnmatchedBirthCoordinates=std::move(predictionUnmatchedBirthCoordinates),
+                predictionUnmatchedDeathCoordinates=std::move(predictionUnmatchedDeathCoordinates),
+                numMatchesByDim=std::move(numMatchesByDim),
+                numUnmatchedPredictionByDim=std::move(numUnmatchedPredictionByDim)};
+            if (return_target_unmatched_pairs) {
+                arrayResult.targetUnmatchedBirthCoordinates = std::move(targetUnmatchedBirthCoordinates);
+                arrayResult.targetUnmatchedDeathCoordinates = std::move(targetUnmatchedDeathCoordinates);
+                arrayResult.numUnmatchedTargetByDim = std::move(numUnmatchedTargetByDim);
+            }
+            arrayResults.emplace_back(arrayResult);
         }
         return arrayResults;
-    });
+    },
+    py::arg("inputs0"),
+    py::arg("inputs1"),
+    py::arg("return_target_unmatched_pairs") = true);
 
 
 
@@ -228,8 +271,11 @@ PYBIND11_MODULE(betti_matching, m) {
         .def_readonly("target_matches_death_coordinates", &BettiMatchingResult::targetMatchesDeathCoordinates)
         .def_readonly("prediction_unmatched_birth_coordinates", &BettiMatchingResult::predictionUnmatchedBirthCoordinates)
         .def_readonly("prediction_unmatched_death_coordinates", &BettiMatchingResult::predictionUnmatchedDeathCoordinates)
+        .def_readonly("target_unmatched_birth_coordinates", &BettiMatchingResult::targetUnmatchedBirthCoordinates)
+        .def_readonly("target_unmatched_death_coordinates", &BettiMatchingResult::targetUnmatchedDeathCoordinates)
         .def_readonly("num_matches_by_dim", &BettiMatchingResult::numMatchesByDim)
         .def_readonly("num_unmatched_prediction_by_dim", &BettiMatchingResult::numUnmatchedPredictionByDim)
+        .def_readonly("num_unmatched_target_by_dim", &BettiMatchingResult::numUnmatchedTargetByDim)
         .def("__repr__", [](BettiMatchingResult &self) {
             auto reprMemberArray = [](string name, py::array_t<int64_t>& array) {
                 return name + "=" + repr_vector(std::vector<index_t>(array.shape(), array.shape() + array.ndim()), make_tuple("[", "]"));
@@ -241,8 +287,11 @@ PYBIND11_MODULE(betti_matching, m) {
                 reprMemberArray("target_matches_death_coordinates", self.targetMatchesDeathCoordinates) + ", " +
                 reprMemberArray("prediction_unmatched_birth_coordinates", self.predictionUnmatchedBirthCoordinates) + ", " +
                 reprMemberArray("prediction_unmatched_death_coordinates", self.predictionUnmatchedDeathCoordinates) + ", " +
+                (self.targetUnmatchedBirthCoordinates.has_value() ? (reprMemberArray("target_unmatched_birth_coordinates", *self.targetUnmatchedBirthCoordinates) + ", ") : "") +
+                (self.targetUnmatchedDeathCoordinates.has_value() ? (reprMemberArray("target_unmatched_death_coordinates", *self.targetUnmatchedDeathCoordinates) + ", ") : "") +
                 reprMemberArray("num_matches_by_dim", self.numMatchesByDim) + ", " +
-                reprMemberArray("num_unmatched_prediction_by_dim", self.numUnmatchedPredictionByDim)
+                reprMemberArray("num_unmatched_prediction_by_dim", self.numUnmatchedPredictionByDim) +
+                (self.numUnmatchedTargetByDim.has_value() ? (", " + reprMemberArray("num_unmatched_target_by_dim", *self.numUnmatchedTargetByDim) + ", ") : "")
             ) + ")";
         });
 }
