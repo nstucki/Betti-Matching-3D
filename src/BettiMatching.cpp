@@ -130,7 +130,6 @@ vector<vector<VoxelPair>> BettiMatching::computePairsInput0() {
     auto pairsInput0 = bettiMatching.computePairsInput0();
 
     computedPairsInput0 = true;
-    cout << "Called\n";
 
     return pairsInput0;
 }
