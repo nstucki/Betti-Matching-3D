@@ -60,6 +60,18 @@ std::tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>, vector<vector<
     return bettiMatching.getMatching();
 };
 
+vector<vector<VoxelPair>> computeInput0PairsFromNumpyArrays(
+    py::array_t<value_t> &input0)
+{
+    vector<index_t> shape0(input0.shape(), input0.shape() + input0.ndim());
+    vector<value_t> input0Vector(input0.mutable_data(), input0.mutable_data() + input0.size());
+    vector<value_t> input0VectorCopy(input0.mutable_data(), input0.mutable_data() + input0.size());
+
+    Config config;
+    BettiMatching bettiMatching(std::move(input0Vector), std::move(input0VectorCopy), std::move(shape0), std::move(config));
+    return bettiMatching.computePairsInput0();
+};
+
 BettiMatchingResult arrayResultFromVoxelPairResult(vector<vector<VoxelMatch>>& matchesByDimension, vector<vector<VoxelPair>>& predictionUnmatchedByDimension, vector<vector<VoxelPair>>& targetUnmatchedByDimension, bool returnTargetUnmatchedPairs) {
     auto numDimensions = matchesByDimension.size();
 
@@ -246,6 +258,37 @@ PYBIND11_MODULE(betti_matching, m) {
     py::arg("inputs1"),
     py::arg("return_target_unmatched_pairs") = true);
 
+    m.def("compute_barcode", [](vector<py::array_t<value_t>> inputs) {
+        size_t batchSize = inputs.size();
+        size_t numDimensions = inputs[0].ndim();
+
+        std::vector<std::tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>, vector<vector<VoxelPair>>>> pairResults;
+        // Create one asynchronous task for Betti matching computation per input in the batch
+        std::vector<std::future<vector<vector<VoxelPair>>>> resultFutures;
+        for (int i = 0; i < inputs.size(); i++) {
+            resultFutures.push_back(std::async(computeInput0PairsFromNumpyArrays, std::ref(inputs[i])));
+        }
+
+        // Now block on all of them one at a time.
+        for (auto& future : resultFutures) {
+            auto result = future.get();
+            vector<vector<VoxelMatch>> resultVoxelMatches(numDimensions);
+            for (int d = 0; d < numDimensions; d++) {
+                for (auto& voxelPair : result[d]) {
+                    resultVoxelMatches[d].emplace_back(voxelPair, voxelPair);
+                }
+            }
+            pairResults.emplace_back(resultVoxelMatches, std::vector<std::vector<VoxelPair>>(3), std::vector<std::vector<VoxelPair>>(3));
+        }
+
+        vector<BettiMatchingResult> arrayResults;
+
+        // Write the results into numpy arrays
+        for (auto &result : pairResults) {
+            arrayResults.emplace_back(arrayResultFromVoxelPairResult(std::get<0>(result), std::get<1>(result), std::get<2>(result), false));
+        }
+        return arrayResults;
+    });
 
 
     py::class_<VoxelMatch>(m, "VoxelMatch")
