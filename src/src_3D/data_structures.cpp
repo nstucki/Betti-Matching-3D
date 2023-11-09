@@ -7,7 +7,7 @@ using namespace std;
 
 
 
-Cube::Cube() : birth(0), index(NONE) {}
+Cube::Cube() : birth(0), index(NONE_INDEX) {}
 
 
 Cube::Cube(value_t _birth, index_t _x, index_t _y, index_t _z, uint8_t _type) : birth(_birth) {

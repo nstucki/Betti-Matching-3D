@@ -147,16 +147,16 @@ CubeMap<_dim, _Tp>::CubeMap(vector<index_t> shape) : shape(shape), stride_x_dire
 
 template<int _dim, class _Tp>
 void CubeMap<_dim, _Tp>::emplace(uint64_t cube_index, _Tp element) {
-	if (cube_index != NONE) {
+	if (cube_index != NONE_INDEX) {
 		elements[computeCoordinateIndex(cube_index)] = element;
 	} else {
-		throw runtime_error("CubeMap::emplace may not be called with NONE magic number");
+		throw runtime_error("CubeMap::emplace may not be called with NONE_INDEX magic number");
 	}
 }
 
 template<int _dim, class _Tp>
 const std::optional<_Tp>& CubeMap<_dim, _Tp>::find(uint64_t cube_index) const {
-	if (cube_index != NONE) {
+	if (cube_index != NONE_INDEX) {
 		return elements[computeCoordinateIndex(cube_index)];
 	}
 	return none;
@@ -164,10 +164,10 @@ const std::optional<_Tp>& CubeMap<_dim, _Tp>::find(uint64_t cube_index) const {
 
 template<int _dim, class _Tp>
 optional<_Tp>& CubeMap<_dim, _Tp>::operator[](uint64_t cube_index) {
-	if (cube_index != NONE) {
+	if (cube_index != NONE_INDEX) {
 		return elements[computeCoordinateIndex(cube_index)];
 	}
-	throw runtime_error("CubeMap subscript operator may not be called with NONE magic number");
+	throw runtime_error("CubeMap subscript operator may not be called with NONE_INDEX magic number");
 }
 
 template<int _dim, class _Tp>

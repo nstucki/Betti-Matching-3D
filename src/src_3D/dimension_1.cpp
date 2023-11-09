@@ -202,7 +202,7 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 #endif
 			}
 			pivot = getPivot(workingBoundary);
-			if (pivot.index != NONE) {
+			if (pivot.index != NONE_INDEX) {
 				auto it = pivotColumnIndex.find(pivot.index);
 				if (it.has_value()) {
 					j = *it;
@@ -404,7 +404,7 @@ Cube Dimension1::popPivot(CubeQueue& column) const {
 
 Cube Dimension1::getPivot(CubeQueue& column) const {
 	Cube result = popPivot(column);
-	if (result.index != NONE) { column.push(result); }
+	if (result.index != NONE_INDEX) { column.push(result); }
 	return result;
 }
 
@@ -715,7 +715,7 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
                 }
             }
 #endif
-			if (pivot.index != NONE) {
+			if (pivot.index != NONE_INDEX) {
 				auto cachedIndex = pivotColumnIndex.find(pivot.index);
 				if (cachedIndex.has_value()) {
 					j = *cachedIndex;
@@ -768,7 +768,7 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 			} else {
 #if defined(USE_CLEARING_IMAGE)
                 if ((computePairsMode == COMPARISON_PAIRS && !useApparentPairsComp) || computePairsMode == IMAGE_PAIRS) {
-                    ctr[i].index = NONE;
+                    ctr[i].index = NONE_INDEX;
                     shouldClear = true;
                 }
 #endif
@@ -780,7 +780,7 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 #if defined(USE_CLEARING_IMAGE)
 	if ((computePairsMode == COMPARISON_PAIRS && !useApparentPairsComp) || computePairsMode == IMAGE_PAIRS) {
 		if (shouldClear) {
-			auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.index == NONE; });
+			auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.index == NONE_INDEX; });
 			ctr.erase(newEnd, ctr.end());
 		}
 	}

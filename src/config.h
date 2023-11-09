@@ -22,6 +22,7 @@ typedef double value_t;
 
 #define INFTY numeric_limits<value_t>::infinity()
 #define NONE numeric_limits<index_t>::max()
+#define NONE_INDEX numeric_limits<uint64_t>::max()
 
 enum fileFormat { DIPHA, PERSEUS, NUMPY };
 

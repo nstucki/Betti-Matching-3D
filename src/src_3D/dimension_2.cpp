@@ -276,11 +276,11 @@ void Dimension2::computeInputAndImagePairs(vector<Cube>& dualEdges, const uint8_
 				pairs.push_back(Pair(*edge, Cube(birth, birthCoordinates[0], birthCoordinates[1], birthCoordinates[2], 0)));
 				matchMap.emplace(birthIdxComp, pairs.back());
 			} 
-			edge->index = NONE;
+			edge->index = NONE_INDEX;
 		}
 	}
 
-	auto new_end = remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& cube){ return cube.index == NONE; });
+	auto new_end = remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& cube){ return cube.index == NONE_INDEX; });
 	dualEdges.erase(new_end, dualEdges.end());
 
 #ifdef RUNTIME
@@ -332,12 +332,12 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges, vector<Cube>&
 					isMatched1.emplace(find1->second.birth.index, true);
 				}
 			}
-			edge->index = NONE;
+			edge->index = NONE_INDEX;
 		} else {
 #ifdef USE_APPARENT_PAIRS_COMP
 			ctrImage.push_back(*edge);
 			if (isApparentPair(*edge, enumeratorComp, coEnumeratorComp)) {
-				edge->index = NONE;
+				edge->index = NONE_INDEX;
 #ifdef RUNTIME
 				++numApparentPairs;
 #endif
@@ -346,7 +346,7 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges, vector<Cube>&
 		}
 	}
 
-	auto new_end = std::remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& cube){ return cube.index == NONE; });
+	auto new_end = std::remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& cube){ return cube.index == NONE_INDEX; });
 	dualEdges.erase(new_end, dualEdges.end());
 #ifdef USE_APPARENT_PAIRS_COMP
 	reverse(ctrImage.begin(), ctrImage.end());
