@@ -20,20 +20,29 @@ class Dimension1 {
 	vector<vector<index_t>> getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc);
 
 	private:
-	void computePairs(const vector<Cube>& ctr, uint8_t k);
+	enum ComputePairsMode { INPUT_PAIRS, COMPARISON_PAIRS, IMAGE_PAIRS };
+
+	void computePairs(vector<Cube>& ctr, uint8_t k);
 	void computePairsComp(vector<Cube>& ctr);
 	void computePairsImage(vector<Cube>& ctr, uint8_t k);
+
+	template <ComputePairsMode computePairsMode>
+	void computePairsUnified(vector<Cube>& ctr, uint8_t k);
 	void computeMatching();
-	void enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc) const;
+	void enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc, CubeMap<1, size_t>& pivotColumnIndex) const;
 	void enumerateColumnsToReduce(vector<Cube>& ctr, const CubicalGridComplex& cgc) const;
 	Cube popPivot(CubeQueue& column) const;
 	Cube getPivot(CubeQueue& column) const;
 #ifdef USE_REDUCTION_MATRIX
-	void useReductionMatrix(const Cube& column, CubeQueue& workingBoundary, BoundaryEnumerator& enumerator) const;
+	void useReductionMatrix(const Cube& column, CubeQueue& workingBoundary, BoundaryEnumerator& enumerator
+#ifdef USE_CACHE
+							, CubeMap<2, vector<Cube>>& cache
+#endif
+							) const;
 #endif
 #ifdef USE_CACHE
-	bool columnIsCached(const Cube& column, CubeQueue& workingBoundary) const;
-	void addCache(const Cube& column, CubeQueue& working_boundary, queue<uint64_t>& cachedColumnIdx);
+	bool columnIsCached(const Cube& column, CubeQueue& workingBoundary, CubeMap<2, vector<Cube>>& cache) const;
+	void addCache(const Cube& column, CubeQueue& workingBoundary, queue<uint64_t>& cachedColumnIdx, CubeMap<2, vector<Cube>>& cache);
 #endif
 #if defined(USE_APPARENT_PAIRS) or defined(USE_APPARENT_PAIRS_COMP)
 	bool pivotIsApparentPair(const Cube& pivot, vector<Cube>& faces, 
@@ -42,14 +51,10 @@ class Dimension1 {
 										BoundaryEnumerator& enumerator, CoboundaryEnumerator& coEnumerator) const;
 #endif
 #ifdef USE_EMERGENT_PAIRS
+	template <ComputePairsMode computePairsMode>
 	bool isEmergentPair(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
-						BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
-						CoboundaryEnumerator& coEnumeratorAP) const;
-	bool isEmergentPairComp(const Cube& column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair, 
-							BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
-							CoboundaryEnumerator& coEnumeratorAP) const; 
-	bool isEmergentPairImage(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
-								const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator) const;
+								const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
+								CoboundaryEnumerator& coEnumeratorAP, CubeMap<1, size_t>& pivotColumnIndex) const;
 #endif
 	const CubicalGridComplex& cgc0;
 	const CubicalGridComplex& cgc1;
@@ -64,16 +69,18 @@ class Dimension1 {
 #ifdef USE_ISPAIRED
 	unordered_map<uint64_t, bool> isPairedComp;
 #endif
-	unordered_map<uint64_t, Pair> matchMap0;
-	unordered_map<uint64_t, Pair> matchMap1;
-	unordered_map<uint64_t, uint64_t> matchMapIm0;
-	unordered_map<uint64_t, uint64_t> matchMapIm1;
-	unordered_map<uint64_t, size_t> pivotColumnIndex;
+	CubeMap<1, Pair> matchMap0;
+	CubeMap<1, Pair> matchMap1;
+	CubeMap<1, uint64_t> matchMapIm0;
+	CubeMap<1, uint64_t> matchMapIm1;
+
+	CubeMap<1, size_t> pivotColumnIndexInput0; // to be used for input 0 pairs
+	CubeMap<1, size_t> pivotColumnIndexInput1; // to be used for input 1 pairs
+	CubeMap<1, size_t> pivotColumnIndexComp; // to be used for comparison pairs
+	CubeMap<1, size_t> pivotColumnIndexImage0; // to be used for image pairs 0
+	CubeMap<1, size_t> pivotColumnIndexImage1; // to be used for image pairs 1
 #ifdef USE_REDUCTION_MATRIX
-	unordered_map<uint64_t, vector<Cube>> reductionMatrix;
-#endif
-#ifdef USE_CACHE
-	unordered_map<uint64_t, CubeQueue> cache;
+	CubeMap<2, vector<Cube>> reductionMatrix;
 #endif
 };
 }

@@ -190,18 +190,34 @@ void Dimension0::enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& c
 #ifdef USE_CLEARING_DIM0
 	Cube cube;
 #endif
+#ifdef USE_STABLE_SORT_OR_STABLE_PARTITION
+	bool binaryInputs = true;
+#endif
 	for (index_t x = 0; x < cgc.shape[0]; ++x) {
 		for (index_t y = 0; y < cgc.shape[1]; ++y) {
 			for (index_t z = 0; z < cgc.shape[2]; ++z) {
 				for (uint8_t type = 0; type < 3; ++type) {
 					birth = cgc.getBirth(x, y, z, type, 1);
-					if (birth < config.threshold) { edges.push_back(Cube(birth, x, y, z, type)); }	
+					if (birth < config.threshold) {
+						edges.push_back(Cube(birth, x, y, z, type));
+#ifdef USE_STABLE_SORT_OR_STABLE_PARTITION
+						if (binaryInputs && birth != 0 && birth != 1) binaryInputs = false;
+#endif
+					}	
 				}				
 			}
 		}
 	}
 
-	sort(edges.begin(), edges.end(), CubeComparator());
+#ifdef USE_STABLE_SORT_OR_STABLE_PARTITION
+	if (binaryInputs) {
+		std::stable_partition(edges.begin(), edges.end(), [](Cube &cube) { return cube.birth == 0; });
+	} else {
+		std::stable_sort(edges.begin(), edges.end(), [](const Cube &cube1, const Cube &cube2) { return cube1.birth < cube2.birth; });
+	}
+#else
+	std::sort(edges.begin(), edges.end(), CubeComparator());
+#endif
 
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();

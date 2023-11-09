@@ -1,9 +1,11 @@
 #include "dimension_1.h"
 #include "enumerators.h"
 
-#include <iostream>
-#include <chrono>
 #include <algorithm>
+#include <chrono>
+#include <future>
+#include <iostream>
+#include <stdexcept>
 
 using namespace dim3;
 using namespace std::chrono;
@@ -14,64 +16,106 @@ Dimension1::Dimension1(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, vector<Match>& _matches, 
 						unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1) : 
 						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), pairs0(_pairs0), pairs1(_pairs1),
-						pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1) {}
+						pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1),
+						matchMap0(_cgc0.shape), matchMap1(_cgc0.shape), matchMapIm0(_cgc0.shape), matchMapIm1(_cgc0.shape),
+#ifdef USE_REDUCTION_MATRIX
+						reductionMatrix(_cgc0.shape),
+#endif
+						pivotColumnIndexInput0(_cgc0.shape),
+						pivotColumnIndexInput1(_cgc1.shape),
+						pivotColumnIndexComp(_cgcComp.shape),
+						pivotColumnIndexImage0(_cgc0.shape),
+						pivotColumnIndexImage1(_cgc1.shape)
+						{}
 
 
 void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp, vector<Cube>& ctrImage) {
+	auto processInput0 = [this, &ctr0]() {
 #ifdef RUNTIME
-	cout << endl << "input 0: ";
+		cout << endl << "input 0: ";
 #endif
-
-	computePairs(ctr0, 0);
+    	computePairs(ctr0, 0);
 #ifdef USE_CLEARING_DIM0
-	enumerateEdges(ctr0, cgc0);
+    	enumerateEdges(ctr0, cgc0, pivotColumnIndexInput0);
 #endif
+	};
 
+	auto processInput1 = [this, &ctr1]() {
 #ifdef RUNTIME
-	cout << endl << "input 1: ";
+    	cout << endl << "input 1: ";
 #endif
 
-	computePairs(ctr1, 1);
+	    computePairs(ctr1, 1);
 #ifdef USE_CLEARING_DIM0
-	enumerateEdges(ctr1, cgc1);
+    	enumerateEdges(ctr1, cgc1, pivotColumnIndexInput1);
 #endif
+	};
 
+	auto processComparison = [this, &ctrComp, &ctrImage]() {
 #ifdef RUNTIME
-	cout << endl << "comparison: ";
+    	cout << endl << "comparison: ";
 #endif
 
-	computePairsComp(ctrComp);
+	    computePairsComp(ctrComp);
 #ifdef USE_CLEARING_DIM0
 #ifndef USE_APPARENT_PAIRS_COMP
-	ctrImage = ctrComp;
+    	ctrImage = ctrComp;
 #endif
-	enumerateEdges(ctrComp, cgcComp);
+	    enumerateEdges(ctrComp, cgcComp, pivotColumnIndexComp);
 #endif
+	};
 
+	auto processImageInput0Comparison = [this, &ctrComp, &ctrImage]() {
 #ifdef RUNTIME
-	cout << endl << "image 0: ";
+    	cout << endl << "image 0: ";
 #endif
 
 #if defined(USE_APPARENT_PAIRS_COMP) or defined(USE_CLEARING_DIM0)
-	computePairsImage(ctrImage, 0);
+    	computePairsImage(ctrImage, 0);
 #else
-	computePairsImage(ctrComp, 0);
+    	computePairsImage(ctrComp, 0);
 #endif
+	};
 
+	auto processImageInput1Comparison = [this, &ctrComp, &ctrImage]() {
 #ifdef RUNTIME
-	cout << endl << "image 1: ";
+		cout << endl << "image 1: ";
 #endif
 
 #if defined(USE_APPARENT_PAIRS_COMP) or defined(USE_CLEARING_DIM0)
-	computePairsImage(ctrImage, 1);
+          computePairsImage(ctrImage, 1);
 #else
-	computePairsImage(ctrComp, 1); 
+          computePairsImage(ctrComp, 1);
 #endif
-	
+	};
+
+#ifdef PARALLELIZE_INDEPENDENT_BARCODES_DIM1
+	auto comparisonFuture = std::async(processComparison);
+	auto input0Future = std::async(processInput0);
+	auto input1Future = std::async(processInput1);
+#if defined(USE_APPARENT_PAIRS_COMP) or defined(USE_CLEARING_DIM0) or defined(USE_ISPAIRED)
+	comparisonFuture.wait();
+#endif
+	auto imageInput0ComparisonFuture = std::async(processImageInput0Comparison);
+	auto imageInput1ComparisonFuture = std::async(processImageInput1Comparison);
+	input0Future.wait();
+	input1Future.wait();
+	imageInput0ComparisonFuture.wait();
+	imageInput1ComparisonFuture.wait();
+#if not(defined(USE_APPARENT_PAIRS_COMP) or defined(USE_CLEARING_DIM0) or defined(USE_ISPAIRED))
+	comparisonFuture.wait();
+#endif
+#else
+	processInput0();
+	processInput1();
+	processComparison();
+	processImageInput0Comparison();
+	processImageInput1Comparison();
+#endif
+
 #ifdef RUNTIME
 	cout << endl << "matching: ";
 #endif
-
 	computeMatching();
 }
 
@@ -83,20 +127,18 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 	vector<Cube> ctr;
 	enumerateColumnsToReduce(ctr, cgc);
 	size_t ctrSize = ctr.size();
+	auto& pivotColumnIndex = pivotColumnIndexInput0; // Use input 0 pivot column index (doesn't really matter which one for this method)
 	pivotColumnIndex.clear();
-	pivotColumnIndex.reserve(ctrSize);
 	BoundaryEnumerator enumerator(cgc);
 	Cube pivot;
 	size_t j;
 	vector<index_t> vertex;
 #ifdef USE_REDUCTION_MATRIX
 	reductionMatrix.clear();
-	reductionMatrix.reserve(ctrSize);
 	vector<Cube> reductionColumn;
 #endif
 #ifdef USE_CACHE
-	cache.clear();
-	cache.reserve(min(config.cacheSize, ctrSize));
+	CubeMap<2, vector<Cube>> cache(cgc.shape);
 	queue<uint64_t> cachedColumnIdx;
 	size_t numRecurse;
 #endif
@@ -122,7 +164,7 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 		while (true) {
 			if (j == i) {
 #ifdef USE_EMERGENT_PAIRS
-				if (isEmergentPair(ctr[i], pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP)) {
+				if (isEmergentPair<INPUT_PAIRS>(ctr[i], pivot, j, faces, checkEmergentPair, cgc, enumerator, enumeratorAP, coEnumeratorAP, pivotColumnIndex)) {
 					pivotColumnIndex.emplace(pivot.index, i);
 					break;
 				} else {
@@ -144,12 +186,16 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 				reductionColumn.push_back(ctr[j]);
 #endif
 #ifdef USE_CACHE
-				if (!columnIsCached(ctr[j], workingBoundary)) {
+				if (!columnIsCached(ctr[j], workingBoundary, cache)) {
 #endif
 					enumerator.setBoundaryEnumerator(ctr[j]);
 					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
 #ifdef USE_REDUCTION_MATRIX
-					useReductionMatrix(ctr[j], workingBoundary, enumerator);
+					useReductionMatrix(ctr[j], workingBoundary, enumerator
+#ifdef USE_CACHE
+										, cache
+#endif
+										);
 #endif
 #ifdef USE_CACHE
 				}
@@ -158,8 +204,8 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 			pivot = getPivot(workingBoundary);
 			if (pivot.index != NONE) {
 				auto it = pivotColumnIndex.find(pivot.index);
-				if (it != pivotColumnIndex.end()) {
-					j = it->second;
+				if (it.has_value()) {
+					j = *it;
 #ifdef USE_CACHE
 					++numRecurse;
 #endif
@@ -198,7 +244,7 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 					pivotColumnIndex.emplace(pivot.index, i);
 #ifdef USE_CACHE
 					if (numRecurse >= config.minRecursionToCache) {
-						addCache(ctr[i], workingBoundary, cachedColumnIdx);
+						addCache(ctr[i], workingBoundary, cachedColumnIdx, cache);
 						break;
 					}
 #endif
@@ -220,514 +266,16 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 }
 
 
-void Dimension1::computePairs(const vector<Cube>& ctr, uint8_t k) {
-#ifdef RUNTIME
-	cout << "barcode ";
-	auto start = high_resolution_clock::now();
-#endif
-
-	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
-	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
-	unordered_map<uint64_t, Pair>& matchMap = (k == 0) ? matchMap0 : matchMap1;
-
-	size_t ctrSize = ctr.size();
-	pivotColumnIndex.clear();
-	pivotColumnIndex.reserve(ctrSize);
-	BoundaryEnumerator enumerator(cgc);
-	Cube pivot;
-	size_t j;
-#ifdef USE_REDUCTION_MATRIX
-	reductionMatrix.clear();
-	reductionMatrix.reserve(ctrSize);
-	vector<Cube> reductionColumn;
-#ifdef RUNTIME
-	size_t numReductionColumns = 0;
-#endif
-#endif
-#ifdef USE_CACHE
-	cache.clear();
-	cache.reserve(min(config.cacheSize, ctrSize));
-	queue<uint64_t> cachedColumnIdx;
-	size_t numRecurse;
-#ifdef RUNTIME
-	size_t numCached = 0;
-#endif
-#endif
-#ifdef USE_EMERGENT_PAIRS
-	bool checkEmergentPair;
-#ifdef RUNTIME
-	size_t numEmergentPairs = 0;
-#endif
-#endif
-#if defined(USE_APPARENT_PAIRS) or defined(USE_EMERGENT_PAIRS)
-	vector<Cube> faces;
-	BoundaryEnumerator enumeratorAP(cgc);
-	CoboundaryEnumerator coEnumeratorAP(cgc);
-#endif
-
-	for (size_t i = 0; i < ctrSize; ++i) {
-		CubeQueue workingBoundary;
-		j = i;
-#ifdef USE_CACHE
-		numRecurse = 0;
-#endif
-#ifdef USE_EMERGENT_PAIRS
-		checkEmergentPair = true;
-#endif
-		while (true) {
-			if (j == i) {
-#ifdef USE_EMERGENT_PAIRS
-				if (isEmergentPair(ctr[i], pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP)) {
-					pivotColumnIndex.emplace(pivot.index, i);
-#ifdef RUNTIME
-					++numEmergentPairs;
-#endif
-					break;
-				} else {
-					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
-#ifdef USE_CACHE
-					++numRecurse;
-#endif
-					if (j != i) { continue; }
-#ifdef USE_REDUCTION_MATRIX
-					else { reductionColumn.push_back(coEnumeratorAP.nextCoface); }
-#endif
-				}
-#else			
-				enumerator.setBoundaryEnumerator(ctr[i]);
-				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
-#endif
-			} else {
-#ifdef USE_REDUCTION_MATRIX
-				reductionColumn.push_back(ctr[j]);
-#endif
-#ifdef USE_CACHE
-				if (!columnIsCached(ctr[j], workingBoundary)) {
-#endif
-					enumerator.setBoundaryEnumerator(ctr[j]);
-					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
-#ifdef USE_REDUCTION_MATRIX
-					useReductionMatrix(ctr[j], workingBoundary, enumerator);
-#endif
-#ifdef USE_CACHE
-				}
-#endif
-			}
-			pivot = getPivot(workingBoundary);
-#ifdef USE_APPARENT_PAIRS
-			while (true) {
-				faces.clear();
-				if (pivotIsApparentPair(pivot, faces, enumeratorAP, coEnumeratorAP)) {
-					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
-#ifdef USE_REDUCTION_MATRIX
-					reductionColumn.push_back(coEnumeratorAP.nextCoface);
-#endif
-#ifdef USE_CACHE
-					++numRecurse;
-#endif
-					pivot = getPivot(workingBoundary);
-				} else { break; }
-			}
-#endif		
-			if (pivot.index != NONE) {
-				auto pair = pivotColumnIndex.find(pivot.index);
-				if (pair != pivotColumnIndex.end()) {
-					j = pair->second;
-#ifdef USE_CACHE
-					++numRecurse;
-#endif
-					continue;
-				} else {
-					pivotColumnIndex.emplace(pivot.index, i);
-					if (pivot.birth != ctr[i].birth) {
-						pairs.push_back(Pair(pivot, ctr[i]));
-						matchMap.emplace(pivot.index, pairs.back());
-					}
-#ifdef USE_CACHE
-					if (numRecurse >= config.minRecursionToCache) {
-						addCache(ctr[i], workingBoundary, cachedColumnIdx);
-#ifdef RUNTIME
-						++numCached;
-#endif
-						break;
-					}
-#endif
-#ifdef USE_REDUCTION_MATRIX
-					if (reductionColumn.size() > 0) {
-						reductionMatrix.emplace(ctr[i].index, reductionColumn);
-						reductionColumn.clear();
-#ifdef RUNTIME
-						++numReductionColumns;
-#endif
-					}
-#endif
-					break;
-				}
-			} else { break; }
-		}
-	}
-
-#ifdef RUNTIME
-	auto stop = high_resolution_clock::now();
-	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms";
-#ifdef USE_REDUCTION_MATRIX
-	cout << ", " << numReductionColumns << " reduction columns";
-#endif
-#ifdef USE_CACHE
-	cout << ", " << numCached << " cached columns";
-#endif
-#ifdef USE_EMERGENT_PAIRS
-	cout << ", " << numEmergentPairs << " emergent pairs";
-#endif
-#endif
+void Dimension1::computePairs(vector<Cube>& ctr, uint8_t k) {
+	computePairsUnified<ComputePairsMode::INPUT_PAIRS>(ctr, k);
 }
 
 void Dimension1::computePairsComp(vector<Cube>& ctr) {
-#ifdef RUNTIME
-	cout << "barcode ";
-	auto start = high_resolution_clock::now();
-#endif
-
-	size_t ctrSize = ctr.size();
-	pivotColumnIndex.clear();
-	pivotColumnIndex.reserve(ctrSize);	
-	BoundaryEnumerator enumerator(cgcComp);
-	Cube pivot;
-	size_t j;
-#ifdef USE_REDUCTION_MATRIX
-	reductionMatrix.clear();
-	reductionMatrix.reserve(ctrSize);
-	vector<Cube> reductionColumn;
-#ifdef RUNTIME
-	size_t numReductionColumns = 0;
-#endif
-#endif
-#ifdef USE_CACHE
-	cache.clear();
-	cache.reserve(min(config.cacheSize, ctrSize));
-	queue<uint64_t> cachedColumnIdx;
-	size_t numRecurse;
-#ifdef RUNTIME
-	size_t numCached = 0;
-#endif
-#endif
-#ifdef USE_EMERGENT_PAIRS
-	bool checkEmergentPair;
-#ifdef RUNTIME
-	size_t numEmergentPairs = 0;
-#endif
-#endif
-#if defined(USE_APPARENT_PAIRS_COMP) or defined(USE_EMERGENT_PAIRS)
-	vector<Cube> faces;
-	BoundaryEnumerator enumeratorAP(cgcComp);
-	CoboundaryEnumerator coEnumeratorAP(cgcComp);
-#endif
-#if defined (USE_CLEARING_IMAGE) and not defined(USE_APPARENT_PAIRS_COMP)
-	bool shouldClear = false;
-#endif
-
-	for (size_t i = 0; i < ctrSize; ++i) {
-		CubeQueue workingBoundary;
-		j = i;
-#ifdef USE_CACHE
-		numRecurse = 0;
-#endif
-#ifdef USE_EMERGENT_PAIRS
-		checkEmergentPair = true;
-#endif
-		while (true) {
-			if (j == i) {
-#ifdef USE_EMERGENT_PAIRS
-				if (isEmergentPairComp(ctr[i], pivot, j, faces, checkEmergentPair, enumerator, enumeratorAP, coEnumeratorAP)) {
-					pivotColumnIndex.emplace(pivot.index, i);
-#ifdef RUNTIME
-					++numEmergentPairs;
-#endif
-					break;
-				} else {
-					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
-#ifdef USE_CACHE
-					++numRecurse;
-#endif
-					if (j != i) { continue; }
-#ifdef USE_REDUCTION_MATRIX
-					else { reductionColumn.push_back(coEnumeratorAP.nextCoface); }
-#endif
-				}
-#else			
-				enumerator.setBoundaryEnumerator(ctr[i]);
-				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
-#endif
-			} else {
-#ifdef USE_REDUCTION_MATRIX
-				reductionColumn.push_back(ctr[j]);
-#endif
-#ifdef USE_CACHE
-				if (!columnIsCached(ctr[j], workingBoundary)) {
-#endif
-					enumerator.setBoundaryEnumerator(ctr[j]);
-					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
-#ifdef USE_REDUCTION_MATRIX
-					useReductionMatrix(ctr[j], workingBoundary, enumerator);
-#endif
-#ifdef USE_CACHE
-				}
-#endif
-			}
-			pivot = getPivot(workingBoundary);
-#ifdef USE_APPARENT_PAIRS_COMP
-			while (true) {
-				faces.clear();
-				if (pivotIsApparentPair(pivot, faces, enumeratorAP, coEnumeratorAP)) {
-					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
-#ifdef USE_REDUCTION_MATRIX
-					reductionColumn.push_back(coEnumeratorAP.nextCoface);
-#endif
-#ifdef USE_CACHE
-					++numRecurse;
-#endif
-					pivot = getPivot(workingBoundary);
-				} else { break; }
-			}
-#endif
-			if (pivot.index != NONE) {
-				auto pair = pivotColumnIndex.find(pivot.index);
-				if (pair != pivotColumnIndex.end()) {
-					j = pair->second;
-#ifdef USE_CACHE
-					++numRecurse;
-#endif
-					continue;
-				} else {
-					pivotColumnIndex.emplace(pivot.index, i);
-					if (pivot.birth != ctr[i].birth) {
-						pairsComp.push_back(Pair(pivot, ctr[i]));
-#ifdef USE_ISPAIRED
-						isPairedComp.emplace(ctr[i].index, true);
-#endif
-					}
-#ifdef USE_CACHE
-					if (numRecurse >= config.minRecursionToCache) { 
-						addCache(ctr[i], workingBoundary, cachedColumnIdx);
-#ifdef RUNTIME
-						++numCached;
-#endif
-						break;
-					}
-#endif
-#ifdef USE_REDUCTION_MATRIX
-					if (reductionColumn.size() > 0) {
-						reductionMatrix.emplace(ctr[i].index, reductionColumn);
-						reductionColumn.clear();
-#ifdef RUNTIME
-						++numReductionColumns;
-#endif
-					}
-#endif
-					break;
-				}
-			} else {
-#if defined(USE_CLEARING_IMAGE) and not defined(USE_APPARENT_PAIRS_COMP)
-				ctr[i].index = NONE;
-				shouldClear = true;
-#endif
-				break;
-			}
-		}
-	}
-
-#if defined(USE_CLEARING_IMAGE) and not defined(USE_APPARENT_PAIRS_COMP)
-	if (shouldClear) {
-		auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.index == NONE; });
-		ctr.erase(newEnd, ctr.end());
-	}
-#endif
-
-#ifdef RUNTIME
-	auto stop = high_resolution_clock::now();
-	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms";
-#ifdef USE_REDUCTION_MATRIX
-	cout << ", " << numReductionColumns << " reduction columns";
-#endif
-#ifdef USE_CACHE
-	cout << ", " << numCached << " cached columns";
-#endif
-#ifdef USE_EMERGENT_PAIRS
-	cout << ", " << numEmergentPairs << " emergent pairs";
-#endif
-#endif
+	computePairsUnified<ComputePairsMode::COMPARISON_PAIRS>(ctr, 0);
 }
 
 void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
-#ifdef RUNTIME
-	cout << "barcode ";
-	auto start = high_resolution_clock::now();
-#endif
-
-	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
-	unordered_map<uint64_t, uint64_t>& matchMapIm = (k==0) ? matchMapIm0 : matchMapIm1;
-	matchMapIm.reserve(pairsComp.size());
-
-	size_t ctrSize = ctr.size();
-	pivotColumnIndex.clear();
-	pivotColumnIndex.reserve(ctrSize);
-	BoundaryEnumerator enumerator = BoundaryEnumerator(cgc);
-	Cube pivot;
-	value_t birth;
-	size_t j;
-#ifdef USE_REDUCTION_MATRIX
-	reductionMatrix.clear();
-	reductionMatrix.reserve(ctrSize);
-	vector<Cube> reductionColumn;
-#ifdef RUNTIME
-	size_t numReductionColumns = 0;
-#endif
-#endif
-#ifdef USE_CACHE
-	cache.clear();
-	cache.reserve(min(config.cacheSize, ctrSize));
-	queue<uint64_t> cachedColumnIdx;
-	size_t numRecurse;
-#ifdef RUNTIME
-	size_t numCached = 0;
-#endif
-#endif
-#ifdef USE_EMERGENT_PAIRS
-	bool checkEmergentPair;
-#ifdef RUNTIME
-	size_t numEmergentPairs = 0;
-#endif
-#endif
-#ifdef USE_EMERGENT_PAIRS
-	vector<Cube> faces;
-#endif
-#ifdef USE_CLEARING_IMAGE
-	bool shouldClear = false;
-#endif
-
-	for (size_t i = 0; i < ctrSize; ++i) {
-		CubeQueue workingBoundary;
-		j = i;
-#ifdef USE_CACHE
-		numRecurse = 0;
-#endif
-#ifdef USE_EMERGENT_PAIRS
-		checkEmergentPair = true;
-#endif
-		while (true) {
-			if (j == i) {
-#ifdef USE_EMERGENT_PAIRS
-				if (isEmergentPairImage(ctr[i], pivot, j, faces, checkEmergentPair, cgc, enumerator)) {
-					pivotColumnIndex.emplace(pivot.index, i);
-#ifdef USE_ISPAIRED
-					if (isPairedComp[ctr[i].index]) {
-#endif
-						matchMapIm.emplace(ctr[i].index, pivot.index);
-#ifdef USE_ISPAIRED
-					}
-#endif
-#ifdef RUNTIME
-					++numEmergentPairs;
-#endif
-					break;
-				} else {
-					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
-#ifdef USE_CACHE
-					++numRecurse;
-#endif
-					if (j != i) { continue; }
-				}
-#else			
-				enumerator.setBoundaryEnumerator(ctr[i]);
-				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
-#endif
-			} else {
-#ifdef USE_REDUCTION_MATRIX
-				reductionColumn.push_back(ctr[j]);
-#endif
-#ifdef USE_CACHE
-				if (!columnIsCached(ctr[j], workingBoundary)) {
-#endif
-					enumerator.setBoundaryEnumerator(ctr[j]);
-					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
-#ifdef USE_REDUCTION_MATRIX
-					useReductionMatrix(ctr[j], workingBoundary, enumerator);
-#endif
-#ifdef USE_CACHE
-				}
-#endif
-			}
-			pivot = getPivot(workingBoundary);
-			if (pivot.index != NONE) {
-				auto pair = pivotColumnIndex.find(pivot.index);
-				if (pair != pivotColumnIndex.end()) {
-					j = pair->second;
-#ifdef USE_CACHE
-					++numRecurse;
-#endif
-					continue;
-				} else {
-					pivotColumnIndex.emplace(pivot.index, i);
-#ifdef USE_ISPAIRED
-					if (isPairedComp[ctr[i].index]) {
-#endif
-						matchMapIm.emplace(ctr[i].index, pivot.index);
-#ifdef USE_ISPAIRED
-					}
-#endif
-#ifdef USE_CACHE
-					if (numRecurse >= config.minRecursionToCache) {
-						addCache(ctr[i], workingBoundary, cachedColumnIdx);
-#ifdef RUNTIME
-						++numCached;
-#endif
-						break;
-					}
-#endif
-#ifdef USE_REDUCTION_MATRIX
-					if (reductionColumn.size() > 0) {
-						reductionMatrix.emplace(ctr[i].index, reductionColumn);
-						reductionColumn.clear();
-#ifdef RUNTIME
-						++numReductionColumns;
-#endif
-					}
-#endif
-					break;
-				}
-			} else {
-#ifdef USE_CLEARING_IMAGE
-				ctr[i].index = NONE;
-				shouldClear = true;
-#endif
-				break;
-			}
-		}
-	}
-
-#ifdef USE_CLEARING_IMAGE
-	if (shouldClear) {
-		auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.index == NONE; });
-		ctr.erase(newEnd, ctr.end());
-	}
-#endif
-
-#ifdef RUNTIME
-	auto stop = high_resolution_clock::now();
-	auto duration = duration_cast<milliseconds>(stop - start);
-	cout << duration.count() << " ms";
-#ifdef USE_REDUCTION_MATRIX
-	cout << ", " << numReductionColumns << " reduction columns";
-#endif
-#ifdef USE_CACHE
-	cout << ", " << numCached << " cached columns";
-#endif
-#ifdef USE_EMERGENT_PAIRS
-	cout << ", " << numEmergentPairs << " emergent pairs";
-#endif
-#endif
+	computePairsUnified<ComputePairsMode::IMAGE_PAIRS>(ctr, k);
 }
 
 void Dimension1::computeMatching() {
@@ -740,15 +288,15 @@ void Dimension1::computeMatching() {
 	for (Pair& pair : pairsComp) {
 		auto find0 = matchMapIm0.find(pair.death.index);
 		auto find1 = matchMapIm1.find(pair.death.index);
-		if (find0 != matchMapIm0.end() && find1 != matchMapIm1.end()) {
-			birthIndex0 = find0->second;
-			birthIndex1 = find1->second;
+		if (find0.has_value() && find1.has_value()) {
+			birthIndex0 = *find0;
+			birthIndex1 = *find1;
 			auto find0 = matchMap0.find(birthIndex0);
 			auto find1 = matchMap1.find(birthIndex1);
-			if (find0 != matchMap0.end() && find1 != matchMap1.end()) {
-				matches.push_back(Match(find0->second, find1->second));
-				isMatched0.emplace(find0->second.birth.index, true);
-				isMatched1.emplace(find1->second.birth.index, true);
+			if (find0.has_value() && find1.has_value()) {
+				matches.push_back(Match(*find0, *find1));
+				isMatched0.emplace(find0->birth.index, true);
+				isMatched1.emplace(find1->birth.index, true);
 			}
 		}
 	}
@@ -761,7 +309,7 @@ void Dimension1::computeMatching() {
 }
 
 
-void Dimension1::enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc) const {
+void Dimension1::enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc, CubeMap<1, size_t>& pivotColumnIndex) const {
 #ifdef RUNTIME
 	cout << "; enumeration ";
 	auto start = high_resolution_clock::now();
@@ -773,6 +321,9 @@ void Dimension1::enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& c
 #ifdef USE_CLEARING_DIM0
 	Cube cube;
 #endif
+#ifdef USE_STABLE_SORT_OR_STABLE_PARTITION
+	bool binaryInputs = true;
+#endif
 	for (index_t x = 0; x < cgc.shape[0]; ++x) {
 		for (index_t y = 0; y < cgc.shape[1]; ++y) {
 			for (index_t z = 0; z < cgc.shape[2]; ++z) {
@@ -782,17 +333,33 @@ void Dimension1::enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& c
 #ifdef USE_CLEARING_DIM0
 						cube = Cube(birth, x, y, z, type);
 						auto find = pivotColumnIndex.find(cube.index);
-						if (find == pivotColumnIndex.end()) { edges.push_back(cube); }
+						if (!find.has_value())
+						{
+							edges.push_back(cube);
+#ifdef USE_STABLE_SORT_OR_STABLE_PARTITION
+							if (binaryInputs && birth != 0 && birth != 1) binaryInputs = false;
+#endif
+						}
 #else
 						edges.push_back(Cube(birth, x, y, z, type));
+#ifdef USE_STABLE_SORT_OR_STABLE_PARTITION
+						if (binaryInputs && birth != 0 && birth != 1) binaryInputs = false;
+#endif
 #endif
 					}	
 				}				
 			}
 		}
 	}
-
-	sort(edges.begin(), edges.end(), CubeComparator());
+#ifdef USE_STABLE_SORT_OR_STABLE_PARTITION
+	if (binaryInputs) {
+		std::stable_partition(edges.begin(), edges.end(), [](Cube &cube) { return cube.birth == 0; });
+	} else {
+		std::stable_sort(edges.begin(), edges.end(), [](const Cube &cube1, const Cube &cube2) { return cube1.birth < cube2.birth; });
+	}
+#else
+	std::sort(edges.begin(), edges.end(), CubeComparator());
+#endif
 
 #ifdef RUNTIME
 	auto stop = high_resolution_clock::now();
@@ -842,17 +409,24 @@ Cube Dimension1::getPivot(CubeQueue& column) const {
 }
 
 #ifdef USE_REDUCTION_MATRIX
-void Dimension1::useReductionMatrix(const Cube& column, CubeQueue& workingBoundary, BoundaryEnumerator& enumerator) const {
-	auto pair = reductionMatrix.find(column.index);
-	if (pair != reductionMatrix.end()) {
-		auto reductionColumn = pair->second;
-		for (Cube& row : reductionColumn) {
+void Dimension1::useReductionMatrix(const Cube& column, CubeQueue& workingBoundary, BoundaryEnumerator& enumerator
 #ifdef USE_CACHE
-			if (!columnIsCached(row, workingBoundary)) {
+									, CubeMap<2, vector<Cube>>& cache
+#endif
+									) const {
+	auto reductionColumn = reductionMatrix.find(column.index);
+	if (reductionColumn.has_value()) {
+		for (Cube& row : *reductionColumn) {
+#ifdef USE_CACHE
+			if (!columnIsCached(row, workingBoundary, cache)) {
 #endif
 				enumerator.setBoundaryEnumerator(row);
 				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
-				useReductionMatrix(row, workingBoundary, enumerator);
+				useReductionMatrix(row, workingBoundary, enumerator
+#ifdef USE_CACHE
+									, cache
+#endif
+									);
 #ifdef USE_CACHE
 			}
 #endif
@@ -862,118 +436,86 @@ void Dimension1::useReductionMatrix(const Cube& column, CubeQueue& workingBounda
 #endif
 
 #ifdef USE_CACHE
-bool Dimension1::columnIsCached(const Cube& column, CubeQueue& workingBoundary) const {
-	auto pair = cache.find(column.index);
-	if (pair != cache.end()) {
-		auto cachedBoundary = pair->second;
-		while (!cachedBoundary.empty()) {
-			workingBoundary.push(cachedBoundary.top());
-			cachedBoundary.pop();
+bool Dimension1::columnIsCached(const Cube& column, CubeQueue& workingBoundary, CubeMap<2, vector<Cube>>& cache) const {
+	auto& cachedBoundary = cache.find(column.index);
+	if (cachedBoundary.has_value()) {
+		for (auto &face : *cachedBoundary) {
+			workingBoundary.push(face);
 		}
 		return true;
 	} else { return false; }
 }
 
-void Dimension1::addCache(const Cube& column, CubeQueue& workingBoundary, queue<uint64_t>& cachedColumnIdx) {
-	CubeQueue cleanWb;
-	Cube c;
+void Dimension1::addCache(const Cube& column, CubeQueue& workingBoundary, queue<uint64_t>& cachedColumnIdx, CubeMap<2, vector<Cube>>& cache) {
+	std::vector<Cube> cleanWb;
 	while (!workingBoundary.empty()) {
-		c = workingBoundary.top();
+		Cube c = workingBoundary.top();
 		workingBoundary.pop();
 		if (!workingBoundary.empty() && c == workingBoundary.top()) { workingBoundary.pop(); } 
-		else { cleanWb.push(c); }
+		else { cleanWb.emplace_back(c); }
 	}
-	cache.emplace(column.index, cleanWb);
+
+	cache[column.index] = std::move(cleanWb);
 	cachedColumnIdx.push(column.index);
 	if (cachedColumnIdx.size() > config.cacheSize) {
-		cache.erase(cachedColumnIdx.front());
+		cache[cachedColumnIdx.front()] = {};
 		cachedColumnIdx.pop();
 	}
 }
 #endif
 
 #ifdef USE_EMERGENT_PAIRS
-bool Dimension1::isEmergentPair(const Cube& column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair, 
-								BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
-								CoboundaryEnumerator& coEnumeratorAP) const {
-	faces.clear();
-	enumerator.setBoundaryEnumerator(column);
-	while (enumerator.hasPreviousFace()) {
-		if (checkEmergentPair && enumerator.nextFace.birth == column.birth) {
-			auto pair = pivotColumnIndex.find(enumerator.nextFace.index);
+template<Dimension1::ComputePairsMode computePairsMode>
+bool Dimension1::isEmergentPair(const Cube&column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair,
+		const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP,
+		CoboundaryEnumerator& coEnumeratorAP, CubeMap<1, size_t>& pivotColumnIndex) const {
+    auto birth = (computePairsMode == IMAGE_PAIRS) ? cgc.getBirth(column.x(), column.y(), column.z(), column.type(), 2) : column.birth;
+
+    const bool useApparentPairs =
 #ifdef USE_APPARENT_PAIRS
-			if (pair != pivotColumnIndex.end()) {
-				checkEmergentPair = false;
-				j = pair->second;
-			} else if (pivotOfColumnIsApparentPair(enumerator.nextFace, column, faces, enumeratorAP, coEnumeratorAP)) {
-				checkEmergentPair = false;
-			} else {
-				pivot = enumerator.nextFace;
-				return true;
-			}
+        true;
 #else
-			if (pair != pivotColumnIndex.end()) {
-				checkEmergentPair = false;
-				j = pair->second;
-			} else {
-				pivot = enumerator.nextFace;
-				return true;
-			}
+        false;
 #endif
-		}
-		faces.push_back(enumerator.nextFace);
-	}
-	return false;
-}
-
-bool Dimension1::isEmergentPairComp(const Cube& column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair, 
-										BoundaryEnumerator& enumerator, BoundaryEnumerator& enumeratorAP, 
-										CoboundaryEnumerator& coEnumeratorAP) const {
-	faces.clear();
-	enumerator.setBoundaryEnumerator(column);
-	while (enumerator.hasPreviousFace()) {
-		if (checkEmergentPair && enumerator.nextFace.birth == column.birth) {
-			auto pair = pivotColumnIndex.find(enumerator.nextFace.index);
+    const bool useApparentPairsComp =
 #ifdef USE_APPARENT_PAIRS_COMP
-			if (pair != pivotColumnIndex.end()) {
-				checkEmergentPair = false;
-				j = pair->second;
-			} else if (pivotOfColumnIsApparentPair(enumerator.nextFace, column, faces, enumeratorAP, coEnumeratorAP)) {
-				checkEmergentPair = false;
-			} else {
-				pivot = enumerator.nextFace;
-				return true;
-			}
+        true;
 #else
-			if (pair != pivotColumnIndex.end()) {
-				checkEmergentPair = false;
-				j = pair->second;
-			} else {
-				pivot = enumerator.nextFace;
-				return true;
-			}
+        false;
 #endif
-		}
-		faces.push_back(enumerator.nextFace);
-	}
-	return false;
-}
 
-bool Dimension1::isEmergentPairImage(const Cube& column, Cube& pivot, size_t& j, vector<Cube>& faces, bool& checkEmergentPair, 
-										const CubicalGridComplex& cgc, BoundaryEnumerator& enumerator) const {
-	value_t birth = cgc.getBirth(column.x(), column.y(), column.z(), column.type(), 2);
 	faces.clear();
 	enumerator.setBoundaryEnumerator(column);
 	while (enumerator.hasPreviousFace()) {
 		if (checkEmergentPair && enumerator.nextFace.birth == birth) {
-			auto pair = pivotColumnIndex.find(enumerator.nextFace.index);
-			if (pair != pivotColumnIndex.end()) {
-				checkEmergentPair = false;
-				j = pair->second;
-			} else {
-				pivot = enumerator.nextFace;
-				return true;
-			}
+			auto nextColumnIndex = pivotColumnIndex.find(enumerator.nextFace.index);
+            if ((useApparentPairs && computePairsMode == INPUT_PAIRS)
+                    || (useApparentPairsComp && computePairsMode == COMPARISON_PAIRS)
+                    || computePairsMode == IMAGE_PAIRS) {
+				if (nextColumnIndex.has_value()) {
+                    checkEmergentPair = false;
+                    j = *nextColumnIndex;
+                }
+#if defined(USE_APPARENT_PAIRS) or defined(USE_APPARENT_PAIRS_COMP)
+				else if ((computePairsMode == INPUT_PAIRS || computePairsMode == COMPARISON_PAIRS)
+                            && pivotOfColumnIsApparentPair(enumerator.nextFace, column, faces, enumeratorAP, coEnumeratorAP)) {
+                    checkEmergentPair = false;
+                }
+#endif
+				else {
+                    pivot = enumerator.nextFace;
+                    return true;
+                }
+            }
+            else if (computePairsMode == INPUT_PAIRS || computePairsMode == COMPARISON_PAIRS) {
+                if (nextColumnIndex.has_value()) {
+                    checkEmergentPair = false;
+                    j = *nextColumnIndex;
+                } else {
+                    pivot = enumerator.nextFace;
+                    return true;
+                }
+            }
 		}
 		faces.push_back(enumerator.nextFace);
 	}
@@ -1023,3 +565,239 @@ bool Dimension1::pivotOfColumnIsApparentPair(const Cube& pivot, const Cube& colu
 	return foundApparentPair;
 }
 #endif
+
+template <Dimension1::ComputePairsMode computePairsMode>
+void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
+#ifdef RUNTIME
+	cout << "barcode ";
+	auto start = high_resolution_clock::now();
+#endif
+    const CubicalGridComplex& cgc = (computePairsMode == COMPARISON_PAIRS) ? cgcComp : ((k == 0) ? cgc0 : cgc1);
+    vector<Pair>& pairs = (computePairsMode == COMPARISON_PAIRS) ? pairsComp : ((k == 0) ? pairs0 : pairs1);
+    CubeMap<1, Pair>& matchMap = (computePairsMode == INPUT_PAIRS) ? ((k == 0) ? matchMap0 : matchMap1) : matchMap0;
+    CubeMap<1, uint64_t>& matchMapIm = (computePairsMode == IMAGE_PAIRS) ? ((k==0) ? matchMapIm0 : matchMapIm1) : matchMapIm0;
+	CubeMap<1, size_t>& pivotColumnIndex =
+		(computePairsMode == INPUT_PAIRS) ? ((k == 0) ? pivotColumnIndexInput0 : pivotColumnIndexInput1) :
+		(computePairsMode == COMPARISON_PAIRS) ? pivotColumnIndexComp :
+		((k == 0) ? pivotColumnIndexImage0 : pivotColumnIndexImage1);
+
+    const bool useApparentPairs = 
+#ifdef USE_APPARENT_PAIRS
+        true;
+#else
+        false;
+#endif
+    const bool useApparentPairsComp = 
+#ifdef USE_APPARENT_PAIRS_COMP
+        true;
+#else
+        false;
+#endif
+
+	size_t ctrSize = ctr.size();
+	BoundaryEnumerator enumerator(cgc);
+	Cube pivot;
+	size_t j;
+#ifdef USE_REDUCTION_MATRIX
+	reductionMatrix.clear();
+	vector<Cube> reductionColumn;
+#ifdef RUNTIME
+	size_t numReductionColumns = 0;
+#endif
+#endif
+#ifdef USE_CACHE
+	CubeMap<2, vector<Cube>> cache(cgc.shape);
+	queue<uint64_t> cachedColumnIdx;
+	size_t numRecurse;
+#ifdef RUNTIME
+	size_t numCached = 0;
+#endif
+#endif
+#ifdef USE_EMERGENT_PAIRS
+	bool checkEmergentPair;
+#ifdef RUNTIME
+	size_t numEmergentPairs = 0;
+#endif
+#endif
+	vector<Cube> faces;
+	BoundaryEnumerator enumeratorAP(cgc);
+	CoboundaryEnumerator coEnumeratorAP(cgc);
+	bool shouldClear;
+    if (computePairsMode == COMPARISON_PAIRS) {
+#if defined (USE_CLEARING_IMAGE) and not defined(USE_APPARENT_PAIRS_COMP)
+	    shouldClear = false;
+#endif
+    }
+    if (computePairsMode == IMAGE_PAIRS) {
+#ifdef USE_CLEARING_IMAGE
+	    shouldClear = false;
+#endif
+    }
+
+	for (size_t i = 0; i < ctrSize; ++i) {
+		CubeQueue workingBoundary;
+		j = i;
+#ifdef USE_CACHE
+		numRecurse = 0;
+#endif
+#ifdef USE_EMERGENT_PAIRS
+		checkEmergentPair = true;
+#endif
+		while (true) {
+			if (j == i) {
+#ifdef USE_EMERGENT_PAIRS
+				if (isEmergentPair<computePairsMode>(ctr[i], pivot, j, faces, checkEmergentPair, cgc, enumerator, enumeratorAP, coEnumeratorAP, pivotColumnIndex)) {
+					pivotColumnIndex.emplace(pivot.index, i);
+
+                    if (computePairsMode == IMAGE_PAIRS
+#ifdef USE_ISPAIRED
+						 && isPairedComp[ctr[i].index]
+#endif
+					) {
+						matchMapIm.emplace(ctr[i].index, pivot.index);
+					}
+
+
+#ifdef RUNTIME
+					++numEmergentPairs;
+#endif
+					break;
+				} else {
+					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+#ifdef USE_CACHE
+					++numRecurse;
+#endif
+					if (j != i) { continue; }
+#ifdef USE_REDUCTION_MATRIX
+					else if (computePairsMode == INPUT_PAIRS || computePairsMode == COMPARISON_PAIRS) { reductionColumn.push_back(coEnumeratorAP.nextCoface); }
+#endif
+				}
+#else			
+				enumerator.setBoundaryEnumerator(ctr[i]);
+				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
+#endif
+			} else {
+#ifdef USE_REDUCTION_MATRIX
+				reductionColumn.push_back(ctr[j]);
+#endif
+#ifdef USE_CACHE
+				if (!columnIsCached(ctr[j], workingBoundary, cache)) {
+#endif
+					enumerator.setBoundaryEnumerator(ctr[j]);
+					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
+#ifdef USE_REDUCTION_MATRIX
+					useReductionMatrix(ctr[j], workingBoundary, enumerator
+#ifdef USE_CACHE
+									, cache
+#endif
+									);
+#endif
+#ifdef USE_CACHE
+				}
+#endif
+			}
+			pivot = getPivot(workingBoundary);
+
+#if defined(USE_APPARENT_PAIRS) or defined(USE_APPARENT_PAIRS_COMP)
+            if ((useApparentPairs && computePairsMode == INPUT_PAIRS) || (useApparentPairsComp && computePairsMode == COMPARISON_PAIRS)) {
+                while (true) {
+                    faces.clear();
+                    if (pivotIsApparentPair(pivot, faces, enumeratorAP, coEnumeratorAP)) {
+                        for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
+#ifdef USE_REDUCTION_MATRIX
+                        reductionColumn.push_back(coEnumeratorAP.nextCoface);
+#endif
+#ifdef USE_CACHE
+                        ++numRecurse;
+#endif
+                        pivot = getPivot(workingBoundary);
+                    } else { break; }
+                }
+            }
+#endif
+			if (pivot.index != NONE) {
+				auto cachedIndex = pivotColumnIndex.find(pivot.index);
+				if (cachedIndex.has_value()) {
+					j = *cachedIndex;
+#ifdef USE_CACHE
+					++numRecurse;
+#endif
+					continue;
+				} else {
+					pivotColumnIndex.emplace(pivot.index, i);
+					if (computePairsMode == INPUT_PAIRS || computePairsMode == COMPARISON_PAIRS) {
+						if (pivot.birth != ctr[i].birth) {
+							pairs.push_back(Pair(pivot, ctr[i]));
+							if (computePairsMode == INPUT_PAIRS) {
+								matchMap.emplace(pivot.index, pairs.back());
+							}
+#ifdef USE_ISPAIRED
+							if (computePairsMode == COMPARISON_PAIRS) {
+								isPairedComp.emplace(ctr[i].index, true);
+							}
+#endif
+						}
+					}
+					if (computePairsMode == IMAGE_PAIRS
+#ifdef USE_ISPAIRED
+						&& isPairedComp[ctr[i].index]
+#endif
+					) {
+						matchMapIm.emplace(ctr[i].index, pivot.index);
+					}
+#ifdef USE_CACHE
+					if (numRecurse >= config.minRecursionToCache) {
+						addCache(ctr[i], workingBoundary, cachedColumnIdx, cache);
+#ifdef RUNTIME
+						++numCached;
+#endif
+						break;
+					}
+#endif
+#ifdef USE_REDUCTION_MATRIX
+					if (reductionColumn.size() > 0) {
+						reductionMatrix.emplace(ctr[i].index, reductionColumn);
+						reductionColumn.clear();
+#ifdef RUNTIME
+						++numReductionColumns;
+#endif
+					}
+#endif
+					break;
+				}
+			} else {
+#if defined(USE_CLEARING_IMAGE)
+                if ((computePairsMode == COMPARISON_PAIRS && !useApparentPairsComp) || computePairsMode == IMAGE_PAIRS) {
+                    ctr[i].index = NONE;
+                    shouldClear = true;
+                }
+#endif
+                break;
+            }
+		}
+	}
+
+#if defined(USE_CLEARING_IMAGE)
+	if ((computePairsMode == COMPARISON_PAIRS && !useApparentPairsComp) || computePairsMode == IMAGE_PAIRS) {
+		if (shouldClear) {
+			auto newEnd = remove_if(ctr.begin(), ctr.end(), [](const Cube& cube) { return cube.index == NONE; });
+			ctr.erase(newEnd, ctr.end());
+		}
+	}
+#endif
+
+#ifdef RUNTIME
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << duration.count() << " ms";
+#ifdef USE_REDUCTION_MATRIX
+	cout << ", " << numReductionColumns << " reduction columns";
+#endif
+#ifdef USE_CACHE
+	cout << ", " << numCached << " cached columns";
+#endif
+#ifdef USE_EMERGENT_PAIRS
+	cout << ", " << numEmergentPairs << " emergent pairs";
+#endif
+#endif
+}
