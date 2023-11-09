@@ -155,13 +155,13 @@ void Dimension1::computeImagePairs(vector<Cube>& dualEdges, const uint8_t& k) {
 				matchMap.emplace(birthIdxComp, pairs.back());
 			}
 #ifdef USE_CLEARING_DIM0
-			edge->index = NONE;
+			edge->index = NONE_INDEX;
 #endif
 		}
 	}
 
 #ifdef USE_CLEARING_DIM0
-	auto new_end = remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& cube){ return cube.index == NONE; });
+	auto new_end = remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& cube){ return cube.index == NONE_INDEX; });
 	dualEdges.erase(new_end, dualEdges.end());
 #endif
 
@@ -206,13 +206,13 @@ void Dimension1::computeCompPairsAndMatch(vector<Cube>& dualEdges) {
 				}
 			}
 #ifdef USE_CLEARING_DIM0
-			edge->index = NONE;
+			edge->index = NONE_INDEX;
 #endif
 		}
 	}
 
 #ifdef USE_CLEARING_DIM0
-	auto new_end = std::remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& cube){ return cube.index == NONE; });
+	auto new_end = std::remove_if(dualEdges.begin(), dualEdges.end(), [](const Cube& cube){ return cube.index == NONE_INDEX; });
 	dualEdges.erase(new_end, dualEdges.end());
 #endif
 
