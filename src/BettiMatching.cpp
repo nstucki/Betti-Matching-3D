@@ -199,6 +199,18 @@ tuple<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatche
     }
 }
 
+vector<vector<dim3::Cube>> BettiMatching::computeAllRepresentativeCycles(const int k) {
+    switch (dimension) {
+        case 3: {
+            dim3::BettiMatching& bettiMatching = std::get<dim3::BettiMatching>(dimensionSpecificBettiMatching.value());
+            return bettiMatching.computeAllRepresentativeCycles(k);
+        }
+        default: {
+            throw runtime_error("only supported for 3d");
+        }
+    }
+}
+
 
 vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const size_t& dim, const size_t& index, const uint8_t& input) {
     vector<vector<index_t>> repCycle;

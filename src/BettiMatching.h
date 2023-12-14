@@ -20,6 +20,7 @@ public:
     tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>, vector<vector<VoxelPair>>> getMatching();
     tuple<vector<vector<index_t>>, vector<vector<index_t>>> getMatchedRepresentativeCycles(const size_t& dim, const size_t& index);
     vector<vector<index_t>> getUnmatchedRepresentativeCycle(const size_t& dim, const size_t& index, const uint8_t& input);
+    vector<vector<dim3::Cube>> computeAllRepresentativeCycles(const int k);
     vector<index_t> shape;
 
 

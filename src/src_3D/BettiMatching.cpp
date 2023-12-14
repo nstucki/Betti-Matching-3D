@@ -307,3 +307,9 @@ vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uin
     
     return reprCycle;
 }
+
+vector<vector<dim3::Cube>> BettiMatching::computeAllRepresentativeCycles(const int k) {
+    Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1], pairsComp[1],
+                    matches[1], isMatched0[1], isMatched1[1]);
+    return dim1.computeAllRepresentativeCycles(k);
+}

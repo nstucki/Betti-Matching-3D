@@ -1,4 +1,5 @@
 #include "dimension_1.h"
+#include "data_structures.h"
 #include "enumerators.h"
 
 #include <algorithm>
@@ -267,15 +268,57 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 
 
 void Dimension1::computePairs(vector<Cube>& ctr, uint8_t k) {
-	computePairsUnified<ComputePairsMode::INPUT_PAIRS>(ctr, k);
+#ifdef USE_CACHE
+	CubeMap<2, vector<Cube>> cache(cgc0.shape);
+#endif
+	computePairsUnified<ComputePairsMode::INPUT_PAIRS>(ctr, k,
+#ifdef USE_CACHE
+		cache);
+#endif
 }
 
 void Dimension1::computePairsComp(vector<Cube>& ctr) {
-	computePairsUnified<ComputePairsMode::COMPARISON_PAIRS>(ctr, 0);
+#ifdef USE_CACHE
+	CubeMap<2, vector<Cube>> cache(cgc0.shape);
+#endif
+	computePairsUnified<ComputePairsMode::COMPARISON_PAIRS>(ctr, 0,
+#ifdef USE_CACHE
+		cache);
+#endif
 }
 
 void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
-	computePairsUnified<ComputePairsMode::IMAGE_PAIRS>(ctr, k);
+#ifdef USE_CACHE
+	CubeMap<2, vector<Cube>> cache(cgc0.shape);
+#endif
+	computePairsUnified<ComputePairsMode::IMAGE_PAIRS>(ctr, k
+#ifdef USE_CACHE
+		, cache
+#endif
+	);
+}
+
+vector<vector<Cube>> Dimension1::computeAllRepresentativeCycles(uint8_t k) {
+#ifndef USE_CACHE
+	throw runtime_error("computeAllRepresentativeCycles() can only be used when compiled with USE_CACHE defined"); 
+#endif
+	vector<Cube> ctr;
+    const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
+	enumerateColumnsToReduce(ctr, cgc);
+	CubeMap<2, vector<Cube>> cache(cgc0.shape);
+	auto& pairs = (k == 0) ? pairs0 : pairs1;
+	pairs.clear();
+	computePairsUnified<ComputePairsMode::INPUT_PAIRS>(ctr, k, cache);
+
+	vector<vector<Cube>> cycles;
+	for (auto& pair : pairs) {
+		auto& cached_boundary = cache[pair.death.index];
+		if (!cached_boundary.has_value()) {
+			throw runtime_error("A boundary that is needed to get all cycles was deleted from cache! Consider increasing the cache size limit.");
+		}
+		cycles.push_back(*cached_boundary);
+	}
+	return cycles;
 }
 
 void Dimension1::computeMatching() {
@@ -567,7 +610,11 @@ bool Dimension1::pivotOfColumnIsApparentPair(const Cube& pivot, const Cube& colu
 #endif
 
 template <Dimension1::ComputePairsMode computePairsMode>
-void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
+void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k
+#ifdef USE_CACHE
+	, CubeMap<2, vector<Cube>>& cache
+#endif
+	) {
 #ifdef RUNTIME
 	cout << "barcode ";
 	auto start = high_resolution_clock::now();
@@ -606,7 +653,6 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 #endif
 #endif
 #ifdef USE_CACHE
-	CubeMap<2, vector<Cube>> cache(cgc.shape);
 	queue<uint64_t> cachedColumnIdx;
 	size_t numRecurse;
 #ifdef RUNTIME

@@ -18,6 +18,7 @@ class Dimension1 {
 				vector<Match>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1);
 	void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp, vector<Cube>& ctrImage);
 	vector<vector<index_t>> getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc);
+	vector<vector<Cube>> computeAllRepresentativeCycles(uint8_t k);
 
 	private:
 	enum ComputePairsMode { INPUT_PAIRS, COMPARISON_PAIRS, IMAGE_PAIRS };
@@ -27,7 +28,12 @@ class Dimension1 {
 	void computePairsImage(vector<Cube>& ctr, uint8_t k);
 
 	template <ComputePairsMode computePairsMode>
-	void computePairsUnified(vector<Cube>& ctr, uint8_t k);
+	void computePairsUnified(vector<Cube>& ctr, uint8_t k
+#ifdef USE_CACHE
+		, CubeMap<2, vector<Cube>>& cache
+#endif
+	);
+
 	void computeMatching();
 	void enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc, CubeMap<1, size_t>& pivotColumnIndex) const;
 	void enumerateColumnsToReduce(vector<Cube>& ctr, const CubicalGridComplex& cgc) const;

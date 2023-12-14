@@ -6,6 +6,8 @@
 #include <optional>
 #include <stdexcept>
 #include <vector>
+#include <iterator> // For std::forward_iterator_tag
+#include <cstddef>  // For std::ptrdiff_t
 
 using namespace std;
 
@@ -132,6 +134,10 @@ class CubeMap {
 	void clear();
 	optional<_Tp>& operator[](uint64_t cube_index);
 
+	// Iterator functions (directly dispatch to the iterator of the private `elements` vector)
+	typename vector<std::optional<_Tp>>::iterator begin();
+	typename vector<std::optional<_Tp>>::iterator end();
+
 	private:
 	vector<std::optional<_Tp>> elements;
 	uint64_t computeCoordinateIndex(uint64_t cube_index) const;
@@ -185,5 +191,15 @@ template<int _dim, class _Tp>
 void CubeMap<_dim, _Tp>::clear() {
 	elements.clear();
 	elements.resize(shape[0] * shape[1] * shape[2] * NUM_TYPES);
+}
+
+template<int _dim, class _Tp>
+typename vector<std::optional<_Tp>>::iterator CubeMap<_dim, _Tp>::begin() {
+	return elements.begin();
+}
+
+template<int _dim, class _Tp>
+typename vector<std::optional<_Tp>>::iterator CubeMap<_dim, _Tp>::end() {
+	return elements.end();
 }
 }

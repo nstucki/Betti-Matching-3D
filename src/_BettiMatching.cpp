@@ -100,7 +100,9 @@ PYBIND11_MODULE(betti_matching, m) {
 
         .def("get_matched_cycles", &BettiMatching::getMatchedRepresentativeCycles)
 
-        .def("get_unmatched_cycle", &BettiMatching::getUnmatchedRepresentativeCycle);
+        .def("get_unmatched_cycle", &BettiMatching::getUnmatchedRepresentativeCycle)
+
+        .def("get_all_cycles", &BettiMatching::computeAllRepresentativeCycles);
 
 
     m.def("compute_matching", &computeMatchingFromNumpyArrays);
@@ -260,6 +262,15 @@ PYBIND11_MODULE(betti_matching, m) {
         .def("__repr__", [](VoxelPair &self) {
           return "VoxelPair(birth=" + repr_vector(self.birth) +
                  ", death=" + repr_vector(self.death) + ")";
+        });
+
+    py::class_<dim3::Cube>(m, "Cube")
+        .def("x", &dim3::Cube::x)
+        .def("y", &dim3::Cube::y)
+        .def("z", &dim3::Cube::z)
+        .def("type", &dim3::Cube::type)
+        .def("__repr__", [](dim3::Cube& self) {
+          return "dim3::Cube(x=" + std::to_string(self.x()) + ", y=" + std::to_string(self.y()) + ", z=" + std::to_string(self.z()) + ")";
         });
 
     auto resultTypesModule = m.def_submodule("return_types", "Return types for betti_matching");
