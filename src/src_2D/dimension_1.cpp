@@ -43,6 +43,10 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	computeCompPairsAndMatch(ctrComp);
 }
 
+void Dimension1::computeInput0Pairs(vector<Cube>& ctr0) {
+	enumerateDualEdges(ctr0, cgc0);
+    computeImagePairs(ctr0, 0);
+}
 
 vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
 	vector<Cube> dualEdges;

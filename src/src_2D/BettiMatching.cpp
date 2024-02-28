@@ -33,6 +33,24 @@ BettiMatching::BettiMatching(BettiMatching&& other) :
     matches(other.matches), isMatched0(other.isMatched0), isMatched1(other.isMatched1),
     _matched(other.matched), _unmatched0(other.unmatched0), _unmatched1(other.unmatched1) {}
 
+vector<vector<VoxelPair>> BettiMatching::computePairsInput0() {
+    vector<Cube> ctr0;
+
+    Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);
+    dim1.computeInput0Pairs(ctr0);
+
+    Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);
+    dim0.computeInput0Pairs(ctr0);
+
+    vector<vector<VoxelPair>> voxelPairs(2);
+
+    for (uint8_t d = 0; d < 2; ++d) {
+        for (auto& pair : pairs0[d]) {
+            voxelPairs[d].push_back(VoxelPair(cgc0.getParentVoxel(pair.birth, d), cgc0.getParentVoxel(pair.death, d+1)));
+        }
+    }
+    return voxelPairs;
+}
 
 void BettiMatching::computeMatching() {
     vector<Cube> ctr0;
