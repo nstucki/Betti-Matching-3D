@@ -114,13 +114,18 @@ PYBIND11_MODULE(betti_matching, m) {
         bool return_target_unmatched_pairs
     )
     {
+        // Validate and convert inputs
         vector<TypedInputVolume> inputs0;
         vector<TypedInputVolume> inputs1;
-        // Validate and convert inputs
         if (untypedInputs0.size() != untypedInputs1.size()) {
             throw invalid_argument("Different numbers of inputs where provided: " + std::to_string(untypedInputs0.size()) + " (inputs0) and " + std::to_string(untypedInputs1.size()) + " (inputs1)");
         }
         for (size_t i = 0; i < untypedInputs0.size(); i++) {
+            vector<index_t> shape0(untypedInputs0[i].shape(), untypedInputs0[i].shape() + untypedInputs0[i].ndim());
+            vector<index_t> shape1(untypedInputs1[i].shape(), untypedInputs1[i].shape() + untypedInputs1[i].ndim());
+            if (shape0 != shape1) {
+                throw invalid_argument("The shapes of the input volumes must agree. Got " + repr_vector(shape0) + " and " + repr_vector(shape1));
+            }
             inputs0.push_back(untypedInputs0[i].cast<TypedInputVolume>());
             inputs1.push_back(untypedInputs1[i].cast<TypedInputVolume>());
         }
