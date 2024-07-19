@@ -19,6 +19,9 @@
 using namespace std;
 namespace py = pybind11;
 
+typedef py::array InputVolume;
+typedef py::array_t<value_t, py::array::c_style> TypedInputVolume;
+
 struct BettiMatchingResult {
     py::array_t<int64_t> predictionMatchesBirthCoordinates;
     py::array_t<int64_t> predictionMatchesDeathCoordinates;
@@ -44,7 +47,7 @@ string repr_vector(const vector<index_t> shape, std::tuple<string, string> paren
 };
 
 std::tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>, vector<vector<VoxelPair>>> computeMatchingFromNumpyArrays(
-    py::array_t<value_t> &input0, py::array_t<value_t> &input1)
+    TypedInputVolume &input0, TypedInputVolume &input1)
 {
     vector<index_t> shape0(input0.shape(), input0.shape() + input0.ndim());
     vector<index_t> shape1(input1.shape(), input1.shape() + input1.ndim());
@@ -106,13 +109,20 @@ PYBIND11_MODULE(betti_matching, m) {
     m.def("compute_matching", &computeMatchingFromNumpyArrays);
 
     m.def("compute_matching", [](
-        vector<py::array_t<value_t>> inputs0,
-        vector<py::array_t<value_t>> inputs1,
+        vector<InputVolume> untypedInputs0,
+        vector<InputVolume> untypedInputs1,
         bool return_target_unmatched_pairs
     )
     {
-        if (inputs0.size() != inputs1.size()) {
-            throw invalid_argument("Different numbers of inputs where provided: " + std::to_string(inputs0.size()) + " (inputs0) and " + std::to_string(inputs1.size()) + " (inputs1)");
+        vector<TypedInputVolume> inputs0;
+        vector<TypedInputVolume> inputs1;
+        // Validate and convert inputs
+        if (untypedInputs0.size() != untypedInputs1.size()) {
+            throw invalid_argument("Different numbers of inputs where provided: " + std::to_string(untypedInputs0.size()) + " (inputs0) and " + std::to_string(untypedInputs1.size()) + " (inputs1)");
+        }
+        for (size_t i = 0; i < untypedInputs0.size(); i++) {
+            inputs0.push_back(untypedInputs0[i].cast<TypedInputVolume>());
+            inputs1.push_back(untypedInputs1[i].cast<TypedInputVolume>());
         }
         size_t batchSize = inputs0.size();
         size_t numDimensions = inputs0[0].ndim();
