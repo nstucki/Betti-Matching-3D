@@ -281,21 +281,141 @@ PYBIND11_MODULE(betti_matching, m) {
             vector<InputVolume> untypedInputs1 = {untypedInput1};
             return computeMatchingFromInputs(untypedInputs0, untypedInputs1, includeTargetUnmatchedPairs)[0];
         },
-        py::arg("inputs0"),
-        py::arg("inputs1"),
-        py::arg("include_target_unmatched_pairs") = true
+        py::arg("input0"),
+        py::arg("input1"),
+        py::arg("include_target_unmatched_pairs") = true,
+        R"(
+        compute_matching(input0, input1, include_target_unmatched_pairs=True)
+
+        Compute the Betti matching between two input volumes.
+
+        Parameters
+        ----------
+        input0 : np.ndarray
+            The first input volume (the "prediction" in the machine
+            learning context).
+        input1 : np.ndarray
+            The second input volume (the "target" in the machine
+            learning context).
+        include_target_unmatched_pairs : bool, optional
+            Whether to include the unmatched pairs in the input1 (target) volume
+            in the result. Default is True. Can be deactivated when the target
+            unmatched pairs are not needed, such as in training with the Betti
+            matching loss, where they do not contribute to the gradient.
+        
+        Returns
+        -------
+        result : BettiMatchingResult
+            The result of the Betti matching between the two input volumes.
+            See the documentation of `betti_matching.return_types.BettiMatchingResult`
+            for details about the contained data.
+
+        Example
+        -------
+        ```python
+        a, b = np.random.rand(10, 10, 10), np.random.rand(10, 10, 10)
+        result = betti_matching.compute_matching(a, b)
+        a_dim0_matches_birth_coordinates = (
+            result.prediction_matches_birth_coordinates[:result.num_matches_by_dim[0]])
+        a_dim0_matches_death_coordinates = (
+            result.prediction_matches_death_coordinates[:result.num_matches_by_dim[0]])
+        a_dim0_matched_bars_lengths = (a[*a_dim0_matches_death_coordinates.T]
+            - a[*a_dim0_matches_birth_coordinates.T])
+        ```
+        )"
     );
 
     m.def("compute_matching",
         &computeMatchingFromInputs,
         py::arg("inputs0"),
         py::arg("inputs1"),
-        py::arg("include_target_unmatched_pairs") = true
+        py::arg("include_target_unmatched_pairs") = true,
+        R"(
+        compute_matching(inputs0, inputs1, include_target_unmatched_pairs=True)
+
+        Compute the Betti matching between two batches of input volumes in
+        parallel. The Betti matching computation are parallelized using
+        std::async.
+
+        Parameters
+        ----------
+        inputs0 : list of np.ndarray
+            The batch of first input volumes (the "predictions" in the machine
+            learning context).
+        inputs1 : list of np.ndarray
+            The batch of second input volumes (the "targets" in the machine
+            learning context).
+        include_target_unmatched_pairs : bool, optional
+            Whether to include the unmatched pairs in the input1 (target) volumes
+            in the result. Default is True. Can be deactivated when the target
+            unmatched pairs are not needed, such as in training with the Betti
+            matching loss, where they do not contribute to the gradient.
+        
+        Returns
+        -------
+        results : list of BettiMatchingResult
+            The results of the Betti matching between the corresponding pairs of
+            input volumes.
+            See the documentation of`betti_matching.return_types.BettiMatchingResult`
+            for details about the contained data.
+
+        Example
+        -------
+        ```python
+        a1, b1 = np.random.rand(10, 10, 10), np.random.rand(10, 10, 10)
+        a2, b2 = np.random.rand(8, 8, 8), np.random.rand(8, 8, 8)
+        results = betti_matching.compute_matching([a1, a2], [b1, b2])
+        num_matches_a1_b1 = results[0].num_matches_by_dim.sum()
+        num_matches_a2_b2 = results[1].num_matches_by_dim.sum()
+        ```
+        )"
     );
 
     auto resultTypesModule = m.def_submodule("return_types", "Return types for betti_matching");
 
-    py::class_<BettiMatchingResult>(resultTypesModule, "BettiMatchingResult")
+    py::class_<BettiMatchingResult>(resultTypesModule, "BettiMatchingResult",
+        R"(
+        Holds the result of the Betti matching between two arrays (here called
+        "prediction" and "target"). The result contains the coordinates of the
+        birth and death voxels for each matched and unmatched feature,
+        represented as NumPy arrays.
+
+        Each array contains the birth or death coordinates of topological
+        features all dimensions: first the 0-dimensional features, then
+        the 1-dimensional features, and so on. The starting indices of the
+        n-dimensional feature coordinates can be recovered using
+        `num_matches_by_dim`, `num_unmatched_prediction_by_dim`, and
+        `num_unmatched_target_by_dim`, respectively.
+
+        Attributes
+        ----------
+        prediction_matches_birth_coordinates : numpy.ndarray
+        prediction_matches_death_coordinates : numpy.ndarray
+        target_matches_birth_coordinates : numpy.ndarray
+        target_matches_death_coordinates : numpy.ndarray
+            Arrays of shape (n_matched, d). The birth and death coordinates of
+            matched features in the prediction and target, respectively.
+        prediction_unmatched_birth_coordinates : numpy.ndarray
+        prediction_unmatched_death_coordinates : numpy.ndarray
+            Arrays of shape (n_unmatched_prediction, d). The birth and death
+            coordinates of unmatched features in the prediction.
+        target_unmatched_birth_coordinates : numpy.ndarray, optional
+        target_unmatched_death_coordinates : numpy.ndarray, optional
+            Arrays of shape (n_unmatched_target, d). The birth and death
+            coordinates of unmatched features in the target. Only present if
+            the `include_target_unmatched_pairs` flag was set to `True` in the
+            Betti matching computation (can be turned off since the target
+            unmatched pairs do not contribute to the gradient when training
+            with the Betti matching loss).
+        num_matches_by_dim : numpy.ndarray
+            Array of shape (d,). The number of matched features by dimension.
+        num_unmatched_prediction_by_dim : numpy.ndarray
+            Array of shape (d,). The number of unmatched features in the
+            prediction, by dimension.
+        num_unmatched_target_by_dim : numpy.ndarray
+            Array of shape (d,). The number of unmatched features in the
+            target, by dimension.
+        )")
         .def_readonly("prediction_matches_birth_coordinates", &BettiMatchingResult::predictionMatchesBirthCoordinates)
         .def_readonly("prediction_matches_death_coordinates", &BettiMatchingResult::predictionMatchesDeathCoordinates)
         .def_readonly("target_matches_birth_coordinates", &BettiMatchingResult::targetMatchesBirthCoordinates)
@@ -325,4 +445,44 @@ PYBIND11_MODULE(betti_matching, m) {
                 (self.numUnmatchedTargetByDim.has_value() ? (", " + reprMemberArray("num_unmatched_target_by_dim", *self.numUnmatchedTargetByDim) + ", ") : "")
             ) + ")";
         });
+
+    m.doc() = R"(
+        Betti-matching-3D
+        =================
+
+        Provides
+          1. A fast C++ implementation of the Betti matching algorithm for
+            1D, 2D, 3D and n-D images.
+
+        How to compute the Betti matching
+        ---------------------------------
+
+        The Betti matching between two NumPy arrays `a`, `b` can be computed using
+        the `compute_matching` function:
+
+        ```python
+        result = betti_matching.compute_matching(a, b)
+        ```
+
+        The result is a `BettiMatchingResult` object that contains the birth and death
+        voxel coordinates belonging to matched features and unmatched features in the
+        two input arrays, encoded in respective NumPy arrays. 
+
+        Parallel computation of the Betti matching for batches of inputs is supported:
+
+        ```python
+        # results[0] constains the matching result between a1 and b1, results[1]
+        # contains the matching result between a2 and b2, and so on.
+        results = betti_matching.compute_matching([a1, a2, a3], [b1, b2, b3])
+        ```
+
+        The Betti matching can also be computed in more fine-grained steps using the
+        `BettiMatching` class:
+
+        ```python
+        betti_matching = BettiMatching(a, b)
+        betti_matching.compute_matching()
+        result = betti_matching.get_matching()
+        ```
+    )";
 }
