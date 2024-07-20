@@ -71,6 +71,17 @@ void Dimension2::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	}
 }
 
+void Dimension2::computeInput0Pairs(vector<Cube>& ctr0)  {
+	size_t actualDim = 3;
+	for (index_t s : cgc0.shape) { if (s == 1) { --actualDim; } }
+	bool needToCompute = (actualDim == 3);
+	if (!needToCompute) {
+		enumerateDualEdges(ctr0, cgc0);
+	} else {
+		enumerateDualEdges(ctr0, cgc0);
+		computeInputAndImagePairs(ctr0, 0);
+	}
+}
 
 vector<vector<index_t>> Dimension2::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
 	vector<Cube> dualEdges;

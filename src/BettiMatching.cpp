@@ -16,7 +16,7 @@ using namespace std::chrono;
 
 
 BettiMatching::BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1, vector<index_t>&& _shape, Config&& config) : 
-    shape(_shape), dimension(shape.size()), computed(false) {
+    shape(_shape), dimension(shape.size()), computed(false), computedPairsInput0(false) {
 #ifdef RUNTIME
     cout << "initializing BettiMatching ... ";
 	auto start = high_resolution_clock::now();
@@ -70,6 +70,9 @@ void BettiMatching::computeMatching() {
 #endif        
         return;
     }
+    if (computedPairsInput0) {
+        throw runtime_error("computeMatching cannot be called after computePairsInput0 has been called");
+    }
 
 #ifdef RUNTIME
 	cout << "computing Betti Matching ..." << endl;
@@ -113,6 +116,22 @@ void BettiMatching::computeMatching() {
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << "total runtime: " << duration.count() << " ms" << endl << endl;
 #endif
+}
+
+vector<vector<VoxelPair>> BettiMatching::computePairsInput0() {
+    if (dimension != 3) {
+        throw runtime_error("computePairsInput0 only implemented for 3-dimensional inputs");
+    }
+    if (computed || computedPairsInput0) {
+        throw runtime_error("computePairsInput0 can only be called once and if computeMatching has not been called before");
+    }
+
+    dim3::BettiMatching &bettiMatching = std::get<dim3::BettiMatching>(dimensionSpecificBettiMatching.value());
+    auto pairsInput0 = bettiMatching.computePairsInput0();
+
+    computedPairsInput0 = true;
+
+    return pairsInput0;
 }
 
 

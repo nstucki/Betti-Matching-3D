@@ -119,6 +119,12 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	computeMatching();
 }
 
+void Dimension1::computeInput0Pairs(vector<Cube>& ctr0)  {
+	computePairs(ctr0, 0);
+#ifdef USE_CLEARING_DIM0
+	enumerateEdges(ctr0, cgc0, pivotColumnIndexInput0);
+#endif
+}
 
 vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) {
 	vector<vector<index_t>> reprCycle;
