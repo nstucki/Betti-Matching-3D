@@ -235,21 +235,6 @@ PYBIND11_MODULE(betti_matching, m) {
                 return BettiMatching(std::move(input0Vector), std::move(input1Vector), std::move(shape0), std::move(config));
             }))
 
-        .def(py::init([](string input0_path, string input1_path) {
-                vector<value_t> input0Vector;
-                vector<value_t> input1Vector;
-                vector<index_t> shape0;
-                vector<index_t> shape1;
-                readImage(input0_path, NUMPY, input0Vector, shape0);
-                readImage(input1_path, NUMPY, input1Vector, shape1);
-                if (shape0 != shape1) {
-                    throw invalid_argument("The shapes of the tree input volumes must agree. Got " + repr_vector(shape0)
-                                            + " and " + repr_vector(shape1));
-                }
-                Config config;
-                return BettiMatching(std::move(input0Vector), std::move(input1Vector), std::move(shape0), std::move(config));
-            }))
-
         .def_readwrite("shape", &BettiMatching::shape)
 
         .def("compute_matching", &BettiMatching::computeMatching)
