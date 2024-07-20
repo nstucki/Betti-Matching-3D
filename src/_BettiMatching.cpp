@@ -219,7 +219,30 @@ BettiMatchingResult convertPairResultToArrayResult(BettiMatchingPairsResult &res
 }
 
 PYBIND11_MODULE(betti_matching, m) {
-    py::class_<BettiMatching>(m, "BettiMatching")
+    py::class_<BettiMatching>(m, "BettiMatching",
+        R"(
+        BettiMatching(input0, input1)
+
+        Class for computing the Betti matching between two input volumes, and computing
+        representative cycles.
+
+        Parameters
+        ----------
+        input0 : np.ndarray
+            The first input volume (the "prediction" in the machine learning context).
+        input1 : np.ndarray
+            The second input volume (the "target" in the machine learning context).
+
+        Example
+        -------
+        ```python
+        a, b = np.random.rand(10, 10, 10), np.random.rand(10, 10, 10)
+        betti_matching = BettiMatching(a, b)
+        betti_matching.compute_matching()
+        result = betti_matching.get_matching()
+        ```
+        )"
+    )
         .def(py::init([](InputVolume& untypedInput0, InputVolume& untypedInput1) {
                 auto input0 = untypedInput0.cast<TypedInputVolume>();
                 auto input1 = untypedInput1.cast<TypedInputVolume>();
@@ -233,27 +256,56 @@ PYBIND11_MODULE(betti_matching, m) {
                 vector<value_t> input1Vector(input1.mutable_data(), input1.mutable_data() + input1.size());
                 Config config;
                 return BettiMatching(std::move(input0Vector), std::move(input1Vector), std::move(shape0), std::move(config));
-            }))
+            }),
+            py::arg("input0"),
+            py::arg("input1")
+        )
 
         .def_readwrite("shape", &BettiMatching::shape)
 
-        .def("compute_matching", &BettiMatching::computeMatching)
+        .def("compute_matching", &BettiMatching::computeMatching,
+            R"(
+            compute_matching()
 
-        .def("print", &BettiMatching::printResult)
+            Compute the Betti matching between the two input volumes.
+            Skips the computation if it has already been performed previously on
+            the same `BettiMatching` instance.
+            )"
+        )
 
         .def("get_matching", [](BettiMatching &self, bool includeTargetUnmatchedPairs)
             {
                 BettiMatchingPairsResult result = self.getMatching();
                 return convertPairResultToArrayResult(result, self.shape.size(), includeTargetUnmatchedPairs);
             },
-            py::arg("include_target_unmatched_pairs") = true
+            py::arg("include_target_unmatched_pairs") = true,
+            R"(
+            get_matching()
+
+            Retrieve the computed matching. `compute_matching()` must be called
+            before calling this method.
+
+            Returns
+            -------
+            result : BettiMatchingResult
+                The result of the Betti matching between the two input volumes.
+                See the documentation of `betti_matching.return_types.BettiMatchingResult`
+                for details about the contained data.
+            )"
+        )
+
+        .def("print", &BettiMatching::printResult,
+            R"(
+            print()
+
+            Print a summary of the computed matching. `compute_matching()` must be called
+            before calling this method.
+            )"
         )
 
         .def("get_matched_cycles", &BettiMatching::getMatchedRepresentativeCycles)
 
         .def("get_unmatched_cycle", &BettiMatching::getUnmatchedRepresentativeCycle);
-
-
 
 
     m.def("compute_matching",
@@ -395,11 +447,9 @@ PYBIND11_MODULE(betti_matching, m) {
         num_matches_by_dim : numpy.ndarray
             Array of shape (d,). The number of matched features by dimension.
         num_unmatched_prediction_by_dim : numpy.ndarray
-            Array of shape (d,). The number of unmatched features in the
-            prediction, by dimension.
         num_unmatched_target_by_dim : numpy.ndarray
-            Array of shape (d,). The number of unmatched features in the
-            target, by dimension.
+            Arrays of shape (d,). The number of unmatched features in the
+            prediction and target, respectively, by dimension.
         )")
         .def_readonly("prediction_matches_birth_coordinates", &BettiMatchingResult::predictionMatchesBirthCoordinates)
         .def_readonly("prediction_matches_death_coordinates", &BettiMatchingResult::predictionMatchesDeathCoordinates)

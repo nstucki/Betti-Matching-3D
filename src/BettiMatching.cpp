@@ -117,6 +117,9 @@ void BettiMatching::computeMatching() {
 
 
 void BettiMatching::printResult() {
+    if (!computed) {
+        throw std::runtime_error("Betti Matching not computed yet.");
+    }
     switch (dimension) {
         case 1: {
             dim1::BettiMatching& bettiMatching = std::get<dim1::BettiMatching>(dimensionSpecificBettiMatching.value());
@@ -146,6 +149,9 @@ void BettiMatching::printResult() {
 
 
 std::tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>, vector<vector<VoxelPair>>> BettiMatching::getMatching() {
+    if (!computed) {
+        throw std::runtime_error("Betti Matching not computed yet.");
+    }
     switch (dimension) {
         case 1: {
             dim1::BettiMatching& bettiMatching = std::get<dim1::BettiMatching>(dimensionSpecificBettiMatching.value());
