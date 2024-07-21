@@ -12,7 +12,14 @@ using namespace std::chrono;
 
 
 BettiMatching::BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1, vector<value_t>&& comparison, vector<index_t>&& shape,
-                                Config&& _config) : cgc0(input0, shape), cgc1(input1, shape), cgcComp(comparison, shape), config(_config) {}
+                                Config&& _config) : cgc0(input0, shape), cgc1(input1, shape), cgcComp(comparison, shape), config(_config) {
+    pairs0 = vector<vector<Pair>>(1);
+    pairs1 = vector<vector<Pair>>(1);
+    pairsComp = vector<vector<Pair>>(1);
+    matches = vector<vector<Match>>(1);
+    isMatched0 = vector<unordered_map<uint64_t, bool>>(1);
+    isMatched1 = vector<unordered_map<uint64_t, bool>>(1);
+}
 
 
 BettiMatching::BettiMatching(BettiMatching&& other) : 
