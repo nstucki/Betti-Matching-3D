@@ -106,6 +106,29 @@ void BettiMatching::computeVoxels() {
 #endif
 }
 
+vector<vector<VoxelPair>> BettiMatching::computePairsInput0() {
+    vector<Cube> ctr0;
+
+    TopDimension topDim(cgc0, cgc1, cgcComp, config, pairs0[dim-1], pairs1[dim-1], pairsComp[dim-1], matches[dim-1],
+                        isMatched0, isMatched1);
+    topDim.computeInput0Pairs(ctr0);
+
+    InterDimensions interDim(cgc0, cgc1, cgcComp, config, pairs0, pairs1, pairsComp, matches, isMatched0, isMatched1);
+    interDim.computeInput0Pairs(ctr0);
+
+    Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0, isMatched1);
+    dim0.computeInput0Pairs(ctr0);
+
+    vector<vector<VoxelPair>> voxelPairs(dim);
+
+    for (uint8_t d = 0; d < dim; ++d) {
+        for (auto& pair : pairs0[d]) {
+            voxelPairs[d].push_back(VoxelPair(cgc0.getParentVoxel(pair.birth), cgc0.getParentVoxel(pair.death)));
+        }
+    }
+    return voxelPairs;
+}
+
 void BettiMatching::printResult() {
     index_t count;
     cout << "---------------------------------------------------------------------------------------------------------------" << endl;

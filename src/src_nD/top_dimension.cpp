@@ -71,6 +71,18 @@ void TopDimension::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, 
 	}
 }
 
+void TopDimension::computeInput0Pairs(vector<Cube>& ctr0) {
+	size_t actualDim = cgc0.dim;
+	for (index_t s : cgc0.shape) { if (s == 1) { --actualDim; } }
+	bool needToCompute = (cgc0.dim == actualDim);
+	if (!needToCompute) {
+		enumerateDualEdges(cgc0, ctr0);
+	} else {
+        enumerateDualEdges(cgc0, ctr0);
+        computeImagePairs(ctr0, 0);
+	}
+}
+
 void TopDimension::enumerateDualEdges(const CubicalGridComplex& cgc, vector<Cube>& dualEdges) const {
 #ifdef RUNTIME
 	cout << "enumeration ";

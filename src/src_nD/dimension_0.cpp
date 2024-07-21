@@ -49,6 +49,10 @@ void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
     computeImagePairsAndMatch(ctrComp);
 }
 
+void Dimension0::computeInput0Pairs(vector<Cube>& ctr0) {
+	computePairs(ctr0, 0);
+}
+
 void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 #ifdef RUNTIME
 	cout << "barcode ";

@@ -119,15 +119,36 @@ void BettiMatching::computeMatching() {
 }
 
 vector<vector<VoxelPair>> BettiMatching::computePairsInput0() {
-    if (dimension != 3) {
-        throw runtime_error("computePairsInput0 only implemented for 3-dimensional inputs");
-    }
     if (computed || computedPairsInput0) {
         throw runtime_error("computePairsInput0 can only be called once and if computeMatching has not been called before");
     }
 
-    dim3::BettiMatching &bettiMatching = std::get<dim3::BettiMatching>(dimensionSpecificBettiMatching.value());
-    auto pairsInput0 = bettiMatching.computePairsInput0();
+    vector<vector<VoxelPair>> pairsInput0;
+    switch (dimension) {
+        case 1: {
+            dim1::BettiMatching &bettiMatching = std::get<dim1::BettiMatching>(dimensionSpecificBettiMatching.value());
+            pairsInput0 = bettiMatching.computePairsInput0();
+            break;
+        }
+
+        case 2: {
+            dim2::BettiMatching &bettiMatching = std::get<dim2::BettiMatching>(dimensionSpecificBettiMatching.value());
+            pairsInput0 = bettiMatching.computePairsInput0();
+            break;
+        }
+
+        case 3: {
+            dim3::BettiMatching &bettiMatching = std::get<dim3::BettiMatching>(dimensionSpecificBettiMatching.value());
+            pairsInput0 = bettiMatching.computePairsInput0();
+            break;
+        }
+
+        default: {
+            dimN::BettiMatching &bettiMatching = std::get<dimN::BettiMatching>(dimensionSpecificBettiMatching.value());
+            pairsInput0 = bettiMatching.computePairsInput0();
+            break;
+        }
+    }
 
     computedPairsInput0 = true;
 

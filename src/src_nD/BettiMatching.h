@@ -10,6 +10,7 @@ class BettiMatching {
                     Config&& config);
     void computeMatching();
     void computeVoxels();
+    vector<vector<VoxelPair>> computePairsInput0();
     void printResult();
     const vector<vector<VoxelMatch>> &matched = _matched;
     const vector<vector<VoxelPair>> &unmatched0 = _unmatched0;

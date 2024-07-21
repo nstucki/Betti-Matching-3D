@@ -13,6 +13,7 @@ class Dimension0 {
 				const Config& config, vector<Pair>& pairs0, vector<Pair>& pairs1, vector<Pair>& pairsComp, vector<Match>& matches, 
 				unordered_map<index_t, bool>& isMatched0, unordered_map<index_t, bool>& isMatched1);
 	void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp);
+    void computeInput0Pairs(vector<Cube>& ctr0);
 
 	private:
 	const CubicalGridComplex& cgc0;

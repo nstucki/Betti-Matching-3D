@@ -112,6 +112,31 @@ void InterDimensions::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr
 	}
 }
 
+
+void InterDimensions::computeInput0Pairs(vector<Cube>& ctr0) {
+	vector<Cube> ctrImage;
+	while (computeDim > 0) {
+		if (computeDim != cgc0.dim-2) {
+			pivotColumnIndex.clear();
+			cache.clear();
+			matchMap0.clear();
+		}
+		computePairs(ctr0, 0);
+#ifdef USE_CLEARING_DIM0
+		ctr0.clear();
+		assembleColumnsToReduce(cgc0, ctr0);
+#else
+		if (computeDim != 1) {
+			ctr0.clear();
+			assembleColumnsToReduce(cgc0, ctr0);
+		}
+#endif
+
+		--computeDim;
+	}
+
+}
+
 void InterDimensions::computePairs(const vector<Cube>& ctr, uint8_t k) {
 #ifdef RUNTIME
 	cout << "barcode ";

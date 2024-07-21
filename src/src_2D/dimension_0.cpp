@@ -38,6 +38,10 @@ void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	computeImagePairsAndMatch(ctrComp);
 }
 
+void Dimension0::computeInput0Pairs(vector<Cube>& ctr0) {
+	computePairs(ctr0, 0);
+}
+
 
 vector<vector<index_t>> Dimension0::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
 	vector<Cube> edges;
