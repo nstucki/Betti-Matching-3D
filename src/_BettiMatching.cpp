@@ -415,7 +415,7 @@ PYBIND11_MODULE(betti_matching, m) {
                 auto result = self.getMatchedRepresentativeCycles(dim, index);
 
                 py::array_t<int64_t> matchedCycle0 = coordinateListToArray(std::get<0>(result), self.shape.size());
-                py::array_t<int64_t> matchedCycle1 = coordinateListToArray(std::get<0>(result), self.shape.size());
+                py::array_t<int64_t> matchedCycle1 = coordinateListToArray(std::get<1>(result), self.shape.size());
 
                 return std::make_tuple(matchedCycle0, matchedCycle1);
             },
