@@ -735,17 +735,18 @@ PYBIND11_MODULE(betti_matching, m) {
 
     py::class_<BettiMatchingResult>(resultTypesModule, "BettiMatchingResult",
         R"(
-        Holds the result of the Betti matching between two arrays (here called
-        "prediction" and "target"). The result contains the coordinates of the
-        birth and death voxels for each matched and unmatched feature,
-        represented as NumPy arrays.
+        BettiMatchingResult
 
-        Each array contains the birth or death coordinates of topological
-        features all dimensions: first the 0-dimensional features, then
-        the 1-dimensional features, and so on. The starting indices of the
-        n-dimensional feature coordinates can be recovered using
-        `num_matches_by_dim`, `num_unmatched_prediction_by_dim`, and
-        `num_unmatched_target_by_dim`, respectively.
+        Holds the result of the Betti matching between two arrays (called "prediction"
+        and "target"). The result contains the coordinates of the birth and death voxels
+        for each matched and unmatched persistence pair, represented as NumPy arrays.
+
+        Each coordinate array contains the birth or death coordinates of persistence
+        pairs in all dimensions: first of the 0-dim. pairs, then of the 1-dim. pairs,
+        and so on. The starting index of the persistence pairs birth/death coordinates
+        in dimension i can be recovered using `np.cumsum()` on `num_matches_by_dim`,
+        `num_unmatched_prediction_by_dim`, and `num_unmatched_target_by_dim`,
+        respectively.
 
         Attributes
         ----------
@@ -753,25 +754,25 @@ PYBIND11_MODULE(betti_matching, m) {
         prediction_matches_death_coordinates : numpy.ndarray
         target_matches_birth_coordinates : numpy.ndarray
         target_matches_death_coordinates : numpy.ndarray
-            Arrays of shape (n_matched, d). The birth and death coordinates of
-            matched features in the prediction and target, respectively.
+            Arrays of shape (n_matched, d). The birth and death coordinates of matched
+            persistence pairs in the prediction and target, respectively.
         prediction_unmatched_birth_coordinates : numpy.ndarray
         prediction_unmatched_death_coordinates : numpy.ndarray
-            Arrays of shape (n_unmatched_prediction, d). The birth and death
-            coordinates of unmatched features in the prediction.
+            Arrays of shape (n_unmatched_prediction, d). The birth and death coordinates
+            of unmatched persistence pairs in the prediction.
         target_unmatched_birth_coordinates : numpy.ndarray, optional
         target_unmatched_death_coordinates : numpy.ndarray, optional
             Arrays of shape (n_unmatched_target, d). The birth and death
-            coordinates of unmatched features in the target. Only present if
+            coordinates of unmatched persistence pairs in the target. Only present if
             the `include_target_unmatched_pairs` flag was set to `True` in the
-            Betti matching computation (can be turned off since the target
-            unmatched pairs do not contribute to the gradient when training
-            with the Betti matching loss).
+            Betti matching computation (can be turned off since the target unmatched
+            pairs do not contribute to the gradient when training with the Betti
+            matching loss).
         num_matches_by_dim : numpy.ndarray
-            Array of shape (d,). The number of matched features by dimension.
+            Array of shape (d,). The number of matched persistence pairs by dimension.
         num_unmatched_prediction_by_dim : numpy.ndarray
         num_unmatched_target_by_dim : numpy.ndarray
-            Arrays of shape (d,). The number of unmatched features in the
+            Arrays of shape (d,). The number of unmatched persistence pairs in the
             prediction and target, respectively, by dimension.
         )")
         .def_readonly("prediction_matches_birth_coordinates", &BettiMatchingResult::predictionMatchesBirthCoordinates)
@@ -804,7 +805,29 @@ PYBIND11_MODULE(betti_matching, m) {
             ) + ")";
         });
 
-    py::class_<BarcodeResult>(resultTypesModule, "BarcodeResult")
+    py::class_<BarcodeResult>(resultTypesModule, "BarcodeResult",
+        R"(
+        BarcodeResult
+
+        Holds the result of the barcode computation for a single input volume.
+
+        Each coordinate array contains the birth or death coordinates of persistence
+        pairs in all dimensions: first of the 0-dim. pairs, then of the 1-dim. pairs,
+        and so on. The starting index of the persistence pairs birth/death coordinates
+        in dimension i can be recovered using `np.cumsum()` on `num_matches_by_dim`,
+        `num_unmatched_prediction_by_dim`, and `num_unmatched_target_by_dim`,
+        respectively.
+
+        Attributes
+        ----------
+        birth_coordinates : numpy.ndarray
+        death_coordinates : numpy.ndarray
+            Arrays of shape (n_pairs, d). The birth and death coordinates of
+            all persistence pairs in the input volume.
+        num_pairs_by_dim : numpy.ndarray
+            Array of shape (d,). The number of persistence pairs by dimension.
+        )"
+        )
         .def_readonly("birth_coordinates", &BarcodeResult::birthCoordinates)
         .def_readonly("death_coordinates", &BarcodeResult::deathCoordinates)
         .def_readonly("num_pairs_by_dim", &BarcodeResult::numPairsByDim)
