@@ -1,8 +1,12 @@
 #include "dimension_0.h"
+#include "BettiMatching.h"
+#include "../utils.h"
 
-#include <iostream>
-#include <chrono>
 #include <algorithm>
+#include <chrono>
+#include <iostream>
+#include <stdexcept>
+#include <unordered_map>
 
 using namespace dim3;
 using namespace std::chrono;
@@ -16,7 +20,6 @@ Dimension0::Dimension0(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						pairs0(_pairs0), pairs1(_pairs1), pairsComp(_pairsComp),
 						matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1),
 						uf0(UnionFind(cgc0)), uf1(UnionFind(cgc1)), ufComp(UnionFind(cgcComp)) {}
-
 
 void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
 #ifdef RUNTIME
@@ -54,39 +57,124 @@ void Dimension0::computeInput0Pairs(vector<Cube>& ctr0) {
 	computePairs(ctr0, 0);
 }
 
-vector<vector<index_t>> Dimension0::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
-	vector<Cube> edges;
-	enumerateEdges(edges, cgc);
-	UnionFind uf(cgc);
-	vector<index_t> boundaryIndices(2);
-	index_t parentIdx0;
-	index_t parentIdx1;
-	index_t birthIdx;
-	
-	for (Cube& edge : edges) {
-		if (edge == pair.death) { break; }
-		boundaryIndices = uf.getBoundaryIndices(edge);
-		parentIdx0 = uf.find(boundaryIndices[0]);
-		parentIdx1 = uf.find(boundaryIndices[1]);
-		if (parentIdx0 != parentIdx1) { birthIdx = uf.link(parentIdx0, parentIdx1); }
-	}
+vector<vector<index_t>>
+Dimension0::getRepresentativeCycle(const Pair &pair, const CubicalGridComplex &cgc) const {
+    vector<Cube> edges;
+    enumerateEdges(edges, cgc);
+    UnionFind uf(cgc);
+    vector<index_t> boundaryIndices(2);
+    index_t parentIdx0;
+    index_t parentIdx1;
+    index_t birthIdx;
 
-	vector<vector<index_t>> reprCycle;
-	reprCycle.push_back(cgc.getParentVoxel(pair.birth, 0));
-	vector<index_t> vertex;
-	parentIdx0 = uf.find(pair.birth.x()*cgc.n_yz + pair.birth.y()*cgc.shape[2] + pair.birth.z());
-	for (size_t i = 0; i < cgc.getNumberOfCubes(0); ++i) {
-		parentIdx1 = uf.find(i);
-		if (parentIdx0 == parentIdx1) { 
-			vertex = uf.getCoordinates(i);
-			if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); }
-		}
-	}
-	reprCycle.push_back(cgc.getParentVoxel(pair.death, 1));
+    for (Cube &edge : edges) {
+    if (edge == pair.death) {
+        break;
+    }
+    boundaryIndices = uf.getBoundaryIndices(edge);
+    parentIdx0 = uf.find(boundaryIndices[0]);
+    parentIdx1 = uf.find(boundaryIndices[1]);
+        if (parentIdx0 != parentIdx1) {
+            birthIdx = uf.link(parentIdx0, parentIdx1);
+        }
+    }
 
-	return reprCycle;
+    vector<vector<index_t>> reprCycle;
+    reprCycle.push_back(cgc.getParentVoxel(pair.birth, 0));
+    vector<index_t> vertex;
+    parentIdx0 = uf.find(pair.birth.x() * cgc.n_yz + pair.birth.y() * cgc.shape[2] + pair.birth.z());
+    for (size_t i = 0; i < cgc.getNumberOfCubes(0); ++i) {
+    parentIdx1 = uf.find(i);
+        if (parentIdx0 == parentIdx1) {
+            vertex = uf.getCoordinates(i);
+            if (find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) {
+                reprCycle.push_back(vertex);
+            }
+        }
+    }
+    reprCycle.push_back(cgc.getParentVoxel(pair.death, 1));
+
+    return reprCycle;
 }
 
+tuple<vector<RepresentativeCycle>, vector<RepresentativeCycle>>
+Dimension0::getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles, bool computeUnmatchedCycles) {
+    const CubicalGridComplex &cgc = (input == 0) ? cgc0 : cgc1;
+    UnionFind uf(cgc);
+    vector<Pair> &pairs = (input == 0) ? pairs0 : pairs1;
+    unordered_map<index_t, Pair> &matchMap = (input == 0) ? matchMap0 : matchMap1;
+    auto &isMatched = (input == 0) ? isMatched0 : isMatched1;
+
+    // Map from cube indices to union find indices (to match cycles with persistence pairs)
+    CubeMap<1, index_t> unionFindIdxByDeathCube(cgc.shape);
+
+    // Initialize singleton representative cycles
+    vector<RepresentativeCycle> cycleByBirthIdx(cgc.shape[0] * cgc.shape[1] * cgc.shape[2]);
+    for (int birthIdx = 0; birthIdx < cycleByBirthIdx.size(); birthIdx++) {
+        cycleByBirthIdx[birthIdx].emplace_back(vectorToTuple<3>(uf.getCoordinates(birthIdx)));
+    }
+
+    vector<Cube> edges;
+    enumerateEdges(edges, cgc);
+
+    // Track the next pair to be found (we will find them in the same order as before) to know when to save a cycle
+    auto currentPair = pairs.begin();
+
+    // Follow the union-find algorithm:
+    for (Cube &edge : edges) {
+        vector<index_t> boundaryIndices = uf.getBoundaryIndices(edge);
+        index_t parentIdx0 = uf.find(boundaryIndices[0]);
+        index_t parentIdx1 = uf.find(boundaryIndices[1]);
+        // When merging a younger component into an older one, extend the older component's cycle by the younger component's cycle
+        if (parentIdx0 != parentIdx1) {
+            auto youngerBirthIdx = uf.link(parentIdx0, parentIdx1);
+            auto olderBirthIdx = (parentIdx1 == youngerBirthIdx) ? parentIdx0 : parentIdx1;
+            cycleByBirthIdx[olderBirthIdx].insert(cycleByBirthIdx[olderBirthIdx].end(), cycleByBirthIdx[youngerBirthIdx].begin(), cycleByBirthIdx[youngerBirthIdx].end());
+            unionFindIdxByDeathCube[edge.index] = youngerBirthIdx;
+
+            // If the died component corresponds to a pair we'd like to save:
+            if (currentPair != pairs.end() && edge.index == currentPair->death.index) {
+                currentPair++;
+            } else {
+                // Else, delete the component's cycle to save memory
+                cycleByBirthIdx[youngerBirthIdx].clear();
+            }
+        }
+    }
+
+    // Collect the representative cycles belonging to matched pairs
+    vector<RepresentativeCycle> matchedCycles;
+    if (computeMatchedCycles) {
+        matchedCycles.reserve(matches.size());
+        for (auto &match : matches) {
+            auto &pair = (input == 0) ? match.pair0 : match.pair1;
+            auto unionFindIdx = unionFindIdxByDeathCube.find(pair.death.index);
+            if (!unionFindIdx.has_value()) {
+                throw runtime_error("Union find index for matched pair cannot be found");
+            }
+            auto &cycle = cycleByBirthIdx[*unionFindIdx];
+            matchedCycles.emplace_back(std::move(cycle));
+        }
+    }
+
+    // Collect the representative cycles belonging to unmatched pairs
+    vector<RepresentativeCycle> unmatchedCycles;
+    if (computeUnmatchedCycles) {
+        unmatchedCycles.reserve(pairs.size() - matches.size());
+        for (auto &pair : pairs) {
+            if (!isMatched[pair.birth.index]) {
+                auto unionFindIdx = unionFindIdxByDeathCube.find(pair.death.index);
+                if (!unionFindIdx.has_value()) {
+                    throw runtime_error("Union find index for matched pair cannot be found");
+                }
+                auto &cycle = cycleByBirthIdx[*unionFindIdx];
+                unmatchedCycles.emplace_back(std::move(cycle));
+            }
+        }
+    }
+
+    return {matchedCycles, unmatchedCycles};
+}
 
 void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 #ifdef RUNTIME

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../config.h"
+#include "BettiMatching.h"
 #include "data_structures.h"
 #include "enumerators.h"
 
@@ -16,6 +17,7 @@ class Dimension2 {
 	void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp, vector<Cube>& ctrImage);
 	void computeInput0Pairs(vector<Cube>& ctr0);
 	vector<vector<index_t>> getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const;
+	tuple<vector<RepresentativeCycle>, vector<RepresentativeCycle>> getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles, bool computeUnmatchedCycles) const;
 
 	private:
 	void enumerateDualEdges(vector<Cube>& dualEdges, const CubicalGridComplex& cgc) const;

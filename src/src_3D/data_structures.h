@@ -3,8 +3,14 @@
 #include "../config.h"
 
 #include <cstdint>
+#include <iostream>
 #include <optional>
 #include <vector>
+#include <iterator> // For std::forward_iterator_tag
+#include <cstddef>  // For std::ptrdiff_t
+#include <tuple>
+
+#include <sstream>
 
 using namespace std;
 

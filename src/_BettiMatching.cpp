@@ -302,6 +302,29 @@ BarcodeResult convertPairResultToBarcodeResult(vector<vector<VoxelPair>>& pairsB
     return arrayResult;
 }
 
+py::array_t<int64_t> coordinateListToArray(vector<tuple<uint64_t, uint64_t, uint64_t>>& coordinateList) {
+    py::array_t<int64_t> coordinateArray({(int)coordinateList.size(), 3}, {3 * sizeof(int64_t), sizeof(int64_t)});
+    auto coordinateArrayView = coordinateArray.mutable_unchecked();
+    for (int i = 0; i < coordinateList.size(); i++) {
+        auto& coordinates = coordinateList[i];
+        coordinateArrayView(i, 0) = std::get<0>(coordinates);
+        coordinateArrayView(i, 1) = std::get<1>(coordinates);
+        coordinateArrayView(i, 2) = std::get<2>(coordinates);
+    }
+    return coordinateArray;
+}
+
+py::array_t<int64_t> coordinateListToArray(vector<vector<index_t>>& coordinateList, size_t numDimensions) {
+    py::array_t<int64_t> coordinateArray({(int)coordinateList.size(), (int)numDimensions}, {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+    auto coordinateArrayView = coordinateArray.mutable_unchecked();
+    for (int i = 0; i < coordinateList.size(); i++) {
+        for (int j = 0; j < numDimensions; j++) {
+            coordinateArrayView(i, j) = coordinateList[i][j];
+        }
+    }
+    return coordinateArray;
+}
+
 PYBIND11_MODULE(betti_matching, m) {
     py::class_<BettiMatching>(m, "BettiMatching",
         R"(
@@ -387,9 +410,50 @@ PYBIND11_MODULE(betti_matching, m) {
             )"
         )
 
-        .def("get_matched_cycles", &BettiMatching::getMatchedRepresentativeCycles)
+        .def("get_matched_cycles",
+            [](BettiMatching &self, size_t dim, size_t index) {
+                auto result = self.getMatchedRepresentativeCycles(dim, index);
 
-        .def("get_unmatched_cycle", &BettiMatching::getUnmatchedRepresentativeCycle);
+                py::array_t<int64_t> matchedCycle0 = coordinateListToArray(std::get<0>(result), self.shape.size());
+                py::array_t<int64_t> matchedCycle1 = coordinateListToArray(std::get<0>(result), self.shape.size());
+
+                return std::make_tuple(matchedCycle0, matchedCycle1);
+            },
+            py::arg("dim"),
+            py::arg("index")
+        )
+
+        .def("get_unmatched_cycle",
+            [](BettiMatching &self, uint8_t input, size_t dim, size_t index) {
+                auto unmatchedCycle = self.getUnmatchedRepresentativeCycle(input, dim, index);
+                return coordinateListToArray(unmatchedCycle, self.shape.size());
+            },
+            py::arg("input"),
+            py::arg("dim"),
+            py::arg("index")
+        )
+
+        .def("get_all_cycles",
+            [](BettiMatching &self, int input, int dim, bool computeMatchedCycles, bool computeUnmatchedCycles) {
+                auto matchedAndUnmatchedCycles = self.computeAllRepresentativeCycles(input, dim, computeMatchedCycles, computeUnmatchedCycles);
+                auto matchedCycles = std::get<0>(matchedAndUnmatchedCycles);
+                auto unmatchedCycles = std::get<1>(matchedAndUnmatchedCycles);
+
+                vector<py::array_t<int64_t>> matchedCyclesArrays;
+                vector<py::array_t<int64_t>> unmatchedCyclesArrays;
+
+                std::transform(matchedCycles.begin(), matchedCycles.end(), back_inserter(matchedCyclesArrays),
+                    [](auto coords){return coordinateListToArray(coords);});
+                std::transform(unmatchedCycles.begin(), unmatchedCycles.end(), back_inserter(unmatchedCyclesArrays),
+                    [](auto coords){return coordinateListToArray(coords);});
+
+                return std::make_tuple(matchedCyclesArrays, unmatchedCyclesArrays);
+            },
+            py::arg("dim"),
+            py::arg("input"),
+            py::arg("compute_matched_cycles") = true,
+            py::arg("compute_unmatched_cycles") = true
+        );
 
 
     m.def("compute_matching",
@@ -506,6 +570,15 @@ PYBIND11_MODULE(betti_matching, m) {
         &computeBarcodeFromInputs,
         py::arg("inputs")
     );
+
+    py::class_<dim3::Cube>(m, "Cube")
+        .def("x", &dim3::Cube::x)
+        .def("y", &dim3::Cube::y)
+        .def("z", &dim3::Cube::z)
+        .def("type", &dim3::Cube::type)
+        .def("__repr__", [](dim3::Cube& self) {
+          return "dim3::Cube(x=" + std::to_string(self.x()) + ", y=" + std::to_string(self.y()) + ", z=" + std::to_string(self.z()) + ")";
+        });
 
     auto resultTypesModule = m.def_submodule("return_types", "Return types for betti_matching");
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BettiMatching.h"
 #include "data_structures.h"
 #include "enumerators.h"
 
@@ -15,12 +16,18 @@ class Dimension1 {
 	public:
 	Dimension1(const CubicalGridComplex& cgc0, const CubicalGridComplex& cgc1, const CubicalGridComplex& cgcComp, 
 				const Config& config, vector<Pair>& pairs0, vector<Pair>& pairs1, vector<Pair>& pairsComp,
-				vector<Match>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1);
+				vector<Match>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1
+#ifdef USE_CACHE
+                , CubeMap<2, vector<Cube>>& _cacheInputPairs0,
+                CubeMap<2, vector<Cube>>& _cacheInputPairs1
+#endif
+    );
 	void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp, vector<Cube>& ctrImage);
 	void computeInput0Pairs(vector<Cube>& ctr0);
 	vector<vector<index_t>> getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc);
+	tuple<vector<dim3::RepresentativeCycle>, vector<dim3::RepresentativeCycle>> getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles, bool computeUnmatchedCycles);
 
-	private:
+    private:
 	enum ComputePairsMode { INPUT_PAIRS, COMPARISON_PAIRS, IMAGE_PAIRS };
 
 	void computePairs(vector<Cube>& ctr, uint8_t k);
@@ -28,7 +35,12 @@ class Dimension1 {
 	void computePairsImage(vector<Cube>& ctr, uint8_t k);
 
 	template <ComputePairsMode computePairsMode>
-	void computePairsUnified(vector<Cube>& ctr, uint8_t k);
+	void computePairsUnified(vector<Cube>& ctr, uint8_t k
+#ifdef USE_CACHE
+		, CubeMap<2, vector<Cube>>& cache
+#endif
+	);
+
 	void computeMatching();
 	void enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& cgc, CubeMap<1, size_t>& pivotColumnIndex) const;
 	void enumerateColumnsToReduce(vector<Cube>& ctr, const CubicalGridComplex& cgc) const;
@@ -82,6 +94,12 @@ class Dimension1 {
 	CubeMap<1, size_t> pivotColumnIndexImage1; // to be used for image pairs 1
 #ifdef USE_REDUCTION_MATRIX
 	CubeMap<2, vector<Cube>> reductionMatrix;
+#endif
+
+#ifdef USE_CACHE
+    // Keep the caches for input 0 and input 1 barcodes for later use in computing representative cycles.
+    CubeMap<2, vector<Cube>>& cacheInputPairs0;
+    CubeMap<2, vector<Cube>>& cacheInputPairs1;
 #endif
 };
 }

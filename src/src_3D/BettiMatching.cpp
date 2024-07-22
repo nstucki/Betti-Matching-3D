@@ -3,8 +3,9 @@
 #include "dimension_1.h"
 #include "dimension_2.h"
 
-#include <iostream>
 #include <chrono>
+#include <iostream>
+#include <stdexcept>
 
 using namespace dim3;
 using namespace std;
@@ -12,7 +13,8 @@ using namespace std::chrono;
 
 
 BettiMatching::BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1, vector<value_t>&& comparison, vector<index_t>&& shape,
-                                Config&& _config) : cgc0(input0, shape), cgc1(input1, shape), cgcComp(comparison, shape), config(_config) {
+                                Config&& _config) : cgc0(input0, shape), cgc1(input1, shape), cgcComp(comparison, shape), config(_config),
+                                dim1CacheInputPairs0(shape), dim1CacheInputPairs1(shape) {
     pairs0 = vector<vector<Pair>>(3);
     pairs1 = vector<vector<Pair>>(3);
     pairsComp = vector<vector<Pair>>(3);
@@ -29,7 +31,8 @@ BettiMatching::BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1,
     cgc0(std::move(other.cgc0)), cgc1(std::move(other.cgc1)), cgcComp(std::move(other.cgcComp)),
     config(other.config), pairs0(other.pairs0), pairs1(other.pairs1), pairsComp(other.pairsComp),
     matches(other.matches), isMatched0(other.isMatched0), isMatched1(other.isMatched1),
-    _matched(other.matched), _unmatched0(other.unmatched0), _unmatched1(other.unmatched1) {}
+    _matched(other.matched), _unmatched0(other.unmatched0), _unmatched1(other.unmatched1),
+    dim1CacheInputPairs0(other.dim1CacheInputPairs0), dim1CacheInputPairs1(other.dim1CacheInputPairs1) {}
 
 
 
@@ -61,7 +64,8 @@ void BettiMatching::computeMatching() {
         auto start = high_resolution_clock::now();
 #endif
 
-        Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);       
+        Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1],
+            dim1CacheInputPairs0, dim1CacheInputPairs1);
         dim1.computePairsAndMatch(ctr0, ctr1, ctrComp, ctrImage);
 
 #ifdef RUNTIME
@@ -127,7 +131,7 @@ vector<vector<VoxelPair>> BettiMatching::computePairsInput0() {
     Dimension2 dim2(cgc0, cgc1, cgcComp,  config, pairs0[2], pairs1[2], pairsComp[2], matches[2], isMatched0[2], isMatched1[2]);
     dim2.computeInput0Pairs(ctr0);
 
-    Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);
+    Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1], dim1CacheInputPairs0, dim1CacheInputPairs1);
     dim1.computeInput0Pairs(ctr0);
 
     Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);
@@ -255,9 +259,16 @@ void BettiMatching::printResult() {
 
 
 pair<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatchedRepresentativeCycles(const uint8_t& dim, const size_t& index) {
+    if (dim >= 3) {
+        throw runtime_error("Invalid value for dim");
+    }
+
     pair<vector<vector<index_t>>, vector<vector<index_t>>> reprCycles;
 
-    if (index >= matches[dim].size()) { return reprCycles; }
+    if (index >= matches[dim].size()) {
+        throw runtime_error("Cycle index " + std::to_string((int)index) + " out of range: There are only " + std::to_string((int)matches[dim].size()) +
+            " matched cycles in dimension " + std::to_string((int)dim));
+    }
 
     switch(dim) {
         case 0: {
@@ -266,14 +277,13 @@ pair<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatched
             get<1>(reprCycles) = dim0.getRepresentativeCycle(matches[0][index].pair1, cgc1); 
             break;
         }
-
         case 1: {
-            Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);
+            Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1],
+                dim1CacheInputPairs0, dim1CacheInputPairs1);
             get<0>(reprCycles) = dim1.getRepresentativeCycle(matches[1][index].pair0, cgc0);
             get<1>(reprCycles) = dim1.getRepresentativeCycle(matches[1][index].pair1, cgc1);
             break;
         }
-
         case 2: {
             Dimension2 dim2(cgc0, cgc1, cgcComp, config, pairs0[2], pairs1[2], pairsComp[2], matches[2], isMatched0[2], isMatched1[2]);
             get<0>(reprCycles) = dim2.getRepresentativeCycle(matches[2][index].pair0, cgc0);
@@ -285,7 +295,14 @@ pair<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatched
 }
 
 
-vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t& input, const uint8_t& dim, const size_t& index) {
+vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t& input, const size_t& dim, const size_t& index) {
+    if (dim >= 3) {
+        throw runtime_error("Invalid value for dim");
+    }
+    if (input >= 2) {
+        throw runtime_error("Invalid value for input: must be 0 or 1");
+    }
+
     const CubicalGridComplex& cgc = (input == 0) ? cgc0 : cgc1;
     vector<vector<Pair>>& pairs = (input == 0) ? pairs0 : pairs1;
     vector<unordered_map<uint64_t, bool>> isMatched = (input == 0) ? isMatched0 : isMatched1;
@@ -293,7 +310,10 @@ vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uin
     vector<vector<index_t>> reprCycle;
 
     size_t numPairs = pairs[dim].size();
-    if (index >= numPairs) { return reprCycle; }
+    if (index >= numPairs) {
+        throw runtime_error("Cycle index " + std::to_string((int)index) + " out of range: There are only " + std::to_string((int)numPairs) +
+            " unmatched cycles in dimension " + std::to_string((int)dim));
+    }
 
     size_t count = 0;
     for (Pair& pair : pairs[dim]) {
@@ -306,14 +326,12 @@ vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uin
                         reprCycle = dim0.getRepresentativeCycle(pair, cgc);
                         break;
                     }
-
                     case 1: {
                         Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1], pairsComp[1], 
-                                        matches[1], isMatched0[1], isMatched1[1]);
+                                        matches[1], isMatched0[1], isMatched1[1], dim1CacheInputPairs0, dim1CacheInputPairs1);
                         reprCycle = dim1.getRepresentativeCycle(pair, cgc);
                         break;
                     }
-
                     case 2: {
                         Dimension2 dim2(cgc0, cgc1, cgcComp, config, pairs0[2], pairs1[2], pairsComp[2], 
                                         matches[2], isMatched0[2], isMatched1[2]);
@@ -328,4 +346,28 @@ vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uin
     }
     
     return reprCycle;
+}
+
+tuple<vector<dim3::RepresentativeCycle>, vector<dim3::RepresentativeCycle>>
+BettiMatching::computeAllRepresentativeCycles(const int input, const int dim, bool computeMatchedCycles, bool computeUnmatchedCycles) {
+    switch (dim) {
+        case 0: {
+            Dimension0 dim0(cgc0, cgc1, cgcComp, config, pairs0[0], pairs1[0],
+                            pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);
+            return dim0.getAllRepresentativeCycles(input, computeMatchedCycles, computeUnmatchedCycles);
+        }
+        case 1: {
+            Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1],
+                            pairsComp[1], matches[1], isMatched0[1], isMatched1[1], dim1CacheInputPairs0, dim1CacheInputPairs1);
+            return dim1.getAllRepresentativeCycles(input, computeMatchedCycles, computeUnmatchedCycles);
+        }
+        case 2: {
+            Dimension2 dim2(cgc0, cgc1, cgcComp, config, pairs0[2], pairs1[2],
+                            pairsComp[2], matches[2], isMatched0[2], isMatched1[2]);
+            return dim2.getAllRepresentativeCycles(input, computeMatchedCycles, computeUnmatchedCycles);
+        }
+        default: {
+            throw runtime_error("Invalid value for dim");
+        }
+    }
 }

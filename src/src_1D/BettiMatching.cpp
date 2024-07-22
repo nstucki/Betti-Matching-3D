@@ -196,9 +196,16 @@ void BettiMatching::printResult() {
 
 
 pair<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatchedRepresentativeCycles(const uint8_t& dim, const size_t& index) {
+    if (dim >= 1) {
+        throw runtime_error("Invalid value for dim");
+    }
+
     pair<vector<vector<index_t>>, vector<vector<index_t>>> reprCycles;
 
-    if (index >= matches[dim].size()) { return reprCycles; }
+    if (index >= matches[dim].size()) {
+        throw runtime_error("Cycle index " + std::to_string((int)index) + " out of range: There are only " + std::to_string((int)matches[dim].size()) +
+            " matched cycles in dimension " + std::to_string((int)dim));
+    }
 
     Dimension0 dim0(cgc0, cgc1, cgcComp, config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);
     get<0>(reprCycles) = dim0.getRepresentativeCycle(matches[0][index].pair0, cgc0);
@@ -208,7 +215,14 @@ pair<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatched
 }
 
 
-vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t& input, const uint8_t& dim, const size_t& index) {
+vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t& input, const size_t& dim, const size_t& index) {
+    if (dim >= 1) {
+        throw runtime_error("Invalid value for dim");
+    }
+    if (input >= 2) {
+        throw runtime_error("Invalid value for input: must be 0 or 1");
+    }
+
     const CubicalGridComplex& cgc = (input == 0) ? cgc0 : cgc1;
     vector<vector<Pair>>& pairs = (input == 0) ? pairs0 : pairs1;
     vector<unordered_map<uint64_t, bool>> isMatched = (input == 0) ? isMatched0 : isMatched1;
@@ -216,7 +230,10 @@ vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uin
     vector<vector<index_t>> reprCycle;
     
     size_t numPairs = pairs[dim].size();
-    if (index > numPairs-1) { return reprCycle; }
+    if (index >= numPairs) {
+        throw runtime_error("Cycle index " + std::to_string((int)index) + " out of range: There are only " + std::to_string((int)numPairs) +
+            " unmatched cycles in dimension " + std::to_string((int)dim));
+    }
 
     size_t count = 0;
     for (Pair& pair : pairs[dim]) {

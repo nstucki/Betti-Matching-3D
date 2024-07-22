@@ -60,7 +60,7 @@ BettiMatching::BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1,
 
 BettiMatching::BettiMatching(BettiMatching&& other) : 
     shape(other.shape), dimensionSpecificBettiMatching(std::move(other.dimensionSpecificBettiMatching)),
-    dimension(other.dimension), computed(other.computed) {}
+    dimension(other.dimension), computed(other.computed), computedPairsInput0(other.computedPairsInput0) {}
 
 
 void BettiMatching::computeMatching() {
@@ -158,7 +158,7 @@ vector<vector<VoxelPair>> BettiMatching::computePairsInput0() {
 
 void BettiMatching::printResult() {
     if (!computed) {
-        throw std::runtime_error("Betti Matching not computed yet.");
+        throw std::runtime_error("Betti Matching not computed yet");
     }
     switch (dimension) {
         case 1: {
@@ -190,7 +190,7 @@ void BettiMatching::printResult() {
 
 std::tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>, vector<vector<VoxelPair>>> BettiMatching::getMatching() {
     if (!computed) {
-        throw std::runtime_error("Betti Matching not computed yet.");
+        throw std::runtime_error("Betti Matching not computed yet");
     }
     switch (dimension) {
         case 1: {
@@ -219,6 +219,10 @@ std::tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>, vector<vector<
 
 
 tuple<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatchedRepresentativeCycles(const size_t& dim, const size_t& index) {
+    if (!computed) {
+        throw std::runtime_error("Betti Matching not computed yet");
+    }
+
     tuple<vector<vector<index_t>>, vector<vector<index_t>>> repCycles;
     switch (dimension) {
         case 1: {
@@ -240,35 +244,55 @@ tuple<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatche
         }
 
         default: {
-            return repCycles;
+            throw runtime_error("Computing matched representative cycles is only supported for 1D, 2D and 3D volumes");
+        }
+    }
+}
+
+tuple<vector<dim3::RepresentativeCycle>, vector<dim3::RepresentativeCycle>> BettiMatching::computeAllRepresentativeCycles(const int input, const int dim, bool computeMatchedCycles, bool computeUnmatchedCycles) {
+    if (!computed) {
+        throw std::runtime_error("Betti Matching not computed yet");
+    }
+
+    switch (dimension) {
+        case 3: {
+            dim3::BettiMatching& bettiMatching = std::get<dim3::BettiMatching>(dimensionSpecificBettiMatching.value());
+            return bettiMatching.computeAllRepresentativeCycles(input, dim, computeMatchedCycles, computeUnmatchedCycles);
+        }
+        default: {
+            throw runtime_error("Computing all representative cycles is only supported for 3D volumes");
         }
     }
 }
 
 
-vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const size_t& dim, const size_t& index, const uint8_t& input) {
+vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t& input, const size_t& dim, const size_t& index) {
+    if (!computed) {
+        throw std::runtime_error("Betti Matching not computed yet");
+    }
+
     vector<vector<index_t>> repCycle;
     switch (dimension) {
         case 1: {
             dim1::BettiMatching& bettiMatching = std::get<dim1::BettiMatching>(dimensionSpecificBettiMatching.value());
-            repCycle = bettiMatching.getUnmatchedRepresentativeCycle(dim, index, input);
+            repCycle = bettiMatching.getUnmatchedRepresentativeCycle(input, dim, index);
             return repCycle;
         }
 
         case 2: {
             dim2::BettiMatching& bettiMatching = std::get<dim2::BettiMatching>(dimensionSpecificBettiMatching.value());
-            repCycle = bettiMatching.getUnmatchedRepresentativeCycle(dim, index, input);
+            repCycle = bettiMatching.getUnmatchedRepresentativeCycle(input, dim, index);
             return repCycle;
         }
 
         case 3: {
             dim3::BettiMatching& bettiMatching = std::get<dim3::BettiMatching>(dimensionSpecificBettiMatching.value());
-            repCycle = bettiMatching.getUnmatchedRepresentativeCycle(dim, index, input);
+            repCycle = bettiMatching.getUnmatchedRepresentativeCycle(input, dim, index);
             return repCycle;
         }
 
         default: {
-            return repCycle;
+            throw runtime_error("Computing matched representative cycles is only supported for 1D, 2D and 3D volumes");
         }
     }
 }

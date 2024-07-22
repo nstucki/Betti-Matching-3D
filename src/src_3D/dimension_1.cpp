@@ -1,4 +1,6 @@
 #include "dimension_1.h"
+#include "BettiMatching.h"
+#include "data_structures.h"
 #include "enumerators.h"
 
 #include <algorithm>
@@ -14,7 +16,12 @@ using namespace std::chrono;
 Dimension1::Dimension1(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, 
 						const CubicalGridComplex& _cgcComp, const Config& _config, 
 						vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, vector<Match>& _matches, 
-						unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1) : 
+						unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1
+#ifdef USE_CACHE
+                        , CubeMap<2, vector<Cube>>& _cacheInputPairs0,
+                        CubeMap<2, vector<Cube>>& _cacheInputPairs1
+#endif
+                        ) :
 						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), pairs0(_pairs0), pairs1(_pairs1),
 						pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1),
 						matchMap0(_cgc0.shape), matchMap1(_cgc0.shape), matchMapIm0(_cgc0.shape), matchMapIm1(_cgc0.shape),
@@ -25,7 +32,11 @@ Dimension1::Dimension1(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						pivotColumnIndexInput1(_cgc1.shape),
 						pivotColumnIndexComp(_cgcComp.shape),
 						pivotColumnIndexImage0(_cgc0.shape),
-						pivotColumnIndexImage1(_cgc1.shape)
+						pivotColumnIndexImage1(_cgc1.shape),
+#ifdef USE_CACHE
+                        cacheInputPairs0(_cacheInputPairs0),
+                        cacheInputPairs1(_cacheInputPairs1)
+#endif
 						{}
 
 
@@ -273,15 +284,101 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 
 
 void Dimension1::computePairs(vector<Cube>& ctr, uint8_t k) {
-	computePairsUnified<ComputePairsMode::INPUT_PAIRS>(ctr, k);
+#ifdef USE_CACHE
+	auto& cache = (k == 0) ? cacheInputPairs0 : cacheInputPairs1;
+#endif
+	computePairsUnified<ComputePairsMode::INPUT_PAIRS>(ctr, k,
+#ifdef USE_CACHE
+		cache);
+#endif
 }
 
 void Dimension1::computePairsComp(vector<Cube>& ctr) {
-	computePairsUnified<ComputePairsMode::COMPARISON_PAIRS>(ctr, 0);
+#ifdef USE_CACHE
+	CubeMap<2, vector<Cube>> cache(cgc0.shape);
+#endif
+	computePairsUnified<ComputePairsMode::COMPARISON_PAIRS>(ctr, 0,
+#ifdef USE_CACHE
+		cache);
+#endif
 }
 
 void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
-	computePairsUnified<ComputePairsMode::IMAGE_PAIRS>(ctr, k);
+#ifdef USE_CACHE
+	CubeMap<2, vector<Cube>> cache(cgc0.shape);
+#endif
+	computePairsUnified<ComputePairsMode::IMAGE_PAIRS>(ctr, k
+#ifdef USE_CACHE
+		, cache
+#endif
+	);
+}
+
+RepresentativeCycle cubeCycleToVoxelCycle(vector<Cube>& cubeCycle) {
+	// This function deduplicates voxels in obvious consecutive cases, but it is not necessarily guaranteed that its output does not contain duplicate voxels.
+	if (cubeCycle.empty()) {
+		return {};
+	}
+    auto& cube = cubeCycle[0];
+	RepresentativeCycle voxelCycle {
+        {cube.x(), cube.y(), cube.z()},
+        {cube.x() + (cube.type() == 0), cube.y() + (cube.type() == 1), cube.z() + (cube.type() == 2)}
+    };
+
+	for (auto& cube : cubeCycle) {
+		tuple<index_t, index_t, index_t> endpoint0 = {cube.x(), cube.y(), cube.z()};
+		auto type = cube.type();
+		tuple<index_t, index_t, index_t> endpoint1 = {cube.x() + (type == 0), cube.y() + (type == 1), cube.z() + (type == 2)};
+		auto lastAdded1 = voxelCycle[voxelCycle.size() - 1];
+		auto lastAdded2 = voxelCycle[voxelCycle.size() - 2];
+		if (lastAdded1 != endpoint0 && lastAdded2 != endpoint0) {
+			voxelCycle.emplace_back(std::move(endpoint0));
+		}
+		if (lastAdded1 != endpoint1 && lastAdded2 != endpoint1) {
+			voxelCycle.emplace_back(std::move(endpoint1));
+		}
+	}
+
+	return voxelCycle;
+}
+
+
+tuple<vector<dim3::RepresentativeCycle>, vector<dim3::RepresentativeCycle>>
+Dimension1::getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles, bool computeUnmatchedCycles) {
+#ifndef USE_CACHE
+	throw runtime_error("computeAllRepresentativeCycles() can only be used when compiled with USE_CACHE defined"); 
+#endif
+
+	auto& isMatched = (input == 0) ? isMatched0 : isMatched1;
+	auto& pairs = (input == 0) ? pairs0 : pairs1;
+	auto& cache = (input == 0) ? cacheInputPairs0 : cacheInputPairs1;
+
+	vector<RepresentativeCycle> matchedCycles;
+	vector<RepresentativeCycle> unmatchedCycles;
+    if (computeMatchedCycles) {
+        for (auto& match : matches) {
+            auto& pair = (input == 0) ? match.pair0 : match.pair1;
+            auto& cachedBoundary = cache[pair.death.index];
+            if (!cachedBoundary.has_value()) {
+                throw runtime_error("A boundary that is needed to get all cycles was deleted from cache! Consider increasing the cache size limit.");
+            }
+
+            matchedCycles.emplace_back(cubeCycleToVoxelCycle(*cachedBoundary));
+        }
+    }
+    if (computeUnmatchedCycles) {
+        for (auto& pair : pairs) {
+            if (!isMatched[pair.birth.index]) {
+                auto& cachedBoundary = cache[pair.death.index];
+                if (!cachedBoundary.has_value()) {
+                    throw runtime_error("A boundary that is needed to get all cycles was deleted from cache! Consider increasing the cache size limit.");
+                }
+
+                unmatchedCycles.emplace_back(cubeCycleToVoxelCycle(*cachedBoundary));
+            }
+        }
+    }
+	return {matchedCycles, unmatchedCycles};
 }
 
 void Dimension1::computeMatching() {
@@ -573,7 +670,11 @@ bool Dimension1::pivotOfColumnIsApparentPair(const Cube& pivot, const Cube& colu
 #endif
 
 template <Dimension1::ComputePairsMode computePairsMode>
-void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
+void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k
+#ifdef USE_CACHE
+	, CubeMap<2, vector<Cube>>& cache
+#endif
+	) {
 #ifdef RUNTIME
 	cout << "barcode ";
 	auto start = high_resolution_clock::now();
@@ -612,7 +713,6 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k) {
 #endif
 #endif
 #ifdef USE_CACHE
-	CubeMap<2, vector<Cube>> cache(cgc.shape);
 	queue<uint64_t> cachedColumnIdx;
 	size_t numRecurse;
 #ifdef RUNTIME
