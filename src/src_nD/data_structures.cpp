@@ -6,6 +6,7 @@
 #include <functional>
 #include <algorithm>
 #include <limits>
+#include <stdexcept>
 #include <vector>
 
 using namespace dimN;
@@ -133,7 +134,7 @@ vector<index_t> CubicalGridComplex::getParentVoxel(const Cube &c) const {
 			nonDegen.push_back(axis);
 		}
 	}
-	cerr << "could not find parent voxel" << endl;
+	throw runtime_error("Could not find parent voxel");
 	return {0};
 }
 

@@ -1,6 +1,7 @@
 #include "data_structures.h"
 #include <iostream>
 #include <algorithm>
+#include <stdexcept>
 
 using namespace dim3;
 using namespace std;
@@ -110,8 +111,7 @@ size_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
 		case 3:
 			return m_x*m_y*m_z;
 	}
-	cerr << "no cubes in dim " << unsigned(dim) << endl;
-	return -1;
+	throw runtime_error("No cubes in dim " + std::to_string(unsigned(dim)));
 }
 
 
@@ -152,8 +152,7 @@ value_t CubicalGridComplex::getBirth(const index_t& x, const index_t& y, const i
 			return max({getBirth(x, y, z),getBirth(x, y, z+1),getBirth(x, y+1, z),getBirth(x, y+1, z+1),
 						getBirth(x+1, y, z),getBirth(x+1, y, z+1),getBirth(x+1, y+1, z),getBirth(x+1, y+1, z+1)});
 	}
-	cerr << "birth not found!" << endl;
-	return INFTY;
+	throw runtime_error("Birth not found!");
 }
 
 
@@ -211,8 +210,7 @@ vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8
 			else if (cube.birth == getBirth(x+1, y+1, z)) { return {x+1,y+1,z}; } 
 			else { return {x+1,y+1,z+1}; }	
 	}
-	cerr << "parent voxel not found!" << endl;
-	return {0,0,0};
+	throw runtime_error("Parent voxel not found!");
 }
 
 
@@ -255,7 +253,7 @@ value_t*** CubicalGridComplex::allocateMemory() const {
         g[i] = new value_t*[shape[1]+2];
         for (index_t j = 0; j < shape[1]+2; ++j) { g[i][j] = new value_t[shape[2]+2]; }
     }
-	if (g == NULL) { cerr << "Out of memory!" << endl; }
+	if (g == NULL) { throw runtime_error("Out of memory!"); }
 	return g;
 }
 

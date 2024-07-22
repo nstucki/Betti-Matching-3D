@@ -94,8 +94,7 @@ size_t CubicalGridComplex::getNumberOfCubes(const uint8_t& dim) const {
 		case 2:
 			return m_xy;
 	}
-	cerr << "no cubes in dim " << unsigned(dim) << endl;
-	return -1;
+	throw runtime_error("No cubes in dim " + std::to_string(unsigned(dim)));
 }
 
 
@@ -119,8 +118,7 @@ value_t CubicalGridComplex::getBirth(const index_t& x, const index_t& y, const u
 		case 2:
 			return max({getBirth(x, y),getBirth(x, y+1),getBirth(x+1, y),getBirth(x+1, y+1)});
 	}
-	cerr << "birth not found!" << endl;
-	return INFTY;
+	throw runtime_error("Birth not found!");
 }
 
 
@@ -148,8 +146,7 @@ vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8
 			else if (cube.birth == getBirth(x, y+1)) { return {x,y+1}; }
 			else { return {x,y}; }
 	}
-	cerr << "parent voxel not found!" << endl;
-	return {0,0};
+	throw runtime_error("Parent voxel not found!");
 }
 
 
@@ -184,7 +181,7 @@ void CubicalGridComplex::printRepresentativeCycle(const vector<vector<index_t>>&
 value_t** CubicalGridComplex::allocateMemory() const {
 	value_t** g = new value_t*[shape[0]+2];
     for (index_t i = 0; i < shape[0]+2; ++i) { g[i] = new value_t[shape[1]+2]; }
-	if (g == NULL) { cerr << "out of memory!" << endl; }
+	if (g == NULL) { throw runtime_error("Out of memory!"); }
 	return g;
 }
 
