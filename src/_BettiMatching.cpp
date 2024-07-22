@@ -331,7 +331,19 @@ PYBIND11_MODULE(betti_matching, m) {
         BettiMatching(input0, input1)
 
         Class for computing the Betti matching between two input volumes, and computing
-        representative cycles.
+        representative cycles. In comparison to `betti_matching.compute_matching()`,
+        this class allows to cache the computed matching and use it to compute
+        representative cycles for the matched and unmatched features.
+
+        Representative cycles have the following format:
+        - Each cycle is represented as a NumPy array of shape (len_cycle+1, d).
+        - The entries are voxel coordinates which outline the cycle boundary.
+            - Dimension 0: vertex (0-cube) coordinates of the cycle.
+            - Dimension 1: endpoint vertex coordinates of edges (1-cubes) in the cycle
+            - Dimension 2: corner vertex coordinates of faces (2-cubes) in the cycle
+        - The last index coordinate is the voxel coordinate corresponding to the death
+          cube of the persistence pair (a `dim+1`-dimensional cube).
+        - Cycles in dimension 1 may have duplicate voxel coordinates.
 
         Parameters
         ----------
@@ -410,7 +422,7 @@ PYBIND11_MODULE(betti_matching, m) {
             )"
         )
 
-        .def("get_matched_cycles",
+        .def("compute_matched_representative_cycles",
             [](BettiMatching &self, size_t dim, size_t index) {
                 auto result = self.getMatchedRepresentativeCycles(dim, index);
 
@@ -420,39 +432,179 @@ PYBIND11_MODULE(betti_matching, m) {
                 return std::make_tuple(matchedCycle0, matchedCycle1);
             },
             py::arg("dim"),
-            py::arg("index")
+            py::arg("index"),
+            R"(
+            compute_matched_representative_cycles(dim, index)
+
+            Compute a representative cycle in each of the two input volumes for a given pair
+            of matched persistence pairs.
+
+            Computation time is on the order of computing the barcodes in dimension `dim` of
+            the input volumes (depending on `index`, since small indices allow the
+            computation to exit early).
+
+            Parameters
+            ----------
+            dim : int
+                The dimension of the persistence pair.
+            index : int
+                The index of the persistence pair, relative to the dimension.
+
+            Returns
+            -------
+            matched_cycles : tuple of (np.ndarray, np.ndarray)
+                The representative cycles in each input volume for the given pair of matched
+                persistence pairs. The first array contains the representative cycle in the
+                first input volume, and the second array contains the representative cycle
+                in the second input volume.
+                See the documentation of the `BettiMatching` class for details about the
+                representative cycle format.
+
+            Example
+            -------
+            ```python
+            bm = betti_matching.BettiMatching(prediction, target)
+            bm.compute_matching()
+            first_matched_component_in_prediction, _ = (
+                bm.compute_matched_representative_cycles(dim=0, index=0))
+            cycle_image = np.zeros(prediction.shape)
+            cycle_image[*first_matched_component_prediction.T] = 1
+            ```
+            )"
         )
 
-        .def("get_unmatched_cycle",
+        .def("compute_unmatched_representative_cycle",
             [](BettiMatching &self, uint8_t input, size_t dim, size_t index) {
                 auto unmatchedCycle = self.getUnmatchedRepresentativeCycle(input, dim, index);
                 return coordinateListToArray(unmatchedCycle, self.shape.size());
             },
             py::arg("input"),
             py::arg("dim"),
-            py::arg("index")
+            py::arg("index"),
+            R"(
+            compute_unmatched_representative_cycle(input, dim, index)
+
+            Compute a representative cycle in one of the input volumes for a given unmatched
+            persistence pair.
+
+            Computation time is on the order of computing the barcode in dimension `dim` of
+            the input volume (depending on `index`, since small indices allow the
+            computation to exit early).
+
+            Parameters
+            ----------
+            input : int
+                The index of the input volume for which to compute the unmatched cycle.
+            dim : int
+                The dimension of the persistence pair.
+            index : int
+                The index of the persistence pair, relative to the dimension.
+            
+            Returns
+            -------
+            unmatched_cycle : np.ndarray
+                The representative cycle in the input volume for the given unmatched
+                persistence pair.
+                See the documentation of the `BettiMatching` class for details about the
+                representative cycle format.
+            
+            Example
+            -------
+            ```python
+            bm = betti_matching.BettiMatching(prediction, target)
+            bm.compute_matching()
+            first_unmatched_component_in_prediction = (
+                bm.compute_unmatched_representative_cycle(input=0, dim=0, index=0))
+            cycle_image = np.zeros(prediction.shape)
+            cycle_image[*first_unmatched_component_prediction.T] = 1
+            ```
+            )"
         )
 
-        .def("get_all_cycles",
+        .def("compute_all_representative_cycles",
             [](BettiMatching &self, int input, int dim, bool computeMatchedCycles, bool computeUnmatchedCycles) {
                 auto matchedAndUnmatchedCycles = self.computeAllRepresentativeCycles(input, dim, computeMatchedCycles, computeUnmatchedCycles);
                 auto matchedCycles = std::get<0>(matchedAndUnmatchedCycles);
                 auto unmatchedCycles = std::get<1>(matchedAndUnmatchedCycles);
 
-                vector<py::array_t<int64_t>> matchedCyclesArrays;
-                vector<py::array_t<int64_t>> unmatchedCyclesArrays;
-
-                std::transform(matchedCycles.begin(), matchedCycles.end(), back_inserter(matchedCyclesArrays),
-                    [](auto coords){return coordinateListToArray(coords);});
-                std::transform(unmatchedCycles.begin(), unmatchedCycles.end(), back_inserter(unmatchedCyclesArrays),
-                    [](auto coords){return coordinateListToArray(coords);});
+                std::optional<vector<py::array_t<int64_t>>> matchedCyclesArrays;
+                std::optional<vector<py::array_t<int64_t>>> unmatchedCyclesArrays;
+                
+                if (computeMatchedCycles) {
+                    matchedCyclesArrays = {{}};
+                    std::transform(matchedCycles.begin(), matchedCycles.end(), back_inserter(*matchedCyclesArrays),
+                        [](auto coords){return coordinateListToArray(coords);});
+                }
+                if (computeUnmatchedCycles) {
+                    unmatchedCyclesArrays = {{}};
+                    std::transform(unmatchedCycles.begin(), unmatchedCycles.end(), back_inserter(*unmatchedCyclesArrays),
+                        [](auto coords){return coordinateListToArray(coords);});
+                }
 
                 return std::make_tuple(matchedCyclesArrays, unmatchedCyclesArrays);
             },
-            py::arg("dim"),
             py::arg("input"),
+            py::arg("dim"),
             py::arg("compute_matched_cycles") = true,
-            py::arg("compute_unmatched_cycles") = true
+            py::arg("compute_unmatched_cycles") = true,
+            R"(
+            compute_all_representative_cycles(input,
+                                              dim,
+                                              compute_matched_cycles=True,
+                                              compute_unmatched_cycles=True)
+
+            Currently only supported for 3D input volumes.
+
+            Compute all (matched and unmatched) representative cycles in one of the input
+            volumes for a given dimension. The method is more efficient than calling
+            `compute_matched_representative_cycles` and
+            `compute_unmatched_representative_cycle` for each index.
+
+            The computation can be restricted to not include matched cycles, or not include
+            unmatched cycles.
+
+            Computation time:
+            - for `dim==0` and `dim==2`: at least on the order of computing the barcode in
+                dimension `dim` of the input volume. Additional overhead for saving the
+                cycles applies.
+            - for `dim==1`: utilizes the cache of the previous Betti matching computation,
+                hence the computation time only comes from saving the cycles to arrays.
+
+            Parameters
+            ----------
+            input : int
+                The index of the input volume for which to compute the cycles.
+            dim : int
+                The dimension of the persistence pairs.
+            compute_matched_cycles : bool, optional
+                Whether to compute the matched cycles. Default is True.
+            compute_unmatched_cycles : bool, optional
+                Whether to compute the unmatched cycles. Default is True.
+
+            Returns
+            -------
+            matched_and_unmatched_cycles : tuple of (
+                    optional list of np.ndarray, optional list of np.ndarray)
+                The matched and unmatched representative cycles in the input volume for the
+                given dimension. The first list contains the matched cycles, and the second
+                list contains the unmatched cycles.
+                See the documentation of the `BettiMatching` class for details about the
+                representative cycle format.
+                If `compute_matched_cycles == False` or `compute_unmatched_cycles == False`,
+                `None` is returned for the respective entry.
+            
+            Example
+            -------
+            ```python
+            bm = betti_matching.BettiMatching(prediction, target)
+            bm.compute_matching()
+            matched_components_prediction, _ = bm.compute_all_representative_cycles(
+                input=0, dim=0, compute_unmatched_cycles=False)
+            cycle_image = np.zeros(prediction.shape)
+            for i in reversed(range(len(matched_components_prediction))):
+                cycle_image[*matched_components_prediction[i].T] = i+1
+            ```
+            )"
         );
 
 
