@@ -326,6 +326,121 @@ py::array_t<int64_t> coordinateListToArray(vector<vector<index_t>>& coordinateLi
 }
 
 PYBIND11_MODULE(betti_matching, m) {
+    m.def("compute_matching",
+        [](
+            InputVolume &untypedInput0,
+            InputVolume &untypedInput1,
+            bool includeTargetUnmatchedPairs
+        ) {
+            vector<InputVolume> untypedInputs0 = {untypedInput0};
+            vector<InputVolume> untypedInputs1 = {untypedInput1};
+            return computeMatchingFromInputs(untypedInputs0, untypedInputs1, includeTargetUnmatchedPairs)[0];
+        },
+        py::arg("input0").noconvert(),
+        py::arg("input1").noconvert(),
+        py::arg("include_target_unmatched_pairs") = true,
+        R"(
+        compute_matching(input0, input1, include_target_unmatched_pairs=True)
+
+        Compute the Betti matching between two input volumes.
+
+        Parameters
+        ----------
+        input0 : np.ndarray
+            The first input volume (the "prediction" in the machine
+            learning context).
+        input1 : np.ndarray
+            The second input volume (the "target" in the machine
+            learning context).
+        include_target_unmatched_pairs : bool, optional
+            Whether to include the unmatched pairs in the input1 (target) volume
+            in the result. Default is True. Can be deactivated when the target
+            unmatched pairs are not needed, such as in training with the Betti
+            matching loss, where they do not contribute to the gradient.
+
+        Returns
+        -------
+        result : BettiMatchingResult
+            The result of the Betti matching between the two input volumes.
+            See the documentation of `betti_matching.return_types.BettiMatchingResult`
+            for details about the contained data.
+
+        Example
+        -------
+        ```python
+        a, b = np.random.rand(10, 10, 10), np.random.rand(10, 10, 10)
+        result = betti_matching.compute_matching(a, b)
+        a_dim0_matches_birth_coordinates = (
+            result.prediction_matches_birth_coordinates[:result.num_matches_by_dim[0]])
+        a_dim0_matches_death_coordinates = (
+            result.prediction_matches_death_coordinates[:result.num_matches_by_dim[0]])
+        a_dim0_matched_bars_lengths = (a[*a_dim0_matches_death_coordinates.T]
+            - a[*a_dim0_matches_birth_coordinates.T])
+        ```
+        )"
+    );
+
+    m.def("compute_matching",
+        &computeMatchingFromInputs,
+        py::arg("inputs0").noconvert(),
+        py::arg("inputs1").noconvert(),
+        py::arg("include_target_unmatched_pairs") = true,
+        R"(
+        compute_matching(inputs0, inputs1, include_target_unmatched_pairs=True)
+
+        Compute the Betti matching between two batches of input volumes in
+        parallel. The Betti matching computation are parallelized using
+        std::async.
+
+        Parameters
+        ----------
+        inputs0 : list of np.ndarray
+            The batch of first input volumes (the "predictions" in the machine
+            learning context).
+        inputs1 : list of np.ndarray
+            The batch of second input volumes (the "targets" in the machine
+            learning context).
+        include_target_unmatched_pairs : bool, optional
+            Whether to include the unmatched pairs in the input1 (target) volumes
+            in the result. Default is True. Can be deactivated when the target
+            unmatched pairs are not needed, such as in training with the Betti
+            matching loss, where they do not contribute to the gradient.
+
+        Returns
+        -------
+        results : list of BettiMatchingResult
+            The results of the Betti matching between the corresponding pairs of
+            input volumes.
+            See the documentation of`betti_matching.return_types.BettiMatchingResult`
+            for details about the contained data.
+
+        Example
+        -------
+        ```python
+        a1, b1 = np.random.rand(10, 10, 10), np.random.rand(10, 10, 10)
+        a2, b2 = np.random.rand(8, 8, 8), np.random.rand(8, 8, 8)
+        results = betti_matching.compute_matching([a1, a2], [b1, b2])
+        num_matches_a1_b1 = results[0].num_matches_by_dim.sum()
+        num_matches_a2_b2 = results[1].num_matches_by_dim.sum()
+        ```
+        )"
+    );
+
+    m.def("compute_barcode",
+        [](
+            InputVolume &untypedInput
+        ) {
+            vector<InputVolume> untypedInputs = {untypedInput};
+            return computeBarcodeFromInputs(untypedInputs)[0];
+        },
+        py::arg("input").noconvert()
+    );
+
+    m.def("compute_barcode",
+        &computeBarcodeFromInputs,
+        py::arg("inputs").noconvert()
+    );
+
     py::class_<BettiMatching>(m, "BettiMatching",
         R"(
         BettiMatching(input0, input1)
@@ -606,122 +721,6 @@ PYBIND11_MODULE(betti_matching, m) {
             ```
             )"
         );
-
-
-    m.def("compute_matching",
-        [](
-            InputVolume &untypedInput0,
-            InputVolume &untypedInput1,
-            bool includeTargetUnmatchedPairs
-        ) {
-            vector<InputVolume> untypedInputs0 = {untypedInput0};
-            vector<InputVolume> untypedInputs1 = {untypedInput1};
-            return computeMatchingFromInputs(untypedInputs0, untypedInputs1, includeTargetUnmatchedPairs)[0];
-        },
-        py::arg("input0").noconvert(),
-        py::arg("input1").noconvert(),
-        py::arg("include_target_unmatched_pairs") = true,
-        R"(
-        compute_matching(input0, input1, include_target_unmatched_pairs=True)
-
-        Compute the Betti matching between two input volumes.
-
-        Parameters
-        ----------
-        input0 : np.ndarray
-            The first input volume (the "prediction" in the machine
-            learning context).
-        input1 : np.ndarray
-            The second input volume (the "target" in the machine
-            learning context).
-        include_target_unmatched_pairs : bool, optional
-            Whether to include the unmatched pairs in the input1 (target) volume
-            in the result. Default is True. Can be deactivated when the target
-            unmatched pairs are not needed, such as in training with the Betti
-            matching loss, where they do not contribute to the gradient.
-
-        Returns
-        -------
-        result : BettiMatchingResult
-            The result of the Betti matching between the two input volumes.
-            See the documentation of `betti_matching.return_types.BettiMatchingResult`
-            for details about the contained data.
-
-        Example
-        -------
-        ```python
-        a, b = np.random.rand(10, 10, 10), np.random.rand(10, 10, 10)
-        result = betti_matching.compute_matching(a, b)
-        a_dim0_matches_birth_coordinates = (
-            result.prediction_matches_birth_coordinates[:result.num_matches_by_dim[0]])
-        a_dim0_matches_death_coordinates = (
-            result.prediction_matches_death_coordinates[:result.num_matches_by_dim[0]])
-        a_dim0_matched_bars_lengths = (a[*a_dim0_matches_death_coordinates.T]
-            - a[*a_dim0_matches_birth_coordinates.T])
-        ```
-        )"
-    );
-
-    m.def("compute_matching",
-        &computeMatchingFromInputs,
-        py::arg("inputs0").noconvert(),
-        py::arg("inputs1").noconvert(),
-        py::arg("include_target_unmatched_pairs") = true,
-        R"(
-        compute_matching(inputs0, inputs1, include_target_unmatched_pairs=True)
-
-        Compute the Betti matching between two batches of input volumes in
-        parallel. The Betti matching computation are parallelized using
-        std::async.
-
-        Parameters
-        ----------
-        inputs0 : list of np.ndarray
-            The batch of first input volumes (the "predictions" in the machine
-            learning context).
-        inputs1 : list of np.ndarray
-            The batch of second input volumes (the "targets" in the machine
-            learning context).
-        include_target_unmatched_pairs : bool, optional
-            Whether to include the unmatched pairs in the input1 (target) volumes
-            in the result. Default is True. Can be deactivated when the target
-            unmatched pairs are not needed, such as in training with the Betti
-            matching loss, where they do not contribute to the gradient.
-
-        Returns
-        -------
-        results : list of BettiMatchingResult
-            The results of the Betti matching between the corresponding pairs of
-            input volumes.
-            See the documentation of`betti_matching.return_types.BettiMatchingResult`
-            for details about the contained data.
-
-        Example
-        -------
-        ```python
-        a1, b1 = np.random.rand(10, 10, 10), np.random.rand(10, 10, 10)
-        a2, b2 = np.random.rand(8, 8, 8), np.random.rand(8, 8, 8)
-        results = betti_matching.compute_matching([a1, a2], [b1, b2])
-        num_matches_a1_b1 = results[0].num_matches_by_dim.sum()
-        num_matches_a2_b2 = results[1].num_matches_by_dim.sum()
-        ```
-        )"
-    );
-
-    m.def("compute_barcode",
-        [](
-            InputVolume &untypedInput
-        ) {
-            vector<InputVolume> untypedInputs = {untypedInput};
-            return computeBarcodeFromInputs(untypedInputs)[0];
-        },
-        py::arg("input").noconvert()
-    );
-
-    m.def("compute_barcode",
-        &computeBarcodeFromInputs,
-        py::arg("inputs").noconvert()
-    );
 
     py::class_<dim3::Cube>(m, "Cube")
         .def("x", &dim3::Cube::x)
