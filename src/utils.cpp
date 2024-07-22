@@ -75,9 +75,14 @@ void readImage(const string& filename, const fileFormat& format, vector<double>&
 
         case NUMPY: {
             vector<unsigned long> _shape;
-            try { npy::LoadArrayFromNumpy(filename.c_str(), _shape, image); } 
+            bool fortran_order;
+            try { npy::LoadArrayFromNumpy(filename.c_str(), _shape, fortran_order, image); }
             catch (...) {
                 cerr << "The data type of an numpy array should be numpy.float64." << endl;
+                exit(-2);
+            }
+            if (fortran_order) {
+                cerr << "The array at " << filename << " is not C-contiguous. Convert using numpy.ascontiguousarray() before saving." << endl;
                 exit(-2);
             }
             uint8_t dim = shape.size();
