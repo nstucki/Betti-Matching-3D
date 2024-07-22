@@ -356,9 +356,9 @@ PYBIND11_MODULE(betti_matching, m) {
         -------
         ```python
         a, b = np.random.rand(10, 10, 10), np.random.rand(10, 10, 10)
-        betti_matching = BettiMatching(a, b)
-        betti_matching.compute_matching()
-        result = betti_matching.get_matching()
+        bm = betti_matching.BettiMatching(a, b)
+        bm.compute_matching()
+        result = bm.get_matching()
         ```
         )"
     )
@@ -376,8 +376,8 @@ PYBIND11_MODULE(betti_matching, m) {
                 Config config;
                 return BettiMatching(std::move(input0Vector), std::move(input1Vector), std::move(shape0), std::move(config));
             }),
-            py::arg("input0"),
-            py::arg("input1")
+            py::arg("input0").noconvert(),
+            py::arg("input1").noconvert()
         )
 
         .def_readwrite("shape", &BettiMatching::shape)
@@ -618,8 +618,8 @@ PYBIND11_MODULE(betti_matching, m) {
             vector<InputVolume> untypedInputs1 = {untypedInput1};
             return computeMatchingFromInputs(untypedInputs0, untypedInputs1, includeTargetUnmatchedPairs)[0];
         },
-        py::arg("input0"),
-        py::arg("input1"),
+        py::arg("input0").noconvert(),
+        py::arg("input1").noconvert(),
         py::arg("include_target_unmatched_pairs") = true,
         R"(
         compute_matching(input0, input1, include_target_unmatched_pairs=True)
@@ -639,7 +639,7 @@ PYBIND11_MODULE(betti_matching, m) {
             in the result. Default is True. Can be deactivated when the target
             unmatched pairs are not needed, such as in training with the Betti
             matching loss, where they do not contribute to the gradient.
-        
+
         Returns
         -------
         result : BettiMatchingResult
@@ -664,8 +664,8 @@ PYBIND11_MODULE(betti_matching, m) {
 
     m.def("compute_matching",
         &computeMatchingFromInputs,
-        py::arg("inputs0"),
-        py::arg("inputs1"),
+        py::arg("inputs0").noconvert(),
+        py::arg("inputs1").noconvert(),
         py::arg("include_target_unmatched_pairs") = true,
         R"(
         compute_matching(inputs0, inputs1, include_target_unmatched_pairs=True)
@@ -687,7 +687,7 @@ PYBIND11_MODULE(betti_matching, m) {
             in the result. Default is True. Can be deactivated when the target
             unmatched pairs are not needed, such as in training with the Betti
             matching loss, where they do not contribute to the gradient.
-        
+
         Returns
         -------
         results : list of BettiMatchingResult
@@ -715,12 +715,12 @@ PYBIND11_MODULE(betti_matching, m) {
             vector<InputVolume> untypedInputs = {untypedInput};
             return computeBarcodeFromInputs(untypedInputs)[0];
         },
-        py::arg("input")
+        py::arg("input").noconvert()
     );
 
     m.def("compute_barcode",
         &computeBarcodeFromInputs,
-        py::arg("inputs")
+        py::arg("inputs").noconvert()
     );
 
     py::class_<dim3::Cube>(m, "Cube")
