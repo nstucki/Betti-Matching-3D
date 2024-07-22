@@ -127,9 +127,9 @@ void CubicalGridComplex::printImage() const {
 }
 
 
-void CubicalGridComplex::printRepresentativeCycle(const vector<vector<index_t>>& reprCycle) const {
+void CubicalGridComplex::printRepresentativeCycle(const dim1::RepresentativeCycle& reprCycle) const {
 	for (index_t x = 0; x < shape[0]; ++x) {
-		auto it = find(reprCycle.begin(), reprCycle.end(), vector<index_t>{x});
+		auto it = find(reprCycle.begin(), reprCycle.end(), dim1::Coordinate{x});
 		if (it == reprCycle.begin()) { cout << "2  "; }
 		else if (it == reprCycle.end()-1) { cout << "-1 "; }
 		else if (it != reprCycle.end()) { cout << "1  "; }

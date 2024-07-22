@@ -1,3 +1,4 @@
+#include "src_1D/data_structures.h"
 #include "utils.h"
 #include "config.h"
 #include "data_structures.h"
@@ -12,6 +13,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -302,25 +304,19 @@ BarcodeResult convertPairResultToBarcodeResult(vector<vector<VoxelPair>>& pairsB
     return arrayResult;
 }
 
-py::array_t<int64_t> coordinateListToArray(vector<tuple<uint64_t, uint64_t, uint64_t>>& coordinateList) {
-    py::array_t<int64_t> coordinateArray({(int)coordinateList.size(), 3}, {3 * sizeof(int64_t), sizeof(int64_t)});
+template<typename... Types>
+py::array_t<int64_t> coordinateListToArray(vector<std::tuple<Types...>>& coordinateList)
+{
+    auto dim = (int)std::tuple_size<std::tuple<Types...>>::value;
+    py::array_t<int64_t> coordinateArray({(int)coordinateList.size(), dim}, {dim * sizeof(int64_t), sizeof(int64_t)});
     auto coordinateArrayView = coordinateArray.mutable_unchecked();
     for (int i = 0; i < coordinateList.size(); i++) {
         auto& coordinates = coordinateList[i];
-        coordinateArrayView(i, 0) = std::get<0>(coordinates);
-        coordinateArrayView(i, 1) = std::get<1>(coordinates);
-        coordinateArrayView(i, 2) = std::get<2>(coordinates);
-    }
-    return coordinateArray;
-}
-
-py::array_t<int64_t> coordinateListToArray(vector<vector<index_t>>& coordinateList, size_t numDimensions) {
-    py::array_t<int64_t> coordinateArray({(int)coordinateList.size(), (int)numDimensions}, {numDimensions * sizeof(int64_t), sizeof(int64_t)});
-    auto coordinateArrayView = coordinateArray.mutable_unchecked();
-    for (int i = 0; i < coordinateList.size(); i++) {
-        for (int j = 0; j < numDimensions; j++) {
-            coordinateArrayView(i, j) = coordinateList[i][j];
-        }
+        std::size_t j = 0;
+        std::apply([&](const Types&... args) mutable {
+            // Using a fold expression to compute the sum of elements and their indices
+            ((coordinateArrayView(i, j++) = args), ...);
+        }, coordinates);
     }
     return coordinateArray;
 }
@@ -540,11 +536,29 @@ PYBIND11_MODULE(betti_matching, m) {
         .def("compute_matched_representative_cycles",
             [](BettiMatching &self, size_t dim, size_t index) {
                 auto result = self.getMatchedRepresentativeCycles(dim, index);
-
-                py::array_t<int64_t> matchedCycle0 = coordinateListToArray(std::get<0>(result), self.shape.size());
-                py::array_t<int64_t> matchedCycle1 = coordinateListToArray(std::get<1>(result), self.shape.size());
-
-                return std::make_tuple(matchedCycle0, matchedCycle1);
+                switch (self.shape.size()) {
+                    case 1: {
+                        auto resultDim1 = std::get<pair<dim1::RepresentativeCycle, dim1::RepresentativeCycle>>(result);
+                        py::array_t<int64_t> matchedCycle0 = coordinateListToArray(std::get<0>(resultDim1));
+                        py::array_t<int64_t> matchedCycle1 = coordinateListToArray(std::get<1>(resultDim1));
+                        return std::make_tuple(matchedCycle0, matchedCycle1);
+                    }
+                    case 2: {
+                        auto resultDim2 = std::get<pair<dim2::RepresentativeCycle, dim2::RepresentativeCycle>>(result);
+                        py::array_t<int64_t> matchedCycle0 = coordinateListToArray(std::get<0>(resultDim2));
+                        py::array_t<int64_t> matchedCycle1 = coordinateListToArray(std::get<1>(resultDim2));
+                        return std::make_tuple(matchedCycle0, matchedCycle1);
+                    }
+                    case 3: {
+                        auto resultDim3 = std::get<pair<dim3::RepresentativeCycle, dim3::RepresentativeCycle>>(result);
+                        py::array_t<int64_t> matchedCycle0 = coordinateListToArray(std::get<0>(resultDim3));
+                        py::array_t<int64_t> matchedCycle1 = coordinateListToArray(std::get<1>(resultDim3));
+                        return std::make_tuple(matchedCycle0, matchedCycle1);
+                    }
+                    default: {
+                        throw runtime_error("Invalid value for dim: " + std::to_string(self.shape.size()));
+                    }
+                }
             },
             py::arg("dim"),
             py::arg("index"),
@@ -590,8 +604,21 @@ PYBIND11_MODULE(betti_matching, m) {
 
         .def("compute_unmatched_representative_cycle",
             [](BettiMatching &self, uint8_t input, size_t dim, size_t index) {
-                auto unmatchedCycle = self.getUnmatchedRepresentativeCycle(input, dim, index);
-                return coordinateListToArray(unmatchedCycle, self.shape.size());
+                auto unmatchedCycleVariant = self.getUnmatchedRepresentativeCycle(input, dim, index);
+                switch (self.shape.size()) {
+                    case 1: {
+                        return coordinateListToArray(std::get<dim1::RepresentativeCycle>(unmatchedCycleVariant));
+                    }
+                    case 2: {
+                        return coordinateListToArray(std::get<dim2::RepresentativeCycle>(unmatchedCycleVariant));
+                    }
+                    case 3: {
+                        return coordinateListToArray(std::get<dim3::RepresentativeCycle>(unmatchedCycleVariant));
+                    }
+                    default: {
+                        throw runtime_error("Invalid value for dim: " + std::to_string(self.shape.size()));
+                    }
+                }
             },
             py::arg("input"),
             py::arg("dim"),

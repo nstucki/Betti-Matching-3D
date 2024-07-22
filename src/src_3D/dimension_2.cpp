@@ -88,20 +88,7 @@ void Dimension2::computeInput0Pairs(vector<Cube>& ctr0)  {
 	}
 }
 
-// See https://stackoverflow.com/a/28411055
-template <typename T, std::size_t... Indices>
-auto vectorToTupleHelper(const std::vector<T> &v,
-                         std::index_sequence<Indices...>) {
-        return std::make_tuple(v[Indices]...);
-}
-
-template <std::size_t N, typename T>
-auto vectorToTuple(const std::vector<T> &v) {
-  return vectorToTupleHelper(v, std::make_index_sequence<N>());
-}
-
-template <typename Coordinate>
-vector<Coordinate> extractRepresentativeCycle(const Pair &pair, const CubicalGridComplex &cgc, UnionFindDual &uf) {
+RepresentativeCycle extractRepresentativeCycle(const Pair &pair, const CubicalGridComplex &cgc, UnionFindDual &uf) {
     set<tuple<index_t, index_t, index_t>> cubeCoordinates;
     index_t parentIdx0 = uf.find(pair.death.x() * cgc.m_yz + pair.death.y() * cgc.m_z + pair.death.z());
     for (size_t i = 0; i < cgc.getNumberOfCubes(3); ++i) {
@@ -112,8 +99,8 @@ vector<Coordinate> extractRepresentativeCycle(const Pair &pair, const CubicalGri
         }
     }
 
-    multiset<tuple<index_t, index_t, index_t>> boundaryVertices;
-    for (const tuple<index_t, index_t, index_t> &c : cubeCoordinates) {
+    multiset<Coordinate> boundaryVertices;
+    for (const Coordinate &c : cubeCoordinates) {
         for (uint8_t x = 0; x < 2; ++x) {
             for (uint8_t y = 0; y < 2; ++y) {
                 for (uint8_t z = 0; z < 2; ++z) {
@@ -124,16 +111,15 @@ vector<Coordinate> extractRepresentativeCycle(const Pair &pair, const CubicalGri
     }
 
     vector<Coordinate> reprCycle;
-    for (const tuple<index_t, index_t, index_t> &vertex : boundaryVertices) {
+    for (const Coordinate &vertex : boundaryVertices) {
         auto lower = boundaryVertices.lower_bound(vertex);
         auto upper = boundaryVertices.upper_bound(vertex);
         int multiplicity = distance(lower, upper);
         if (multiplicity < 8) {
-            reprCycle.push_back({std::get<0>(vertex), std::get<1>(vertex), std::get<2>(vertex)});
+            reprCycle.push_back(vertex);
         }
     }
-    auto deathVoxel = cgc.getParentVoxel(pair.death, 3);
-    reprCycle.push_back({deathVoxel[0], deathVoxel[1], deathVoxel[2]});
+    reprCycle.push_back(cgc.getParentVoxel(pair.death, 3));
 
     return reprCycle;
 }
@@ -155,7 +141,7 @@ tuple<vector<RepresentativeCycle>, vector<RepresentativeCycle>> Dimension2::getA
 
 	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge) {
 		if (currentPair != pairs.end() && *edge == currentPair->birth) {
-			RepresentativeCycle reprCycle = extractRepresentativeCycle<tuple<uint64_t, uint64_t, uint64_t>>(*currentPair, cgc, uf);
+			RepresentativeCycle reprCycle = extractRepresentativeCycle(*currentPair, cgc, uf);
 			if (isMatched[currentPair->birth.index]) {
 				matchedCyclesByBirth[currentPair->birth.index] = reprCycle;
 			} else {
@@ -185,7 +171,7 @@ tuple<vector<RepresentativeCycle>, vector<RepresentativeCycle>> Dimension2::getA
 	return {matchedCycles, unmatchedCycles};
 }
 
-vector<vector<index_t>> Dimension2::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
+RepresentativeCycle Dimension2::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
     vector<Cube> dualEdges;
     enumerateDualEdges(dualEdges, cgc);
     UnionFindDual uf(cgc);
@@ -206,7 +192,7 @@ vector<vector<index_t>> Dimension2::getRepresentativeCycle(const Pair& pair, con
             }
     }
 
-    return extractRepresentativeCycle<vector<index_t>>(pair, cgc, uf);
+    return extractRepresentativeCycle(pair, cgc, uf);
 }
 
 void Dimension2::enumerateDualEdges(vector<Cube>& dualEdges, const CubicalGridComplex& cgc) const {

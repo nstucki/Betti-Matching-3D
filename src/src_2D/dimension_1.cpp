@@ -1,4 +1,5 @@
 #include "dimension_1.h"
+#include "data_structures.h"
 
 #include <iostream>
 #include <chrono>
@@ -48,7 +49,7 @@ void Dimension1::computeInput0Pairs(vector<Cube>& ctr0)  {
     computeImagePairs(ctr0, 0);
 }
 
-vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
+dim2::RepresentativeCycle Dimension1::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
 	vector<Cube> dualEdges;
 	enumerateDualEdges(dualEdges, cgc);
 
@@ -65,29 +66,27 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 		if (parentIdx0 != parentIdx1) { birthIdx = uf.link(parentIdx0, parentIdx1); }
 	}
 
-	set<vector<index_t>> cubeCoordinates;
+	set<dim2::Coordinate> cubeCoordinates;
 	parentIdx0 = uf.find(pair.death.x()*cgc.m_y + pair.death.y());
 	for (size_t i = 0; i < cgc.getNumberOfCubes(2); ++i) {
 		parentIdx1 = uf.find(i);
 		if (parentIdx0 == parentIdx1) { cubeCoordinates.insert(uf.getCoordinates(i)); }
 	}
 
-	multiset<vector<index_t>> boundaryVertices;
-	vector<index_t> vertex;
-	for (const vector<index_t>& c : cubeCoordinates) {
+	multiset<dim2::Coordinate> boundaryVertices;
+	dim2::Coordinate vertex;
+	for (const dim2::Coordinate& c : cubeCoordinates) {
 		for (uint8_t x = 0; x < 2; ++x) {
 			for (uint8_t y = 0; y < 2; ++y) {
-				vertex = c;
-				vertex[0] += x;
-				vertex[1] += y;
+                vertex = {std::get<0>(c) + x, std::get<1>(c) + y};
 				boundaryVertices.insert(vertex);
 			}
 		}
 	}
 
-	vector<vector<index_t>> reprCycle;
+	dim2::RepresentativeCycle reprCycle;
 	reprCycle.push_back(cgc.getParentVoxel(pair.birth, 1));
-	for (const vector<index_t>& vertex : boundaryVertices) {
+	for (const dim2::Coordinate& vertex : boundaryVertices) {
 		auto lower = boundaryVertices.lower_bound(vertex);
 		auto upper = boundaryVertices.upper_bound(vertex);
 		int multiplicity = distance(lower, upper);
@@ -142,7 +141,7 @@ void Dimension1::computeImagePairs(vector<Cube>& dualEdges, const uint8_t& k) {
 	index_t birthIdx;
 	index_t birthIdxComp;
 	value_t birth;
-	vector<index_t> birthCoordinates(2);
+	dim2::Coordinate birthCoordinates;
 	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge) {
 		boundaryIndices = uf.getBoundaryIndices(*edge);
 		parentIdx0 = uf.find(boundaryIndices[0]);
@@ -155,7 +154,7 @@ void Dimension1::computeImagePairs(vector<Cube>& dualEdges, const uint8_t& k) {
 			birthIdxComp = ufComp.link(parentIdx0, parentIdx1);
 			if (edge->birth != birth) {
 				birthCoordinates = uf.getCoordinates(birthIdx);
-				pairs.push_back(Pair(*edge, Cube(birth, birthCoordinates[0], birthCoordinates[1], 0)));
+				pairs.push_back(Pair(*edge, Cube(birth, std::get<0>(birthCoordinates), std::get<1>(birthCoordinates), 0)));
 				matchMap.emplace(birthIdxComp, pairs.back());
 			}
 #ifdef USE_CLEARING_DIM0

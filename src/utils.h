@@ -23,3 +23,16 @@ template <std::size_t N, typename T>
 auto vectorToTuple(const std::vector<T> &v) {
   return vectorToTupleHelper(v, std::make_index_sequence<N>());
 }
+
+// See https://stackoverflow.com/a/42495119
+template <class Tuple,
+   class T = std::decay_t<std::tuple_element_t<0, std::decay_t<Tuple>>>>
+std::vector<T> tupleToVector(Tuple&& tuple)
+{
+    return std::apply([](auto&&... elems) {
+        std::vector<T> result;
+        result.reserve(sizeof...(elems));
+        (result.push_back(std::forward<decltype(elems)>(elems)), ...);
+        return result;
+    }, std::forward<Tuple>(tuple));
+}

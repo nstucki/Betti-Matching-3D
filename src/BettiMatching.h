@@ -4,6 +4,7 @@
 #include "src_1D/BettiMatching.h"
 #include "src_2D/BettiMatching.h"
 #include "src_3D/BettiMatching.h"
+#include "src_3D/data_structures.h"
 #include "src_nD/BettiMatching.h"
 
 #include <variant>
@@ -19,8 +20,11 @@ public:
     vector<vector<VoxelPair>> computePairsInput0();
     void printResult();
     tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>, vector<vector<VoxelPair>>> getMatching();
-    tuple<vector<vector<index_t>>, vector<vector<index_t>>> getMatchedRepresentativeCycles(const size_t& dim, const size_t& index);
-    vector<vector<index_t>> getUnmatchedRepresentativeCycle(const uint8_t& input, const size_t& dim, const size_t& index);
+    variant<pair<dim1::RepresentativeCycle, dim1::RepresentativeCycle>,
+        pair<dim2::RepresentativeCycle, dim2::RepresentativeCycle>,
+        pair<dim3::RepresentativeCycle, dim3::RepresentativeCycle>>
+        getMatchedRepresentativeCycles(const size_t& dim, const size_t& index);
+    variant<dim1::RepresentativeCycle, dim2::RepresentativeCycle, dim3::RepresentativeCycle> getUnmatchedRepresentativeCycle(const uint8_t& input, const size_t& dim, const size_t& index);
     tuple<vector<dim3::RepresentativeCycle>, vector<dim3::RepresentativeCycle>> computeAllRepresentativeCycles(const int input, const int dim, bool computeMatchedCycles, bool computeUnmatchedCycles);
     vector<index_t> shape;
 

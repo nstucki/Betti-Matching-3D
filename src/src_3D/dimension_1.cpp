@@ -137,8 +137,8 @@ void Dimension1::computeInput0Pairs(vector<Cube>& ctr0)  {
 #endif
 }
 
-vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) {
-	vector<vector<index_t>> reprCycle;
+RepresentativeCycle Dimension1::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) {
+	RepresentativeCycle reprCycle;
 	reprCycle.push_back(cgc.getParentVoxel(pair.birth, 1));
 	
 	vector<Cube> ctr;
@@ -149,7 +149,7 @@ vector<vector<index_t>> Dimension1::getRepresentativeCycle(const Pair& pair, con
 	BoundaryEnumerator enumerator(cgc);
 	Cube pivot;
 	size_t j;
-	vector<index_t> vertex;
+	Coordinate vertex;
 #ifdef USE_REDUCTION_MATRIX
 	reductionMatrix.clear();
 	vector<Cube> reductionColumn;

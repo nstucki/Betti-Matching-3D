@@ -1,7 +1,9 @@
 #include "BettiMatching.h"
+#include "data_structures.h"
 #include "dimension_0.h"
 #include "dimension_1.h"
 #include "dimension_2.h"
+#include "../utils.h"
 
 #include <chrono>
 #include <iostream>
@@ -201,7 +203,7 @@ void BettiMatching::printResult() {
                 matches[d][i].print();
                 _matched[d][i].print();
                 if (cgc0.shape[0] < 10 && cgc0.shape[1] < 10 && cgc0.shape[2] < 10) {
-                    pair<vector<vector<index_t>>, vector<vector<index_t>>> reprCycles = getMatchedRepresentativeCycles(d, i);
+                    pair<RepresentativeCycle, RepresentativeCycle> reprCycles = getMatchedRepresentativeCycles(d, i);
                     cgc0.printRepresentativeCycle(get<0>(reprCycles));
                     cout << endl;
                     cgc1.printRepresentativeCycle(get<1>(reprCycles));
@@ -224,7 +226,7 @@ void BettiMatching::printResult() {
                 if (!isMatched0[d][pairs0[d][i].birth.index]) {
                     pairs0[d][i].print(); cout << endl;
                     _unmatched0[d][counter].print(); cout << endl;
-                    vector<vector<index_t>> reprCycle = getUnmatchedRepresentativeCycle(0, d, counter);
+                    RepresentativeCycle reprCycle = getUnmatchedRepresentativeCycle(0, d, counter);
                     cgc0.printRepresentativeCycle(reprCycle);
                     cout << endl;
                     ++counter;
@@ -246,7 +248,7 @@ void BettiMatching::printResult() {
                 if (!isMatched1[d][pairs1[d][i].birth.index]) {
                     pairs1[d][i].print(); cout << endl;
                     _unmatched1[d][counter].print(); cout << endl;
-                    vector<vector<index_t>> reprCycle = getUnmatchedRepresentativeCycle(1, d, counter);
+                    RepresentativeCycle reprCycle = getUnmatchedRepresentativeCycle(1, d, counter);
                     cgc1.printRepresentativeCycle(reprCycle);
                     cout << endl;
                     ++counter;
@@ -258,12 +260,12 @@ void BettiMatching::printResult() {
 }
 
 
-pair<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatchedRepresentativeCycles(const uint8_t& dim, const size_t& index) {
+pair<RepresentativeCycle, RepresentativeCycle> BettiMatching::getMatchedRepresentativeCycles(const uint8_t& dim, const size_t& index) {
     if (dim >= 3) {
         throw runtime_error("Invalid value for dim");
     }
 
-    pair<vector<vector<index_t>>, vector<vector<index_t>>> reprCycles;
+    pair<RepresentativeCycle, RepresentativeCycle> reprCycles;
 
     if (index >= matches[dim].size()) {
         throw runtime_error("Cycle index " + std::to_string((int)index) + " out of range: There are only " + std::to_string((int)matches[dim].size()) +
@@ -295,7 +297,7 @@ pair<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatched
 }
 
 
-vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t& input, const size_t& dim, const size_t& index) {
+RepresentativeCycle BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t& input, const size_t& dim, const size_t& index) {
     if (dim >= 3) {
         throw runtime_error("Invalid value for dim");
     }
@@ -307,7 +309,7 @@ vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uin
     vector<vector<Pair>>& pairs = (input == 0) ? pairs0 : pairs1;
     vector<unordered_map<uint64_t, bool>> isMatched = (input == 0) ? isMatched0 : isMatched1;
 
-    vector<vector<index_t>> reprCycle;
+    RepresentativeCycle reprCycle;
 
     size_t numPairs = pairs[dim].size();
     if (index >= numPairs) {

@@ -1,5 +1,6 @@
 #include "BettiMatching.h"
 #include "data_structures.h"
+#include "src_3D/data_structures.h"
 #include "utils.h"
 #include "config.h"
 
@@ -218,29 +219,28 @@ std::tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>, vector<vector<
 }
 
 
-tuple<vector<vector<index_t>>, vector<vector<index_t>>> BettiMatching::getMatchedRepresentativeCycles(const size_t& dim, const size_t& index) {
+variant<pair<dim1::RepresentativeCycle, dim1::RepresentativeCycle>,
+    pair<dim2::RepresentativeCycle, dim2::RepresentativeCycle>,
+    pair<dim3::RepresentativeCycle, dim3::RepresentativeCycle>>
+BettiMatching::getMatchedRepresentativeCycles(const size_t& dim, const size_t& index) {
     if (!computed) {
         throw std::runtime_error("Betti Matching not computed yet");
     }
 
-    tuple<vector<vector<index_t>>, vector<vector<index_t>>> repCycles;
     switch (dimension) {
         case 1: {
             dim1::BettiMatching& bettiMatching = std::get<dim1::BettiMatching>(dimensionSpecificBettiMatching.value());
-            repCycles = bettiMatching.getMatchedRepresentativeCycles(dim, index);
-            return repCycles;
+            return bettiMatching.getMatchedRepresentativeCycles(dim, index);
         }
 
         case 2: {
             dim2::BettiMatching& bettiMatching = std::get<dim2::BettiMatching>(dimensionSpecificBettiMatching.value());
-            repCycles = bettiMatching.getMatchedRepresentativeCycles(dim, index);
-            return repCycles;
+            return bettiMatching.getMatchedRepresentativeCycles(dim, index);
         }
 
         case 3: {
             dim3::BettiMatching& bettiMatching = std::get<dim3::BettiMatching>(dimensionSpecificBettiMatching.value());
-            repCycles = bettiMatching.getMatchedRepresentativeCycles(dim, index);
-            return repCycles;
+            return bettiMatching.getMatchedRepresentativeCycles(dim, index);
         }
 
         default: {
@@ -266,29 +266,26 @@ tuple<vector<dim3::RepresentativeCycle>, vector<dim3::RepresentativeCycle>> Bett
 }
 
 
-vector<vector<index_t>> BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t& input, const size_t& dim, const size_t& index) {
+variant<dim1::RepresentativeCycle, dim2::RepresentativeCycle, dim3::RepresentativeCycle>
+BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t& input, const size_t& dim, const size_t& index) {
     if (!computed) {
         throw std::runtime_error("Betti Matching not computed yet");
     }
 
-    vector<vector<index_t>> repCycle;
     switch (dimension) {
         case 1: {
             dim1::BettiMatching& bettiMatching = std::get<dim1::BettiMatching>(dimensionSpecificBettiMatching.value());
-            repCycle = bettiMatching.getUnmatchedRepresentativeCycle(input, dim, index);
-            return repCycle;
+            return bettiMatching.getUnmatchedRepresentativeCycle(input, dim, index);
         }
 
         case 2: {
             dim2::BettiMatching& bettiMatching = std::get<dim2::BettiMatching>(dimensionSpecificBettiMatching.value());
-            repCycle = bettiMatching.getUnmatchedRepresentativeCycle(input, dim, index);
-            return repCycle;
+            return bettiMatching.getUnmatchedRepresentativeCycle(input, dim, index);
         }
 
         case 3: {
             dim3::BettiMatching& bettiMatching = std::get<dim3::BettiMatching>(dimensionSpecificBettiMatching.value());
-            repCycle = bettiMatching.getUnmatchedRepresentativeCycle(input, dim, index);
-            return repCycle;
+            return bettiMatching.getUnmatchedRepresentativeCycle(input, dim, index);
         }
 
         default: {

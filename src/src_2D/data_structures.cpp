@@ -122,7 +122,7 @@ value_t CubicalGridComplex::getBirth(const index_t& x, const index_t& y, const u
 }
 
 
-vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8_t& dim) const {
+dim2::Coordinate CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8_t& dim) const {
 	index_t x = cube.x();
 	index_t y = cube.y();
 	switch (dim) {
@@ -164,10 +164,10 @@ void CubicalGridComplex::printImage() const {
 }
 
 
-void CubicalGridComplex::printRepresentativeCycle(const vector<vector<index_t>>& reprCycle) const {
+void CubicalGridComplex::printRepresentativeCycle(const dim2::RepresentativeCycle& reprCycle) const {
 	for (index_t x = 0; x < shape[0]; ++x) {
 		for (index_t y = 0; y < shape[1]; ++y) {
-			auto it = find(reprCycle.begin(), reprCycle.end(), vector<index_t>{x,y});
+			auto it = find(reprCycle.begin(), reprCycle.end(), dim2::Coordinate{x,y});
 			if (it == reprCycle.begin()) { cout << "2  "; }
 			else if (it == reprCycle.end()-1) { cout << "-1 "; }
 			else if (it != reprCycle.end()) { cout << "1  "; }
@@ -251,7 +251,7 @@ index_t UnionFind::link(index_t x, index_t y) {
 value_t UnionFind::getBirth(const index_t& idx) const { return birthtime[idx]; }
 
 
-vector<index_t> UnionFind::getCoordinates(index_t idx) const { return {idx/cgc.shape[1],idx % cgc.shape[1]}; }
+dim2::Coordinate UnionFind::getCoordinates(index_t idx) const { return {idx/cgc.shape[1],idx % cgc.shape[1]}; }
 
 
 vector<index_t> UnionFind::getBoundaryIndices(const Cube& edge) const {
@@ -329,7 +329,7 @@ index_t UnionFindDual::link(index_t x, index_t y) {
 value_t UnionFindDual::getBirth(const index_t& idx) const { return birthtime[idx]; }
 
 
-vector<index_t> UnionFindDual::getCoordinates(index_t idx) const { return {idx/cgc.m_y,idx % cgc.m_y}; }
+dim2::Coordinate UnionFindDual::getCoordinates(index_t idx) const { return {idx/cgc.m_y,idx % cgc.m_y}; }
 
 
 vector<index_t> UnionFindDual::getBoundaryIndices(const Cube& edge) const {

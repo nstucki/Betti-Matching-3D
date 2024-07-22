@@ -10,6 +10,9 @@ using namespace std;
 
 
 namespace dim1 {
+typedef tuple<index_t> Coordinate;
+typedef vector<Coordinate> RepresentativeCycle;
+
 class Cube {
 	public:
 	value_t birth;
@@ -61,7 +64,7 @@ class CubicalGridComplex {
 	value_t getBirth(const index_t& x, const uint8_t& dim) const;
 	index_t getParentVoxel(const Cube& c, const uint8_t& dim) const;
 	void printImage() const;
-	void printRepresentativeCycle(const vector<vector<index_t>>& reprCycle) const;
+	void printRepresentativeCycle(const dim1::RepresentativeCycle& reprCycle) const;
 	const vector<index_t> shape;
 	const index_t m_x;
 

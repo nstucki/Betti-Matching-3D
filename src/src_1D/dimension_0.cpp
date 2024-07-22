@@ -1,4 +1,5 @@
 #include "dimension_0.h"
+#include "data_structures.h"
 
 #include <iostream>
 #include <chrono>
@@ -48,7 +49,7 @@ void Dimension0::computeInput0Pairs(vector<Cube>& ctr0) {
 }
 
 
-vector<vector<index_t>> Dimension0::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
+dim1::RepresentativeCycle Dimension0::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
 	vector<Cube> edges;
 	enumerateEdges(edges, cgc);
 	UnionFind uf(cgc);
@@ -65,9 +66,9 @@ vector<vector<index_t>> Dimension0::getRepresentativeCycle(const Pair& pair, con
 		if (parentIdx0 != parentIdx1) { birthIdx = uf.link(parentIdx0, parentIdx1); }
 	}
 
-	vector<vector<index_t>> reprCycle;
+	dim1::RepresentativeCycle reprCycle;
 	reprCycle.push_back({cgc.getParentVoxel(pair.birth, 0)});
-	vector<index_t> vertex;
+	dim1::Coordinate vertex;
 	parentIdx0 = uf.find(pair.birth.x());
 	for (size_t i = 0; i < cgc.getNumberOfCubes(0); ++i) {
 		parentIdx1 = uf.find(i);

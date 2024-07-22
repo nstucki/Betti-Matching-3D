@@ -9,6 +9,9 @@ using namespace std;
 
 
 namespace dim2 {
+typedef tuple<index_t, index_t> Coordinate;
+typedef vector<Coordinate> RepresentativeCycle;
+
 class Cube {
 	public:
 	value_t birth;
@@ -63,9 +66,9 @@ class CubicalGridComplex {
 	size_t getNumberOfCubes(const uint8_t& dim) const;
 	value_t getBirth(const index_t& x, const index_t& y) const;
 	value_t getBirth(const index_t& x, const index_t& y, const uint8_t& type, const uint8_t& dim) const;
-	vector<index_t> getParentVoxel(const Cube& c, const uint8_t& dim) const;
+	dim2::Coordinate getParentVoxel(const Cube& c, const uint8_t& dim) const;
 	void printImage() const;
-	void printRepresentativeCycle(const vector<vector<index_t>>& reprCycle) const;
+	void printRepresentativeCycle(const dim2::RepresentativeCycle& reprCycle) const;
 	const vector<index_t> shape;
 	const index_t m_x;
 	const index_t m_y;
@@ -86,7 +89,7 @@ class UnionFind {
 	index_t find(index_t x);
 	index_t link(index_t x, index_t y);
 	value_t getBirth(const index_t& idx) const;
-	vector<index_t> getCoordinates(index_t idx) const;
+	dim2::Coordinate getCoordinates(index_t idx) const;
 	vector<index_t> getBoundaryIndices(const Cube& edge) const;
 	void reset();
 
@@ -104,7 +107,7 @@ class UnionFindDual {
 	index_t find(index_t x);
 	index_t link(index_t x, index_t y);
 	value_t getBirth(const index_t& idx) const;
-	vector<index_t> getCoordinates(index_t idx) const;
+	dim2::Coordinate getCoordinates(index_t idx) const;
 	vector<index_t> getBoundaryIndices(const Cube& edge) const;
 	void reset();
 

@@ -1,4 +1,5 @@
 #include "data_structures.h"
+#include "BettiMatching.h"
 #include <iostream>
 #include <algorithm>
 #include <stdexcept>
@@ -156,7 +157,7 @@ value_t CubicalGridComplex::getBirth(const index_t& x, const index_t& y, const i
 }
 
 
-vector<index_t> CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8_t& dim) const {
+Coordinate CubicalGridComplex::getParentVoxel(const Cube& cube, const uint8_t& dim) const {
 	index_t x = cube.x();
 	index_t y = cube.y();
 	index_t z = cube.z();
@@ -230,11 +231,11 @@ void CubicalGridComplex::printImage() const {
 }
 
 
-void CubicalGridComplex::printRepresentativeCycle(const vector<vector<index_t>>& reprCycle) const {
+void CubicalGridComplex::printRepresentativeCycle(const RepresentativeCycle& reprCycle) const {
 	for (index_t y = 0; y < shape[1]; ++y) {
 		for (index_t x = 0; x < shape[0]; ++x) {
 			for (index_t z = 0; z < shape[2]; ++z) {
-				auto it = find(reprCycle.begin(), reprCycle.end(), vector<index_t>{x,y,z});
+				auto it = find(reprCycle.begin(), reprCycle.end(), dim3::Coordinate{x,y,z});
 				if (it == reprCycle.begin()) { cout << "2  "; }
 				else if (it == reprCycle.end()-1) { cout << "-1 "; }
 				else if (it != reprCycle.end()) { cout << "1  "; }
@@ -327,7 +328,7 @@ index_t UnionFind::link(index_t x, index_t y) {
 value_t UnionFind::getBirth(const index_t& idx) const { return birthtime[idx]; }
 
 
-vector<index_t> UnionFind::getCoordinates(index_t idx) const { 
+Coordinate UnionFind::getCoordinates(index_t idx) const { 
 	return {idx/cgc.n_yz,idx/cgc.shape[2] % cgc.shape[1],idx % cgc.shape[2]};
 }
 

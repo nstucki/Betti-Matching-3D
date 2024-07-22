@@ -1,6 +1,7 @@
 #include "dimension_0.h"
 #include "BettiMatching.h"
 #include "../utils.h"
+#include "data_structures.h"
 
 #include <algorithm>
 #include <chrono>
@@ -57,7 +58,7 @@ void Dimension0::computeInput0Pairs(vector<Cube>& ctr0) {
 	computePairs(ctr0, 0);
 }
 
-vector<vector<index_t>>
+RepresentativeCycle
 Dimension0::getRepresentativeCycle(const Pair &pair, const CubicalGridComplex &cgc) const {
     vector<Cube> edges;
     enumerateEdges(edges, cgc);
@@ -79,9 +80,9 @@ Dimension0::getRepresentativeCycle(const Pair &pair, const CubicalGridComplex &c
         }
     }
 
-    vector<vector<index_t>> reprCycle;
+    RepresentativeCycle reprCycle;
     reprCycle.push_back(cgc.getParentVoxel(pair.birth, 0));
-    vector<index_t> vertex;
+    Coordinate vertex;
     parentIdx0 = uf.find(pair.birth.x() * cgc.n_yz + pair.birth.y() * cgc.shape[2] + pair.birth.z());
     for (size_t i = 0; i < cgc.getNumberOfCubes(0); ++i) {
     parentIdx1 = uf.find(i);
@@ -111,7 +112,7 @@ Dimension0::getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles,
     // Initialize singleton representative cycles
     vector<RepresentativeCycle> cycleByBirthIdx(cgc.shape[0] * cgc.shape[1] * cgc.shape[2]);
     for (int birthIdx = 0; birthIdx < cycleByBirthIdx.size(); birthIdx++) {
-        cycleByBirthIdx[birthIdx].emplace_back(vectorToTuple<3>(uf.getCoordinates(birthIdx)));
+        cycleByBirthIdx[birthIdx].emplace_back(uf.getCoordinates(birthIdx));
     }
 
     vector<Cube> edges;
@@ -193,7 +194,7 @@ void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 	index_t parentIdx1;
 	index_t birthIdx;
 	value_t birth;
-	vector<index_t> birthCoordinates(3);
+	Coordinate birthCoordinates;
 
 	for (Cube& edge : edges) {
 		boundaryIndices = uf.getBoundaryIndices(edge);
@@ -204,7 +205,7 @@ void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 			birth = uf.getBirth(birthIdx);
 			if (birth != edge.birth) {
 				birthCoordinates = uf.getCoordinates(birthIdx);
-				pairs.push_back(Pair(Cube(birth, birthCoordinates[0], birthCoordinates[1], birthCoordinates[2], 0), edge));
+				pairs.push_back(Pair(Cube(birth, std::get<0>(birthCoordinates), std::get<1>(birthCoordinates), std::get<2>(birthCoordinates), 0), edge));
 				matchMap.emplace(birthIdx, pairs.back());
 			}
 		}
@@ -233,7 +234,7 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 	index_t birthIdx1;
 	index_t birthIdxComp;
 	value_t birth;
-	vector<index_t> birthCoordinates(3);
+	Coordinate birthCoordinates;
 
 	for (Cube& edge : edges) {
 		boundaryIndices = ufComp.getBoundaryIndices(edge);
