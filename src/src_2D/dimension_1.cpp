@@ -27,14 +27,14 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 	cout << endl << "input & image 0: ";
 #endif
 	enumerateDualEdges(ctr0, cgc0);
-    computeImagePairs(ctr0, 0);
+    computeInputAndImagePairs(ctr0, 0);
 
 #ifdef RUNTIME
 	cout << endl << "input & image 1: ";
 #endif
 	enumerateDualEdges(ctr1, cgc1);
 	ufComp.reset();
-    computeImagePairs(ctr1, 1);
+    computeInputAndImagePairs(ctr1, 1);
     
 #ifdef RUNTIME
 	cout << endl << "comparison & matching: ";
@@ -125,7 +125,7 @@ void Dimension1::enumerateDualEdges(vector<Cube>& dualEdges, const CubicalGridCo
 }
 
 
-void Dimension1::computeImagePairs(vector<Cube>& dualEdges, const uint8_t& k) {
+void Dimension1::computeInputAndImagePairs(vector<Cube>& dualEdges, const uint8_t& k) {
 #ifdef RUNTIME
 	cout << "barcodes ";
 	auto start = high_resolution_clock::now();

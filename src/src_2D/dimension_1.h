@@ -33,7 +33,7 @@ class Dimension1 {
 	UnionFindDual ufComp;
 
 	void enumerateDualEdges(vector<Cube>& dualEdges, const CubicalGridComplex& cgc) const;
-	void computeImagePairs(vector<Cube>& dualEdges, const uint8_t& k);
+	void computeInputAndImagePairs(vector<Cube>& dualEdges, const uint8_t& k);
 	void computeCompPairsAndMatch(vector<Cube>& dualEdges);
 };
 }
