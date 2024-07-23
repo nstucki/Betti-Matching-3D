@@ -352,6 +352,7 @@ Dimension1::getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles,
 	auto& isMatched = (input == 0) ? isMatched0 : isMatched1;
 	auto& pairs = (input == 0) ? pairs0 : pairs1;
 	auto& cache = (input == 0) ? cacheInputPairs0 : cacheInputPairs1;
+	const CubicalGridComplex &cgc = (input == 0) ? cgc0 : cgc1;
 
 	vector<RepresentativeCycle> matchedCycles;
 	vector<RepresentativeCycle> unmatchedCycles;
@@ -362,8 +363,9 @@ Dimension1::getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles,
             if (!cachedBoundary.has_value()) {
                 throw runtime_error("A boundary that is needed to get all cycles was deleted from cache! Consider increasing the cache size limit.");
             }
-
-            matchedCycles.emplace_back(cubeCycleToVoxelCycle(*cachedBoundary));
+            auto matchedCycle = cubeCycleToVoxelCycle(*cachedBoundary);
+            matchedCycle.push_back(cgc.getParentVoxel(pair.death, 2));
+            matchedCycles.emplace_back(matchedCycle);
         }
     }
     if (computeUnmatchedCycles) {
@@ -373,8 +375,9 @@ Dimension1::getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles,
                 if (!cachedBoundary.has_value()) {
                     throw runtime_error("A boundary that is needed to get all cycles was deleted from cache! Consider increasing the cache size limit.");
                 }
-
-                unmatchedCycles.emplace_back(cubeCycleToVoxelCycle(*cachedBoundary));
+                auto unmatchedCycle = cubeCycleToVoxelCycle(*cachedBoundary);
+                unmatchedCycle.push_back(cgc.getParentVoxel(pair.death, 2));
+                unmatchedCycles.emplace_back(unmatchedCycle);
             }
         }
     }

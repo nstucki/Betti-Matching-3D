@@ -452,8 +452,10 @@ PYBIND11_MODULE(betti_matching, m) {
             - Dimension 0: vertex (0-cube) coordinates of the cycle.
             - Dimension 1: endpoint vertex coordinates of edges (1-cubes) in the cycle
             - Dimension 2: corner vertex coordinates of faces (2-cubes) in the cycle
-        - The last index coordinate is the voxel coordinate corresponding to the death
-          cube of the persistence pair (a `dim+1`-dimensional cube).
+        - If `include_death_voxel == True` is specified, the last coordinate in the
+          representative cycle array is the voxel coordinate corresponding to the death
+          cube of the persistence pair (a `dim+1`-dimensional cube), which can be useful
+          for some visualizations.
         - Cycles in dimension 1 may have duplicate voxel coordinates.
 
         Parameters
@@ -534,23 +536,35 @@ PYBIND11_MODULE(betti_matching, m) {
         )
 
         .def("compute_matched_representative_cycles",
-            [](BettiMatching &self, size_t dim, size_t index) {
+            [](BettiMatching &self, size_t dim, size_t index, bool includeDeathVoxel) {
                 auto result = self.getMatchedRepresentativeCycles(dim, index);
                 switch (self.shape.size()) {
                     case 1: {
-                        auto resultDim1 = std::get<pair<dim1::RepresentativeCycle, dim1::RepresentativeCycle>>(result);
+                        auto &resultDim1 = std::get<pair<dim1::RepresentativeCycle, dim1::RepresentativeCycle>>(result);
+                        if (!includeDeathVoxel) {
+                            std::get<0>(resultDim1).pop_back();
+                            std::get<1>(resultDim1).pop_back();
+                        }
                         py::array_t<int64_t> matchedCycle0 = coordinateListToArray(std::get<0>(resultDim1));
                         py::array_t<int64_t> matchedCycle1 = coordinateListToArray(std::get<1>(resultDim1));
                         return std::make_tuple(matchedCycle0, matchedCycle1);
                     }
                     case 2: {
-                        auto resultDim2 = std::get<pair<dim2::RepresentativeCycle, dim2::RepresentativeCycle>>(result);
+                        auto &resultDim2 = std::get<pair<dim2::RepresentativeCycle, dim2::RepresentativeCycle>>(result);
+                        if (!includeDeathVoxel) {
+                            std::get<0>(resultDim2).pop_back();
+                            std::get<1>(resultDim2).pop_back();
+                        }
                         py::array_t<int64_t> matchedCycle0 = coordinateListToArray(std::get<0>(resultDim2));
                         py::array_t<int64_t> matchedCycle1 = coordinateListToArray(std::get<1>(resultDim2));
                         return std::make_tuple(matchedCycle0, matchedCycle1);
                     }
                     case 3: {
-                        auto resultDim3 = std::get<pair<dim3::RepresentativeCycle, dim3::RepresentativeCycle>>(result);
+                        auto &resultDim3 = std::get<pair<dim3::RepresentativeCycle, dim3::RepresentativeCycle>>(result);
+                        if (!includeDeathVoxel) {
+                            std::get<0>(resultDim3).pop_back();
+                            std::get<1>(resultDim3).pop_back();
+                        }
                         py::array_t<int64_t> matchedCycle0 = coordinateListToArray(std::get<0>(resultDim3));
                         py::array_t<int64_t> matchedCycle1 = coordinateListToArray(std::get<1>(resultDim3));
                         return std::make_tuple(matchedCycle0, matchedCycle1);
@@ -562,8 +576,9 @@ PYBIND11_MODULE(betti_matching, m) {
             },
             py::arg("dim"),
             py::arg("index"),
+            py::arg("include_death_voxel") = false,
             R"(
-            compute_matched_representative_cycles(dim, index)
+            compute_matched_representative_cycles(dim, index, include_death_voxel=False)
 
             Compute a representative cycle in each of the two input volumes for a given pair
             of matched persistence pairs.
@@ -577,7 +592,10 @@ PYBIND11_MODULE(betti_matching, m) {
             dim : int
                 The dimension of the persistence pair.
             index : int
-                The index of the persistence pair, relative to the dimension.
+                The index of the persistence pair, relative to the matches in the dimension.
+            include_death_voxel : bool, optional
+                Whether to include the death voxel of the persistence pair at the last
+                index of the representative cycle output array. Default is False.
 
             Returns
             -------
@@ -603,17 +621,29 @@ PYBIND11_MODULE(betti_matching, m) {
         )
 
         .def("compute_unmatched_representative_cycle",
-            [](BettiMatching &self, uint8_t input, size_t dim, size_t index) {
+            [](BettiMatching &self, uint8_t input, size_t dim, size_t index, bool includeDeathVoxel) {
                 auto unmatchedCycleVariant = self.getUnmatchedRepresentativeCycle(input, dim, index);
                 switch (self.shape.size()) {
                     case 1: {
-                        return coordinateListToArray(std::get<dim1::RepresentativeCycle>(unmatchedCycleVariant));
+                        auto &resultDim1 = std::get<dim1::RepresentativeCycle>(unmatchedCycleVariant);
+                        if (!includeDeathVoxel) {
+                            resultDim1.pop_back();
+                        }
+                        return coordinateListToArray(resultDim1);
                     }
                     case 2: {
-                        return coordinateListToArray(std::get<dim2::RepresentativeCycle>(unmatchedCycleVariant));
+                        auto &resultDim2 = std::get<dim2::RepresentativeCycle>(unmatchedCycleVariant);
+                        if (!includeDeathVoxel) {
+                            resultDim2.pop_back();
+                        }
+                        return coordinateListToArray(resultDim2);
                     }
                     case 3: {
-                        return coordinateListToArray(std::get<dim3::RepresentativeCycle>(unmatchedCycleVariant));
+                        auto &resultDim3 = std::get<dim3::RepresentativeCycle>(unmatchedCycleVariant);
+                        if (!includeDeathVoxel) {
+                            resultDim3.pop_back();
+                        }
+                        return coordinateListToArray(resultDim3);
                     }
                     default: {
                         throw runtime_error("Invalid value for dim: " + std::to_string(self.shape.size()));
@@ -623,8 +653,10 @@ PYBIND11_MODULE(betti_matching, m) {
             py::arg("input"),
             py::arg("dim"),
             py::arg("index"),
+            py::arg("include_death_voxel") = false,
             R"(
-            compute_unmatched_representative_cycle(input, dim, index)
+            compute_unmatched_representative_cycle(input, dim, index,
+                                                   include_death_voxel=False)
 
             Compute a representative cycle in one of the input volumes for a given unmatched
             persistence pair.
@@ -640,7 +672,12 @@ PYBIND11_MODULE(betti_matching, m) {
             dim : int
                 The dimension of the persistence pair.
             index : int
-                The index of the persistence pair, relative to the dimension.
+                The index of the persistence pair, relative to the unmatched pairs in
+                the dimension.
+            include_death_voxel : bool, optional
+                Whether to include the death voxels of the persistence pairs at the last
+                index of the respective representative cycle output arrays.
+                Default is False.
             
             Returns
             -------
@@ -664,7 +701,7 @@ PYBIND11_MODULE(betti_matching, m) {
         )
 
         .def("compute_all_representative_cycles",
-            [](BettiMatching &self, int input, int dim, bool computeMatchedCycles, bool computeUnmatchedCycles) {
+            [](BettiMatching &self, int input, int dim, bool computeMatchedCycles, bool computeUnmatchedCycles, bool includeDeathVoxel) {
                 auto matchedAndUnmatchedCycles = self.computeAllRepresentativeCycles(input, dim, computeMatchedCycles, computeUnmatchedCycles);
                 auto matchedCycles = std::get<0>(matchedAndUnmatchedCycles);
                 auto unmatchedCycles = std::get<1>(matchedAndUnmatchedCycles);
@@ -675,12 +712,22 @@ PYBIND11_MODULE(betti_matching, m) {
                 if (computeMatchedCycles) {
                     matchedCyclesArrays = {{}};
                     std::transform(matchedCycles.begin(), matchedCycles.end(), back_inserter(*matchedCyclesArrays),
-                        [](auto coords){return coordinateListToArray(coords);});
+                        [includeDeathVoxel](auto &coords) {
+                            if (!includeDeathVoxel) {
+                                coords.pop_back();
+                            }
+                            return coordinateListToArray(coords);
+                        });
                 }
                 if (computeUnmatchedCycles) {
                     unmatchedCyclesArrays = {{}};
                     std::transform(unmatchedCycles.begin(), unmatchedCycles.end(), back_inserter(*unmatchedCyclesArrays),
-                        [](auto coords){return coordinateListToArray(coords);});
+                        [includeDeathVoxel](auto &coords) {
+                            if (!includeDeathVoxel) {
+                                coords.pop_back();
+                            }
+                            return coordinateListToArray(coords);
+                        });
                 }
 
                 return std::make_tuple(matchedCyclesArrays, unmatchedCyclesArrays);
@@ -689,11 +736,13 @@ PYBIND11_MODULE(betti_matching, m) {
             py::arg("dim"),
             py::arg("compute_matched_cycles") = true,
             py::arg("compute_unmatched_cycles") = true,
+            py::arg("include_death_voxel") = false,
             R"(
             compute_all_representative_cycles(input,
                                               dim,
                                               compute_matched_cycles=True,
-                                              compute_unmatched_cycles=True)
+                                              compute_unmatched_cycles=True,
+                                              include_death_voxel=False)
 
             Currently only supported for 3D input volumes.
 
@@ -722,6 +771,10 @@ PYBIND11_MODULE(betti_matching, m) {
                 Whether to compute the matched cycles. Default is True.
             compute_unmatched_cycles : bool, optional
                 Whether to compute the unmatched cycles. Default is True.
+            include_death_voxel : bool, optional
+                Whether to include the death voxels of the persistence pairs at the last
+                index of the respective representative cycle output arrays.
+                Default is False.
 
             Returns
             -------

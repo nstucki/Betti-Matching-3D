@@ -154,6 +154,7 @@ Dimension0::getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles,
                 throw runtime_error("Union find index for matched pair cannot be found");
             }
             auto &cycle = cycleByBirthIdx[*unionFindIdx];
+            cycle.push_back(cgc.getParentVoxel(pair.death, 1));
             matchedCycles.emplace_back(std::move(cycle));
         }
     }
@@ -169,6 +170,7 @@ Dimension0::getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles,
                     throw runtime_error("Union find index for matched pair cannot be found");
                 }
                 auto &cycle = cycleByBirthIdx[*unionFindIdx];
+                cycle.push_back(cgc.getParentVoxel(pair.death, 1));
                 unmatchedCycles.emplace_back(std::move(cycle));
             }
         }
