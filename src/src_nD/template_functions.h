@@ -1,11 +1,10 @@
 #pragma once
 
+#include <algorithm>
 #include <iostream>
 #include <numeric>
-#include <algorithm>
 
 using namespace std;
-
 
 namespace dimN {
 template <typename Container>
@@ -17,31 +16,30 @@ Container multiplyFromRightExclusively(Container c) {
 }
 
 template <typename Container, typename Scalar>
-Container multiplyContainerElementwise(const Container& c, Scalar k) {
+Container multiplyContainerElementwise(const Container &c, Scalar k) {
     Container r(c.size());
-    transform(c.begin(), c.end(), r.begin(), [k](auto &c){ return c*k; });
+    transform(c.begin(), c.end(), r.begin(), [k](auto &c) { return c * k; });
     return r;
 }
 
 template <typename Container, typename Scalar>
-Container addToContainerElementwise(const Container& c, Scalar k) {
+Container addToContainerElementwise(const Container &c, Scalar k) {
     Container r(c.size());
-    transform(c.begin(), c.end(), r.begin(), [k](auto &c){ return c+k; });
+    transform(c.begin(), c.end(), r.begin(), [k](auto &c) { return c + k; });
     return r;
 }
 
 template <typename Container, typename Scalar>
-Container divideContainerElementwise(const Container& c, Scalar k) {
+Container divideContainerElementwise(const Container &c, Scalar k) {
     Container r(c.size());
-    transform(c.begin(), c.end(), r.begin(), [k](auto &c){ return c/k; });
+    transform(c.begin(), c.end(), r.begin(), [k](auto &c) { return c / k; });
     return r;
 }
 
-template <typename Container>
-void printContainer(const Container& c) {
+template <typename Container> void printContainer(const Container &c) {
     for (auto e : c) {
         cout << e << ' ';
     }
     cout << endl;
 }
-}
+} // namespace dimN
