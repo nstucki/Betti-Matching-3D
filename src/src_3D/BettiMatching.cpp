@@ -282,8 +282,8 @@ pair<RepresentativeCycle, RepresentativeCycle> BettiMatching::getMatchedRepresen
         case 1: {
             Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1],
                 dim1CacheInputPairs0, dim1CacheInputPairs1);
-            get<0>(reprCycles) = dim1.getRepresentativeCycle(matches[1][index].pair0, cgc0);
-            get<1>(reprCycles) = dim1.getRepresentativeCycle(matches[1][index].pair1, cgc1);
+            get<0>(reprCycles) = dim1.getRepresentativeCycle(matches[1][index].pair0, 0);
+            get<1>(reprCycles) = dim1.getRepresentativeCycle(matches[1][index].pair1, 1);
             break;
         }
         case 2: {
@@ -331,7 +331,7 @@ RepresentativeCycle BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t
                     case 1: {
                         Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1], pairsComp[1], 
                                         matches[1], isMatched0[1], isMatched1[1], dim1CacheInputPairs0, dim1CacheInputPairs1);
-                        reprCycle = dim1.getRepresentativeCycle(pair, cgc);
+                        reprCycle = dim1.getRepresentativeCycle(pair, input);
                         break;
                     }
                     case 2: {

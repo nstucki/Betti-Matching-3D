@@ -137,152 +137,6 @@ void Dimension1::computeInput0Pairs(vector<Cube>& ctr0)  {
 #endif
 }
 
-RepresentativeCycle Dimension1::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) {
-	RepresentativeCycle reprCycle;
-	reprCycle.push_back(cgc.getParentVoxel(pair.birth, 1));
-	
-	vector<Cube> ctr;
-	enumerateColumnsToReduce(ctr, cgc);
-	size_t ctrSize = ctr.size();
-	auto& pivotColumnIndex = pivotColumnIndexInput0; // Use input 0 pivot column index (doesn't really matter which one for this method)
-	pivotColumnIndex.clear();
-	BoundaryEnumerator enumerator(cgc);
-	Cube pivot;
-	size_t j;
-	Coordinate vertex;
-#ifdef USE_REDUCTION_MATRIX
-	reductionMatrix.clear();
-	vector<Cube> reductionColumn;
-#endif
-#ifdef USE_CACHE
-	CubeMap<2, vector<Cube>> cache(cgc.shape);
-	queue<uint64_t> cachedColumnIdx;
-	size_t numRecurse;
-#endif
-#ifdef USE_EMERGENT_PAIRS
-	bool checkEmergentPair;
-#endif
-#ifdef USE_EMERGENT_PAIRS
-	vector<Cube> faces;
-	BoundaryEnumerator enumeratorAP(cgc);
-	CoboundaryEnumerator coEnumeratorAP(cgc);
-#endif
-
-	for (size_t i = 0; i < ctrSize; ++i) {
-		if (pivot == pair.birth) { break; }
-		CubeQueue workingBoundary;
-		j = i;
-#ifdef USE_CACHE
-		numRecurse = 0;
-#endif
-#ifdef USE_EMERGENT_PAIRS
-		checkEmergentPair = true;
-#endif
-		while (true) {
-			if (j == i) {
-#ifdef USE_EMERGENT_PAIRS
-				if (isEmergentPair<INPUT_PAIRS>(ctr[i], pivot, j, faces, checkEmergentPair, cgc, enumerator, enumeratorAP, coEnumeratorAP, pivotColumnIndex)) {
-					pivotColumnIndex.emplace(pivot.index, i);
-					break;
-				} else {
-					for (auto face = faces.rbegin(), last = faces.rend(); face != last; ++face) { workingBoundary.push(*face); }
-#ifdef USE_CACHE
-					++numRecurse;
-#endif
-					if (j != i) { continue; }
-#ifdef USE_REDUCTION_MATRIX
-					else { reductionColumn.push_back(coEnumeratorAP.nextCoface); }
-#endif
-				}
-#else			
-				enumerator.setBoundaryEnumerator(ctr[i]);
-				while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
-#endif
-			} else {
-#ifdef USE_REDUCTION_MATRIX
-				reductionColumn.push_back(ctr[j]);
-#endif
-#ifdef USE_CACHE
-				if (!columnIsCached(ctr[j], workingBoundary, cache)) {
-#endif
-					enumerator.setBoundaryEnumerator(ctr[j]);
-					while (enumerator.hasNextFace()) { workingBoundary.push(enumerator.nextFace); }
-#ifdef USE_REDUCTION_MATRIX
-					useReductionMatrix(ctr[j], workingBoundary, enumerator
-#ifdef USE_CACHE
-										, cache
-#endif
-										);
-#endif
-#ifdef USE_CACHE
-				}
-#endif
-			}
-			pivot = getPivot(workingBoundary);
-			if (pivot.index != NONE_INDEX) {
-				auto it = pivotColumnIndex.find(pivot.index);
-				if (it.has_value()) {
-					j = *it;
-#ifdef USE_CACHE
-					++numRecurse;
-#endif
-					continue;
-				} else {
-					if (pivot == pair.birth) {
-						Cube c;
-						while (!workingBoundary.empty()) {
-							c = workingBoundary.top();
-							workingBoundary.pop();
-							if (!workingBoundary.empty() && c == workingBoundary.top()) { workingBoundary.pop(); } 
-							else {
-								vertex = {c.x(), c.y(), c.z()};
-								if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); }
-								switch(c.type()) {
-									case 0:
-										vertex = {c.x()+1, c.y(), c.z()};
-										if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); }
-										break;
-
-									case 1:
-										vertex = {c.x(), c.y()+1, c.z()};
-										if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); }
-										break;
-
-									case 2:
-										vertex = {c.x(), c.y(), c.z()+1};
-										if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); }
-										break;
-								}
-								
-							}
-						}
-						break;
-					}
-					pivotColumnIndex.emplace(pivot.index, i);
-#ifdef USE_CACHE
-					if (numRecurse >= config.minRecursionToCache) {
-						addCache(ctr[i], workingBoundary, cachedColumnIdx, cache);
-						break;
-					}
-#endif
-#ifdef USE_REDUCTION_MATRIX
-					if (reductionColumn.size() > 0) {
-						reductionMatrix.emplace(ctr[i].index, reductionColumn);
-						reductionColumn.clear();
-					}
-#endif
-					break;
-				}
-			} else { break; }
-		}
-	}
-
-	reprCycle.push_back(cgc.getParentVoxel(pair.death, 2));
-
-	return reprCycle;
-}
-
-
 void Dimension1::computePairs(vector<Cube>& ctr, uint8_t k) {
 #ifdef USE_CACHE
 	auto& cache = (k == 0) ? cacheInputPairs0 : cacheInputPairs1;
@@ -342,6 +196,14 @@ RepresentativeCycle cubeCycleToVoxelCycle(vector<Cube>& cubeCycle) {
 	return voxelCycle;
 }
 
+RepresentativeCycle Dimension1::getRepresentativeCycle(const Pair& pair, uint8_t input) {
+	auto& cache = (input == 0) ? cacheInputPairs0 : cacheInputPairs1;
+    auto& cachedBoundary = cache[pair.death.index];
+    if (!cachedBoundary.has_value()) {
+        throw runtime_error("A boundary that is needed to get all cycles was deleted from cache! Consider increasing the cache size limit.");
+    }
+    return cubeCycleToVoxelCycle(*cachedBoundary);
+}
 
 tuple<vector<dim3::RepresentativeCycle>, vector<dim3::RepresentativeCycle>>
 Dimension1::getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles, bool computeUnmatchedCycles) {
