@@ -927,8 +927,13 @@ PYBIND11_MODULE(betti_matching, m) {
         =================
 
         Provides
-          1. A fast C++ implementation of the Betti matching algorithm for
-            1D, 2D, 3D and n-D images.
+        1. A fast algorithm for computing the Betti matching on 1D, 2D, 3D and
+           n-D images, implemented in C++.
+        2. A fast algorithm for computing barcodes on cubical grid complexes
+           for 1D, 2D, 3D and n-D images - a subprocedure necessary for the
+           Betti matching computation, but also exposed separately.
+        3. Algorithms for computing representative cycles for matched and unmatched
+           persistence pairs in the Betti matching.
 
         How to compute the Betti matching
         ---------------------------------
@@ -953,12 +958,13 @@ PYBIND11_MODULE(betti_matching, m) {
         ```
 
         The Betti matching can also be computed in more fine-grained steps using the
-        `BettiMatching` class:
+        `BettiMatching` class. This allows to cache the computed matching and compute
+        representative cycles.
 
         ```python
-        betti_matching = BettiMatching(a, b)
-        betti_matching.compute_matching()
-        result = betti_matching.get_matching()
+        bm = betti_matching.BettiMatching(a, b)
+        bm.compute_matching()
+        result = bm.get_matching()
         ```
     )";
 }
