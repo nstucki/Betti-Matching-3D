@@ -16,6 +16,7 @@ class Dimension0 {
 	void computeInput0Pairs(vector<Cube>& ctr0);
 	RepresentativeCycle getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const;
 	tuple<vector<RepresentativeCycle>, vector<RepresentativeCycle>> getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles, bool computeUnmatchedCycles);
+    vector<dim3::RepresentativeCycle> computeRepresentativeCycles(const int input, const std::vector<std::reference_wrapper<Pair>> &requestedPairs);
 
 	private:
 	void computePairs(vector<Cube>& ctr, uint8_t k);

@@ -16,8 +16,8 @@ class Dimension2 {
 					vector<Match>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1);
 	void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp, vector<Cube>& ctrImage);
 	void computeInput0Pairs(vector<Cube>& ctr0);
-	RepresentativeCycle getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const;
-	tuple<vector<RepresentativeCycle>, vector<RepresentativeCycle>> getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles, bool computeUnmatchedCycles) const;
+	RepresentativeCycle computeRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const;
+    vector<dim3::RepresentativeCycle> computeRepresentativeCycles(const int input, const std::vector<std::reference_wrapper<Pair>> &requestedPairs);
 
 	private:
 	void enumerateDualEdges(vector<Cube>& dualEdges, const CubicalGridComplex& cgc) const;

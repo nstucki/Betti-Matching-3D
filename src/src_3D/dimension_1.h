@@ -24,8 +24,7 @@ class Dimension1 {
     );
 	void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp, vector<Cube>& ctrImage);
 	void computeInput0Pairs(vector<Cube>& ctr0);
-	RepresentativeCycle getRepresentativeCycle(const Pair& pair, uint8_t input);
-	tuple<vector<dim3::RepresentativeCycle>, vector<dim3::RepresentativeCycle>> getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles, bool computeUnmatchedCycles);
+    vector<dim3::RepresentativeCycle> computeRepresentativeCycles(const int input, const std::vector<std::reference_wrapper<Pair>> &requestedPairs);
 
     private:
 	enum ComputePairsMode { INPUT_PAIRS, COMPARISON_PAIRS, IMAGE_PAIRS };

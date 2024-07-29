@@ -168,84 +168,6 @@ void Dimension1::computePairsImage(vector<Cube>& ctr, uint8_t k) {
 	);
 }
 
-RepresentativeCycle cubeCycleToVoxelCycle(vector<Cube>& cubeCycle) {
-	// This function deduplicates voxels in obvious consecutive cases, but it is not necessarily guaranteed that its output does not contain duplicate voxels.
-	if (cubeCycle.empty()) {
-		return {};
-	}
-    auto& cube = cubeCycle[0];
-	RepresentativeCycle voxelCycle {
-        {cube.x(), cube.y(), cube.z()},
-        {cube.x() + (cube.type() == 0), cube.y() + (cube.type() == 1), cube.z() + (cube.type() == 2)}
-    };
-
-	for (auto& cube : cubeCycle) {
-		tuple<index_t, index_t, index_t> endpoint0 = {cube.x(), cube.y(), cube.z()};
-		auto type = cube.type();
-		tuple<index_t, index_t, index_t> endpoint1 = {cube.x() + (type == 0), cube.y() + (type == 1), cube.z() + (type == 2)};
-		auto lastAdded1 = voxelCycle[voxelCycle.size() - 1];
-		auto lastAdded2 = voxelCycle[voxelCycle.size() - 2];
-		if (lastAdded1 != endpoint0 && lastAdded2 != endpoint0) {
-			voxelCycle.emplace_back(std::move(endpoint0));
-		}
-		if (lastAdded1 != endpoint1 && lastAdded2 != endpoint1) {
-			voxelCycle.emplace_back(std::move(endpoint1));
-		}
-	}
-
-	return voxelCycle;
-}
-
-RepresentativeCycle Dimension1::getRepresentativeCycle(const Pair& pair, uint8_t input) {
-	auto& cache = (input == 0) ? cacheInputPairs0 : cacheInputPairs1;
-    auto& cachedBoundary = cache[pair.death.index];
-    if (!cachedBoundary.has_value()) {
-        throw runtime_error("A boundary that is needed to get all cycles was deleted from cache! Consider increasing the cache size limit.");
-    }
-    return cubeCycleToVoxelCycle(*cachedBoundary);
-}
-
-tuple<vector<dim3::RepresentativeCycle>, vector<dim3::RepresentativeCycle>>
-Dimension1::getAllRepresentativeCycles(uint8_t input, bool computeMatchedCycles, bool computeUnmatchedCycles) {
-#ifndef USE_CACHE
-	throw runtime_error("computeAllRepresentativeCycles() can only be used when compiled with USE_CACHE defined"); 
-#endif
-
-	auto& isMatched = (input == 0) ? isMatched0 : isMatched1;
-	auto& pairs = (input == 0) ? pairs0 : pairs1;
-	auto& cache = (input == 0) ? cacheInputPairs0 : cacheInputPairs1;
-	const CubicalGridComplex &cgc = (input == 0) ? cgc0 : cgc1;
-
-	vector<RepresentativeCycle> matchedCycles;
-	vector<RepresentativeCycle> unmatchedCycles;
-    if (computeMatchedCycles) {
-        for (auto& match : matches) {
-            auto& pair = (input == 0) ? match.pair0 : match.pair1;
-            auto& cachedBoundary = cache[pair.death.index];
-            if (!cachedBoundary.has_value()) {
-                throw runtime_error("A boundary that is needed to get all cycles was deleted from cache! Consider increasing the cache size limit.");
-            }
-            auto matchedCycle = cubeCycleToVoxelCycle(*cachedBoundary);
-            matchedCycle.push_back(cgc.getParentVoxel(pair.death, 2));
-            matchedCycles.emplace_back(matchedCycle);
-        }
-    }
-    if (computeUnmatchedCycles) {
-        for (auto& pair : pairs) {
-            if (!isMatched[pair.birth.index]) {
-                auto& cachedBoundary = cache[pair.death.index];
-                if (!cachedBoundary.has_value()) {
-                    throw runtime_error("A boundary that is needed to get all cycles was deleted from cache! Consider increasing the cache size limit.");
-                }
-                auto unmatchedCycle = cubeCycleToVoxelCycle(*cachedBoundary);
-                unmatchedCycle.push_back(cgc.getParentVoxel(pair.death, 2));
-                unmatchedCycles.emplace_back(unmatchedCycle);
-            }
-        }
-    }
-	return {matchedCycles, unmatchedCycles};
-}
-
 void Dimension1::computeMatching() {
 #ifdef RUNTIME
 	auto start = high_resolution_clock::now();
@@ -771,4 +693,56 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k
 	cout << ", " << numEmergentPairs << " emergent pairs";
 #endif
 #endif
+}
+
+RepresentativeCycle cubeCycleToVoxelCycle(vector<Cube>& cubeCycle) {
+	// This function deduplicates voxels in obvious consecutive cases, but it is not necessarily guaranteed that its output does not contain duplicate voxels.
+	if (cubeCycle.empty()) {
+		return {};
+	}
+    auto& cube = cubeCycle[0];
+	RepresentativeCycle voxelCycle {
+        {cube.x(), cube.y(), cube.z()},
+        {cube.x() + (cube.type() == 0), cube.y() + (cube.type() == 1), cube.z() + (cube.type() == 2)}
+    };
+
+	for (auto& cube : cubeCycle) {
+		tuple<index_t, index_t, index_t> endpoint0 = {cube.x(), cube.y(), cube.z()};
+		auto type = cube.type();
+		tuple<index_t, index_t, index_t> endpoint1 = {cube.x() + (type == 0), cube.y() + (type == 1), cube.z() + (type == 2)};
+		auto lastAdded1 = voxelCycle[voxelCycle.size() - 1];
+		auto lastAdded2 = voxelCycle[voxelCycle.size() - 2];
+		if (lastAdded1 != endpoint0 && lastAdded2 != endpoint0) {
+			voxelCycle.emplace_back(std::move(endpoint0));
+		}
+		if (lastAdded1 != endpoint1 && lastAdded2 != endpoint1) {
+			voxelCycle.emplace_back(std::move(endpoint1));
+		}
+	}
+
+	return voxelCycle;
+}
+
+vector<dim3::RepresentativeCycle>
+Dimension1::computeRepresentativeCycles(const int input, const std::vector<std::reference_wrapper<Pair>> &requestedPairs) {
+#ifndef USE_CACHE
+	throw runtime_error("computeRepresentativeCycles() can only be used when compiled with USE_CACHE defined"); 
+#endif
+	auto& cache = (input == 0) ? cacheInputPairs0 : cacheInputPairs1;
+	const CubicalGridComplex &cgc = (input == 0) ? cgc0 : cgc1;
+
+	vector<RepresentativeCycle> representativeCycles;
+
+    // Compute representative cycles for requested pairs, using the cached boundaries
+    for (auto &requestedPair : requestedPairs) {
+        auto& cachedBoundary = cache[requestedPair.get().death.index];
+        if (!cachedBoundary.has_value()) {
+            throw runtime_error("A boundary that is needed to get all cycles was deleted from cache! Consider increasing the cache size limit.");
+        }
+        auto representativeCycle = cubeCycleToVoxelCycle(*cachedBoundary);
+        representativeCycle.push_back(cgc.getParentVoxel(requestedPair.get().death, 2));
+        representativeCycles.emplace_back(std::move(representativeCycle));
+    }
+
+	return representativeCycles;
 }

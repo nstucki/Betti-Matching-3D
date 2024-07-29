@@ -20,12 +20,10 @@ public:
     vector<vector<VoxelPair>> computePairsInput0();
     void printResult();
     tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>, vector<vector<VoxelPair>>> getMatching();
-    variant<pair<dim1::RepresentativeCycle, dim1::RepresentativeCycle>,
-        pair<dim2::RepresentativeCycle, dim2::RepresentativeCycle>,
-        pair<dim3::RepresentativeCycle, dim3::RepresentativeCycle>>
-        getMatchedRepresentativeCycles(const size_t& dim, const size_t& index);
-    variant<dim1::RepresentativeCycle, dim2::RepresentativeCycle, dim3::RepresentativeCycle> getUnmatchedRepresentativeCycle(const uint8_t& input, const size_t& dim, const size_t& index);
-    tuple<vector<dim3::RepresentativeCycle>, vector<dim3::RepresentativeCycle>> computeAllRepresentativeCycles(const int input, const int dim, bool computeMatchedCycles, bool computeUnmatchedCycles);
+    variant<tuple<vector<dim1::RepresentativeCycle>, vector<dim1::RepresentativeCycle>>,
+            tuple<vector<dim2::RepresentativeCycle>, vector<dim2::RepresentativeCycle>>,
+            tuple<vector<dim3::RepresentativeCycle>, vector<dim3::RepresentativeCycle>>>
+        computeRepresentativeCycles(const int input, const int dim, const optional<vector<size_t>> &matchedPairsIndices, const optional<vector<size_t>> &unmatchedPairsIndices);
     vector<index_t> shape;
 
 
