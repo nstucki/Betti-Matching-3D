@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <map>
 #include <set>
 #include <stdexcept>
 #include <tuple>
@@ -354,24 +355,27 @@ RepresentativeCycle extractRepresentativeCycle(const Pair &pair, const CubicalGr
         }
     }
 
-    multiset<Coordinate> boundaryVertices;
+    map<Coordinate, size_t> boundaryVertices;
     for (const Coordinate &c : cubeCoordinates) {
         for (uint8_t x = 0; x < 2; ++x) {
             for (uint8_t y = 0; y < 2; ++y) {
                 for (uint8_t z = 0; z < 2; ++z) {
-                    boundaryVertices.insert({std::get<0>(c) + x, std::get<1>(c) + y, std::get<2>(c) + z});
+                    auto vertex = Coordinate{std::get<0>(c) + x, std::get<1>(c) + y, std::get<2>(c) + z};
+                    auto entry = boundaryVertices.find(vertex);
+                    if (entry == boundaryVertices.end()) {
+                        boundaryVertices[vertex] = 1;
+                    } else {
+                        entry->second++;
+                    }
                 }
             }
         }
     }
 
     vector<Coordinate> reprCycle;
-    for (const Coordinate &vertex : boundaryVertices) {
-        auto lower = boundaryVertices.lower_bound(vertex);
-        auto upper = boundaryVertices.upper_bound(vertex);
-        int multiplicity = distance(lower, upper);
-        if (multiplicity < 8) {
-            reprCycle.push_back(vertex);
+    for (auto &entry : boundaryVertices) {
+        if (entry.second < 8) {
+            reprCycle.push_back(entry.first);
         }
     }
     reprCycle.push_back(cgc.getParentVoxel(pair.death, 3));
