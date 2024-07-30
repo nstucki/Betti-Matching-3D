@@ -530,7 +530,7 @@ PYBIND11_MODULE(betti_matching, m) {
         )
 
         .def("compute_representative_cycles",
-            [](BettiMatching &self, size_t input, size_t dim, variant<size_t, vector<size_t>, string> &matchedPairsIndices, variant<size_t, vector<size_t>, string> &unmatchedPairsIndices, bool includeDeathVoxel) {
+            [](BettiMatching &self, size_t input, size_t dim, variant<size_t, vector<size_t>, string> &matchedPairsIndices, variant<size_t, vector<size_t>, string> &unmatchedPairsIndices, bool includeDeathVoxel, bool deduplicateVoxels) {
                 if (input != 0 && input != 1) {
                     throw invalid_argument("Invalid value for input: " + std::to_string(input));
                 }
@@ -600,9 +600,19 @@ PYBIND11_MODULE(betti_matching, m) {
                     case 3: {
                         auto &resultDim3 = std::get<tuple<vector<dim3::RepresentativeCycle>, vector<dim3::RepresentativeCycle>>>(result);
                         for (auto &matchedCycle : std::get<0>(resultDim3)) {
+                            if (dim == 1 && deduplicateVoxels) {
+                                // Sort everything (but the death voxel in the last position!), then remove duplicates
+                                std::sort(matchedCycle.begin(), matchedCycle.end() - 1);
+                                matchedCycle.erase(std::unique(matchedCycle.begin(), matchedCycle.end() - 1), matchedCycle.end() - 1);
+                            }
                             matchedCyclesArrays.emplace_back(coordinateListToArray<index_t, index_t, index_t>(matchedCycle.begin(), matchedCycle.end() - (!includeDeathVoxel)));
                         }
                         for (auto &unmatchedCycle : std::get<1>(resultDim3)) {
+                            if (dim == 1 && deduplicateVoxels) {
+                                // Sort everything (but the death voxel in the last position!), then remove duplicates
+                                std::sort(unmatchedCycle.begin(), unmatchedCycle.end() - 1);
+                                unmatchedCycle.erase(std::unique(unmatchedCycle.begin(), unmatchedCycle.end() - 1), unmatchedCycle.end() - 1);
+                            }
                             unmatchedCyclesArrays.emplace_back(coordinateListToArray<index_t, index_t, index_t>(unmatchedCycle.begin(), unmatchedCycle.end() - (!includeDeathVoxel)));
                         }
                         break;
@@ -621,13 +631,15 @@ PYBIND11_MODULE(betti_matching, m) {
             py::arg("matched") = "none",
             py::arg("unmatched") = "none",
             py::arg("include_death_voxels") = false,
+            py::arg("deduplicate_voxels") = false,
             R"(
             compute_representative_cycles(
                 input,
                 dim,
                 matched="none",
                 unmatched="none",
-                include_death_voxels=False
+                include_death_voxels=False,
+                deduplicate_voxels=False
             )
 
             Compute representative cycles for matched and unmatched persistence pairs.
@@ -663,6 +675,11 @@ PYBIND11_MODULE(betti_matching, m) {
             include_death_voxels : bool, optional
                 Whether to include the death voxel of the persistence pair at the last
                 index of the respective representative cycle output array.
+                Default is False.
+            deduplicate_voxels : bool, optional
+                Whether to deduplicate voxel coordinates in the representative cycles.
+                Only relevant for dim=1 in 3D volumes, where cycles may have duplicate
+                voxel coordinates.
                 Default is False.
 
             Returns
