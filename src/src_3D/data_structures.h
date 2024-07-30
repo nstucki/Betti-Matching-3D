@@ -117,7 +117,7 @@ class UnionFindDual {
 	index_t find(index_t x);
 	index_t link(index_t x, index_t y);
 	value_t getBirth(const index_t& idx) const;
-	vector<index_t> getCoordinates(index_t idx) const;
+	Coordinate getCoordinates(index_t idx) const;
 	vector<index_t> getBoundaryIndices(const Cube& edge) const;
 	void reset();
 

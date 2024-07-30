@@ -224,7 +224,7 @@ void Dimension2::computeInputAndImagePairs(vector<Cube>& dualEdges, const uint8_
 	index_t birthIdx;
 	index_t birthIdxComp;
 	value_t birth;
-	vector<index_t> birthCoordinates(3);
+	Coordinate birthCoordinates;
 
 	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge) {
 		boundaryIndices = uf.getBoundaryIndices(*edge);
@@ -238,7 +238,7 @@ void Dimension2::computeInputAndImagePairs(vector<Cube>& dualEdges, const uint8_
 			birthIdxComp = ufComp.link(parentIdx0, parentIdx1);
 			if (edge->birth != birth) {
 				birthCoordinates = uf.getCoordinates(birthIdx);
-				pairs.push_back(Pair(*edge, Cube(birth, birthCoordinates[0], birthCoordinates[1], birthCoordinates[2], 0)));
+				pairs.push_back(Pair(*edge, Cube(birth, std::get<0>(birthCoordinates), std::get<1>(birthCoordinates), std::get<2>(birthCoordinates), 0)));
 				matchMap.emplace(birthIdxComp, pairs.back());
 			} 
 			edge->index = NONE_INDEX;
@@ -344,19 +344,10 @@ bool Dimension2::isApparentPair(const Cube& dualEdge, BoundaryEnumerator& enumer
 }
 #endif
 
-RepresentativeCycle extractRepresentativeCycle(const Pair &pair, const CubicalGridComplex &cgc, UnionFindDual &uf) {
-    set<tuple<index_t, index_t, index_t>> cubeCoordinates;
-    index_t parentIdx0 = uf.find(pair.death.x() * cgc.m_yz + pair.death.y() * cgc.m_z + pair.death.z());
-    for (size_t i = 0; i < cgc.getNumberOfCubes(3); ++i) {
-        index_t parentIdx1 = uf.find(i);
-        if (parentIdx0 == parentIdx1) {
-            cubeCoordinates.insert(
-                vectorToTuple<3>(uf.getCoordinates(i)));
-        }
-    }
-
+RepresentativeCycle extractRepresentativeCycle(const Pair &pair, const CubicalGridComplex &cgc,
+        vector<dim3::Coordinate> &dualConnectedComponent) {
     map<Coordinate, size_t> boundaryVertices;
-    for (const Coordinate &c : cubeCoordinates) {
+    for (const Coordinate &c : dualConnectedComponent) {
         for (uint8_t x = 0; x < 2; ++x) {
             for (uint8_t y = 0; y < 2; ++y) {
                 for (uint8_t z = 0; z < 2; ++z) {
@@ -397,6 +388,12 @@ Dimension2::computeRepresentativeCycles(const int input, const std::vector<std::
 
 	unordered_map<uint64_t, RepresentativeCycle> cyclesByBirth;
 
+    // Initialize singleton dual connected components
+    vector<RepresentativeCycle> dualConnectedComponentsByBirthIdx(cgc.shape[0] * cgc.shape[1] * cgc.shape[2]);
+    for (int birthIdx = 0; birthIdx < dualConnectedComponentsByBirthIdx.size(); birthIdx++) {
+        dualConnectedComponentsByBirthIdx[birthIdx].emplace_back(uf.getCoordinates(birthIdx));
+    }
+
     // Gather the birth indices of requested pairs for use in the loop below (the pairs
     // are not necessarily ordered in the same order as they are found, hence we need a set)
     unordered_map<uint64_t, std::reference_wrapper<Pair>> requestedPairsByBirth;
@@ -407,15 +404,23 @@ Dimension2::computeRepresentativeCycles(const int input, const std::vector<std::
     // Run the union-find algorithm on the dual edges and collect all requested representative cycles on the way
 	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last && cyclesByBirth.size() != requestedPairs.size(); edge++) {
         // Compute the representative cycle if it was requested
-        auto maybeRequestedPair = requestedPairsByBirth.find(edge->index);
-        if (maybeRequestedPair != requestedPairsByBirth.end()) {
-            cyclesByBirth[edge->index] = extractRepresentativeCycle(maybeRequestedPair->second, cgc, uf);
-        }
 		vector<index_t> boundaryIndices = uf.getBoundaryIndices(*edge);
 		index_t parentIdx0 = uf.find(boundaryIndices[0]);
 		index_t parentIdx1 = uf.find(boundaryIndices[1]);
 		if (parentIdx0 != parentIdx1) {
-			uf.link(parentIdx0, parentIdx1);
+			auto olderBirthIdx = uf.link(parentIdx0, parentIdx1);
+            auto youngerBirthIdx = (parentIdx1 == olderBirthIdx) ? parentIdx0 : parentIdx1;
+            dualConnectedComponentsByBirthIdx[youngerBirthIdx].insert(dualConnectedComponentsByBirthIdx[youngerBirthIdx].end(),
+                dualConnectedComponentsByBirthIdx[olderBirthIdx].begin(), dualConnectedComponentsByBirthIdx[olderBirthIdx].end());
+
+            auto maybeRequestedPair = requestedPairsByBirth.find(edge->index);
+            if (maybeRequestedPair != requestedPairsByBirth.end()) {
+                cyclesByBirth[edge->index] = extractRepresentativeCycle(maybeRequestedPair->second, cgc,
+                    dualConnectedComponentsByBirthIdx[olderBirthIdx]);
+            }
+            // The deceased dual connected component has either been converted to its bordering 2-cycle, or the 2-cycle has not been requested.
+            // Either way, we can delete it and save memory.
+            dualConnectedComponentsByBirthIdx[olderBirthIdx].clear();
 		}
 	}
 
