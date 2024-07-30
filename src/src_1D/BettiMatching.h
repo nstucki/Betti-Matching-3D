@@ -14,8 +14,7 @@ class BettiMatching {
     void computeVoxels();
     vector<vector<VoxelPair>> computePairsInput0();
     void printResult();
-    pair<dim1::RepresentativeCycle, dim1::RepresentativeCycle> getMatchedRepresentativeCycles(const uint8_t& dim, const size_t& index);
-    dim1::RepresentativeCycle getUnmatchedRepresentativeCycle(const uint8_t& input, const size_t& dim, const size_t& index);
+    tuple<vector<dim1::RepresentativeCycle>, vector<dim1::RepresentativeCycle>> computeRepresentativeCycles(const int input, const optional<vector<size_t>> &matchedPairsIndices, const optional<vector<size_t>> &unmatchedPairsIndices);
     const vector<VoxelMatch> &matched = _matched;
     const vector<VoxelPair> &unmatched0 = _unmatched0;
     const vector<VoxelPair> &unmatched1 = _unmatched1;

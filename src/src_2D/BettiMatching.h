@@ -14,11 +14,10 @@ class BettiMatching {
     void computeVoxels();
     vector<vector<VoxelPair>> computePairsInput0();
     void printResult();
-    pair<dim2::RepresentativeCycle, dim2::RepresentativeCycle> getMatchedRepresentativeCycles(const uint8_t& dim, const size_t& index);
-    dim2::RepresentativeCycle getUnmatchedRepresentativeCycle(const uint8_t& input, const uint8_t& dim, const size_t& index);
     const vector<vector<VoxelMatch>> &matched = _matched;
     const vector<vector<VoxelPair>> &unmatched0 = _unmatched0;
     const vector<vector<VoxelPair>> &unmatched1 = _unmatched1;
+    tuple<vector<dim2::RepresentativeCycle>, vector<dim2::RepresentativeCycle>> computeRepresentativeCycles(const int input, const int dim, const optional<vector<size_t>> &matchedPairsIndices, const optional<vector<size_t>> &unmatchedPairsIndices);
 
     private:
     CubicalGridComplex cgc0;

@@ -229,12 +229,12 @@ BettiMatching::computeRepresentativeCycles(const int input, const int dim, const
     switch (dimension) {
         case 1: {
             dim1::BettiMatching& bettiMatching = std::get<dim1::BettiMatching>(dimensionSpecificBettiMatching.value());
-            throw runtime_error("Not implemented!");
+            return bettiMatching.computeRepresentativeCycles(input, matchedPairsIndices, unmatchedPairsIndices);
         }
 
         case 2: {
             dim2::BettiMatching& bettiMatching = std::get<dim2::BettiMatching>(dimensionSpecificBettiMatching.value());
-            throw runtime_error("Not implemented!");
+            return bettiMatching.computeRepresentativeCycles(input, dim, matchedPairsIndices, unmatchedPairsIndices);
         }
 
         case 3: {

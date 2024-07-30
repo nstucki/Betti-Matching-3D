@@ -4,6 +4,7 @@
 #include <iostream>
 #include <chrono>
 #include <algorithm>
+#include <map>
 #include <set>
 
 using namespace dim2;
@@ -48,55 +49,6 @@ void Dimension1::computeInput0Pairs(vector<Cube>& ctr0)  {
 	enumerateDualEdges(ctr0, cgc0);
     computeInputAndImagePairs(ctr0, 0);
 }
-
-dim2::RepresentativeCycle Dimension1::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
-	vector<Cube> dualEdges;
-	enumerateDualEdges(dualEdges, cgc);
-
-	UnionFindDual uf(cgc);
-	vector<index_t> boundaryIndices(2);
-	index_t parentIdx0;
-	index_t parentIdx1;
-	index_t birthIdx;
-	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last; ++edge) {
-		if (*edge == pair.birth) { break; }
-		boundaryIndices = uf.getBoundaryIndices(*edge);
-		parentIdx0 = uf.find(boundaryIndices[0]);
-		parentIdx1 = uf.find(boundaryIndices[1]);
-		if (parentIdx0 != parentIdx1) { birthIdx = uf.link(parentIdx0, parentIdx1); }
-	}
-
-	set<dim2::Coordinate> cubeCoordinates;
-	parentIdx0 = uf.find(pair.death.x()*cgc.m_y + pair.death.y());
-	for (size_t i = 0; i < cgc.getNumberOfCubes(2); ++i) {
-		parentIdx1 = uf.find(i);
-		if (parentIdx0 == parentIdx1) { cubeCoordinates.insert(uf.getCoordinates(i)); }
-	}
-
-	multiset<dim2::Coordinate> boundaryVertices;
-	dim2::Coordinate vertex;
-	for (const dim2::Coordinate& c : cubeCoordinates) {
-		for (uint8_t x = 0; x < 2; ++x) {
-			for (uint8_t y = 0; y < 2; ++y) {
-                vertex = {std::get<0>(c) + x, std::get<1>(c) + y};
-				boundaryVertices.insert(vertex);
-			}
-		}
-	}
-
-	dim2::RepresentativeCycle reprCycle;
-	reprCycle.push_back(cgc.getParentVoxel(pair.birth, 1));
-	for (const dim2::Coordinate& vertex : boundaryVertices) {
-		auto lower = boundaryVertices.lower_bound(vertex);
-		auto upper = boundaryVertices.upper_bound(vertex);
-		int multiplicity = distance(lower, upper);
-		if (multiplicity < 4) { if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); } }
-	}
-	reprCycle.push_back(cgc.getParentVoxel(pair.death, 2));
-
-	return reprCycle;
-}
-
 
 void Dimension1::enumerateDualEdges(vector<Cube>& dualEdges, const CubicalGridComplex& cgc) const {
 #ifdef RUNTIME
@@ -224,4 +176,94 @@ void Dimension1::computeCompPairsAndMatch(vector<Cube>& dualEdges) {
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << duration.count() << " ms";
 #endif
+}
+
+RepresentativeCycle extractRepresentativeCycle(const Pair &pair, const CubicalGridComplex &cgc,
+        vector<dim2::Coordinate> &dualConnectedComponent) {
+    map<Coordinate, size_t> boundaryVertices;
+    for (const Coordinate &c : dualConnectedComponent) {
+        for (uint8_t x = 0; x < 2; ++x) {
+            for (uint8_t y = 0; y < 2; ++y) {
+                auto vertex = Coordinate{std::get<0>(c) + x, std::get<1>(c) + y};
+                auto entry = boundaryVertices.find(vertex);
+                if (entry == boundaryVertices.end()) {
+                    boundaryVertices[vertex] = 1;
+                } else {
+                    entry->second++;
+                }
+            }
+        }
+    }
+
+    vector<Coordinate> reprCycle;
+    for (auto &entry : boundaryVertices) {
+        if (entry.second < 4) {
+            reprCycle.push_back(entry.first);
+        }
+    }
+    reprCycle.push_back(cgc.getParentVoxel(pair.death, 2));
+
+    return reprCycle;
+}
+
+vector<dim2::RepresentativeCycle>
+Dimension1::computeRepresentativeCycles(const int input, const std::vector<std::reference_wrapper<Pair>> &requestedPairs) {
+    if (requestedPairs.size() == 0) {
+        return {};
+    }
+
+	const CubicalGridComplex &cgc = (input == 0) ? cgc0 : cgc1;
+	UnionFindDual uf(cgc);
+
+	vector<Cube> dualEdges;
+	enumerateDualEdges(dualEdges, cgc);
+
+	unordered_map<uint64_t, RepresentativeCycle> cyclesByBirth;
+
+    // Initialize singleton dual connected components
+    vector<RepresentativeCycle> dualConnectedComponentsByBirthIdx(cgc.shape[0] * cgc.shape[1]);
+    for (int birthIdx = 0; birthIdx < dualConnectedComponentsByBirthIdx.size(); birthIdx++) {
+        dualConnectedComponentsByBirthIdx[birthIdx].emplace_back(uf.getCoordinates(birthIdx));
+    }
+
+    // Gather the birth indices of requested pairs for use in the loop below (the pairs
+    // are not necessarily ordered in the same order as they are found, hence we need a set)
+    unordered_map<uint64_t, std::reference_wrapper<Pair>> requestedPairsByBirth;
+    for (auto& pair : requestedPairs) {
+        requestedPairsByBirth.emplace(pair.get().birth.index, pair);
+    }
+
+    // Run the union-find algorithm on the dual edges and collect all requested representative cycles on the way
+	for (auto edge = dualEdges.rbegin(), last = dualEdges.rend(); edge != last && cyclesByBirth.size() != requestedPairs.size(); edge++) {
+        // Compute the representative cycle if it was requested
+		vector<index_t> boundaryIndices = uf.getBoundaryIndices(*edge);
+		index_t parentIdx0 = uf.find(boundaryIndices[0]);
+		index_t parentIdx1 = uf.find(boundaryIndices[1]);
+		if (parentIdx0 != parentIdx1) {
+			auto olderBirthIdx = uf.link(parentIdx0, parentIdx1);
+            auto youngerBirthIdx = (parentIdx1 == olderBirthIdx) ? parentIdx0 : parentIdx1;
+            dualConnectedComponentsByBirthIdx[youngerBirthIdx].insert(dualConnectedComponentsByBirthIdx[youngerBirthIdx].end(),
+                dualConnectedComponentsByBirthIdx[olderBirthIdx].begin(), dualConnectedComponentsByBirthIdx[olderBirthIdx].end());
+
+            auto maybeRequestedPair = requestedPairsByBirth.find(edge->index);
+            if (maybeRequestedPair != requestedPairsByBirth.end()) {
+                cyclesByBirth[edge->index] = extractRepresentativeCycle(maybeRequestedPair->second, cgc,
+                    dualConnectedComponentsByBirthIdx[olderBirthIdx]);
+            }
+            // The deceased dual connected component has either been converted to its bordering 2-cycle, or the 2-cycle has not been requested.
+            // Either way, we can delete it and save memory.
+            dualConnectedComponentsByBirthIdx[olderBirthIdx].clear();
+		}
+	}
+
+    if (cyclesByBirth.size() != requestedPairs.size()) {
+        throw runtime_error("Not all requested representative cycles were found");
+    }
+
+	vector<RepresentativeCycle> representativeCycles;
+    representativeCycles.reserve(requestedPairs.size());
+    for (auto& pair : requestedPairs) {
+        representativeCycles.emplace_back(std::move(cyclesByBirth[pair.get().birth.index]));
+    }
+    return representativeCycles;
 }

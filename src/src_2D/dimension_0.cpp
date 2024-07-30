@@ -43,41 +43,6 @@ void Dimension0::computeInput0Pairs(vector<Cube>& ctr0) {
 	computePairs(ctr0, 0);
 }
 
-
-dim2::RepresentativeCycle Dimension0::getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const {
-	vector<Cube> edges;
-	enumerateEdges(edges, cgc);
-	UnionFind uf(cgc);
-	vector<index_t> boundaryIndices(2);
-	index_t parentIdx0;
-	index_t parentIdx1;
-	index_t birthIdx;
-	
-	for (Cube& edge : edges) {
-		if (edge == pair.death) { break; }
-		boundaryIndices = uf.getBoundaryIndices(edge);
-		parentIdx0 = uf.find(boundaryIndices[0]);
-		parentIdx1 = uf.find(boundaryIndices[1]);
-		if (parentIdx0 != parentIdx1) { birthIdx = uf.link(parentIdx0, parentIdx1); }
-	}
-
-	dim2::RepresentativeCycle reprCycle;
-	reprCycle.push_back(cgc.getParentVoxel(pair.birth, 0));
-	dim2::Coordinate vertex;
-	parentIdx0 = uf.find(pair.birth.x()*cgc.shape[1] + pair.birth.y());
-	for (size_t i = 0; i < cgc.getNumberOfCubes(0); ++i) {
-		parentIdx1 = uf.find(i);
-		if (parentIdx0 == parentIdx1) { 
-			vertex = uf.getCoordinates(i);
-			if(find(reprCycle.begin(), reprCycle.end(), vertex) == reprCycle.end()) { reprCycle.push_back(vertex); }
-		}
-	}
-	reprCycle.push_back(cgc.getParentVoxel(pair.death, 1));
-
-	return reprCycle;
-}
-
-
 void Dimension0::computePairs(vector<Cube>& edges, uint8_t k) {
 #ifdef RUNTIME
 	cout << "barcode ";
@@ -189,4 +154,79 @@ void Dimension0::enumerateEdges(vector<Cube>& edges, const CubicalGridComplex& c
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << duration.count() << " ms, ";
 #endif
+}
+
+vector<dim2::RepresentativeCycle>
+Dimension0::computeRepresentativeCycles(const int input, const std::vector<std::reference_wrapper<Pair>> &requestedPairs) {
+    if (requestedPairs.size() == 0) {
+        return {};
+    }
+
+    const CubicalGridComplex &cgc = (input == 0) ? cgc0 : cgc1;
+    UnionFind uf(cgc);
+    vector<Pair> &pairs = (input == 0) ? pairs0 : pairs1;
+
+    // Map from cube indices to union find indices (to match cycles with persistence pairs)
+    unordered_map<uint64_t, index_t> unionFindIdxByDeath;
+
+    // Gather the birth indices of requested pairs for use in the loop below (the pairs
+    // are not necessarily ordered in the same order as they are found, hence we need a set)
+    unordered_map<uint64_t, std::reference_wrapper<Pair>> requestedPairsByDeath;
+    for (auto& pair : requestedPairs) {
+        requestedPairsByDeath.emplace(pair.get().death.index, pair);
+    }
+
+    // Initialize singleton representative cycles
+    vector<RepresentativeCycle> cycleByBirthIdx(cgc.shape[0] * cgc.shape[1]);
+    for (int birthIdx = 0; birthIdx < cycleByBirthIdx.size(); birthIdx++) {
+        cycleByBirthIdx[birthIdx].emplace_back(uf.getCoordinates(birthIdx));
+    }
+
+    vector<Cube> edges;
+    enumerateEdges(edges, cgc);
+
+    int foundRequestedPairs = 0;
+    // Follow the union-find algorithm:
+    for (Cube &edge : edges) {
+        vector<index_t> boundaryIndices = uf.getBoundaryIndices(edge);
+        index_t parentIdx0 = uf.find(boundaryIndices[0]);
+        index_t parentIdx1 = uf.find(boundaryIndices[1]);
+        // When merging a younger component into an older one, extend the older component's cycle by the younger component's cycle
+        if (parentIdx0 != parentIdx1) {
+            auto youngerBirthIdx = uf.link(parentIdx0, parentIdx1);
+            auto olderBirthIdx = (parentIdx1 == youngerBirthIdx) ? parentIdx0 : parentIdx1;
+            cycleByBirthIdx[olderBirthIdx].insert(cycleByBirthIdx[olderBirthIdx].end(), cycleByBirthIdx[youngerBirthIdx].begin(), cycleByBirthIdx[youngerBirthIdx].end());
+            unionFindIdxByDeath[edge.index] = youngerBirthIdx;
+
+            auto maybeRequestedPair = requestedPairsByDeath.find(edge.index);
+            // If the deceased component does not correspond to a pair we'd like to save, delete it to save memory:
+            if (maybeRequestedPair == requestedPairsByDeath.end()) {
+                cycleByBirthIdx[youngerBirthIdx].clear();
+            } 
+            // Else, increment the counter of found requested pairs, and terminate if we found all
+            else {
+                foundRequestedPairs++;
+                if (foundRequestedPairs == requestedPairs.size()) {
+                    break;
+                }
+            } 
+        }
+    }
+
+    if (foundRequestedPairs != requestedPairs.size()) {
+        throw runtime_error("Not all requested representative cycles were found");
+    }
+
+	vector<RepresentativeCycle> representativeCycles;
+    representativeCycles.reserve(requestedPairs.size());
+    for (auto& pair : requestedPairs) {
+        auto unionFindIdx = unionFindIdxByDeath.find(pair.get().death.index);
+        if (unionFindIdx == unionFindIdxByDeath.end()) {
+            throw runtime_error("Union find index for pair cannot be found");
+        }
+        auto &representativeCycle = cycleByBirthIdx[unionFindIdx->second];
+        representativeCycle.push_back(cgc.getParentVoxel(pair.get().death, 1));
+        representativeCycles.emplace_back(std::move(representativeCycle));
+    }
+    return representativeCycles;
 }

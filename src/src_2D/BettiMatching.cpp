@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <numeric>
 #include <unordered_map>
 
 using namespace dim2;
@@ -170,14 +171,17 @@ void BettiMatching::printResult() {
         count = matches[d].size();
         if (0 < count && count < 10) {
             cout << endl;
+            std::vector<size_t> range(count);
+            std::iota(range.begin(), range.end(), 0);
+            vector<RepresentativeCycle> matchedCycles0 = std::get<0>(computeRepresentativeCycles(0, d, range, {{}}));
+            vector<RepresentativeCycle> matchedCycles1 = std::get<0>(computeRepresentativeCycles(1, d, range, {{}}));
             for (size_t i = 0; i < matches[d].size(); i++) {
                 matches[d][i].print();
                 _matched[d][i].print();
                 if (cgc0.shape[0] < 10 && cgc0.shape[1] < 10 && cgc0.shape[2] < 10) {
-                    pair<dim2::RepresentativeCycle, dim2::RepresentativeCycle> reprCycles = getMatchedRepresentativeCycles(d, i);
-                    cgc0.printRepresentativeCycle(get<0>(reprCycles));
+                    cgc0.printRepresentativeCycle(matchedCycles0[i]);
                     cout << endl;
-                    cgc1.printRepresentativeCycle(get<1>(reprCycles));
+                    cgc1.printRepresentativeCycle(matchedCycles1[i]);
                     cout << endl;
                 }
             }
@@ -192,13 +196,15 @@ void BettiMatching::printResult() {
         for (auto &pair : pairs0[d]) { if (!isMatched0[d][pair.birth.index]) { ++count; } }
         if (0 < count && count < 10) {
             cout << endl;
+            std::vector<size_t> range(count);
+            std::iota(range.begin(), range.end(), 0);
+            vector<RepresentativeCycle> unmatchedCycles = std::get<1>(computeRepresentativeCycles(0, d, {{}}, range));
             counter = 0;
             for (size_t i = 0; i < pairs0[d].size(); ++i) { 
                 if (!isMatched0[d][pairs0[d][i].birth.index]) {
                     pairs0[d][i].print(); cout << endl;
                     _unmatched0[d][counter].print(); cout << endl;
-                    dim2::RepresentativeCycle reprCycle = getUnmatchedRepresentativeCycle(0, d, counter);
-                    cgc0.printRepresentativeCycle(reprCycle);
+                    cgc0.printRepresentativeCycle(unmatchedCycles[counter]);
                     cout << endl;
                     ++counter;
                     if (counter == count) { break; }
@@ -214,13 +220,15 @@ void BettiMatching::printResult() {
         for (auto &pair : pairs1[d]) {if (!isMatched1[d][pair.birth.index]) { ++count; } }
         if (0 < count && count < 10) {
             cout << endl;
+            std::vector<size_t> range(count);
+            std::iota(range.begin(), range.end(), 0);
+            vector<RepresentativeCycle> unmatchedCycles = std::get<1>(computeRepresentativeCycles(1, d, {{}}, range));
             counter = 0;
             for (size_t i = 0; i < pairs1[d].size(); ++i) { 
                 if (!isMatched1[d][pairs1[d][i].birth.index]) {
                     pairs1[d][i].print(); cout << endl;
                     _unmatched1[d][counter].print(); cout << endl;
-                    dim2::RepresentativeCycle reprCycle = getUnmatchedRepresentativeCycle(1, d, counter);
-                    cgc1.printRepresentativeCycle(reprCycle);
+                    cgc1.printRepresentativeCycle(unmatchedCycles[counter]);
                     cout << endl;
                     ++counter;
                     if (counter == count) { break; }
@@ -230,81 +238,40 @@ void BettiMatching::printResult() {
     }
 }
 
-
-pair<dim2::RepresentativeCycle, dim2::RepresentativeCycle> BettiMatching::getMatchedRepresentativeCycles(const uint8_t& dim, const size_t& index) {
-    if (dim >= 2) {
+tuple<vector<dim2::RepresentativeCycle>, vector<dim2::RepresentativeCycle>> BettiMatching::computeRepresentativeCycles(const int input, const int dim, const optional<vector<size_t>> &matchedPairsIndices, const optional<vector<size_t>> &unmatchedPairsIndices) {
+    if (dim < 0 || dim > 1) {
         throw runtime_error("Invalid value for dim");
     }
+    
+    // Assemble the list of requested pairs: First the matched pairs (all if empty optional was passed, then the unmatched pairs (all if empty optional was passed)
+    auto requestedPairs = assembleRequestedPairs(matchedPairsIndices, unmatchedPairsIndices, pairs0[dim], isMatched0[dim], matches[dim], input);
 
-    pair<dim2::RepresentativeCycle, dim2::RepresentativeCycle> reprCycles;
-
-    if (index >= matches[dim].size()) {
-        throw runtime_error("Cycle index " + std::to_string((int)index) + " out of range: There are only " + std::to_string((int)matches[dim].size()) +
-            " matched cycles in dimension " + std::to_string((int)dim));
-    }
-
-    switch(dim) {
+    // Hand over the representative cycle computation to the respective dimension
+    vector<RepresentativeCycle> representativeCycles;
+    switch (dim) {
         case 0: {
-            Dimension0 dim0(cgc0, cgc1, cgcComp, config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);
-            get<0>(reprCycles) = dim0.getRepresentativeCycle(matches[0][index].pair0, cgc0);
-            get<1>(reprCycles) = dim0.getRepresentativeCycle(matches[0][index].pair1, cgc1); 
+            Dimension0 dim0(cgc0, cgc1, cgcComp, config, pairs0[0], pairs1[0],
+                            pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);
+            representativeCycles = dim0.computeRepresentativeCycles(input, requestedPairs);
             break;
         }
         case 1: {
-            Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);
-            get<0>(reprCycles) = dim1.getRepresentativeCycle(matches[1][index].pair0, cgc0);
-            get<1>(reprCycles) = dim1.getRepresentativeCycle(matches[1][index].pair1, cgc1);
+            Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1],
+                            pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);
+            representativeCycles = dim1.computeRepresentativeCycles(input, requestedPairs);
             break;
         }
     }
-    return reprCycles;
-}
 
+    // Split the returned representative cycles into a matched and unmatched portion
+    vector<RepresentativeCycle> matchedRepresentativeCycles;
+    vector<RepresentativeCycle> unmatchedRepresentativeCycles;
 
-dim2::RepresentativeCycle BettiMatching::getUnmatchedRepresentativeCycle(const uint8_t& input, const uint8_t& dim, const size_t& index) {
-    if (dim >= 2) {
-        throw runtime_error("Invalid value for dim");
-    }
-    if (input >= 2) {
-        throw runtime_error("Invalid value for input: must be 0 or 1");
-    }
+    int numMatchedRequested = matchedPairsIndices.has_value() ? matchedPairsIndices->size() : matches[dim].size();
+    matchedRepresentativeCycles.insert(matchedRepresentativeCycles.end(), std::make_move_iterator(representativeCycles.begin()),
+        std::make_move_iterator(representativeCycles.begin()) + numMatchedRequested);
+    unmatchedRepresentativeCycles.insert(unmatchedRepresentativeCycles.end(), std::make_move_iterator(representativeCycles.begin() + numMatchedRequested),
+        std::make_move_iterator(representativeCycles.end()));
 
-    const CubicalGridComplex& cgc = (input == 0) ? cgc0 : cgc1;
-    vector<vector<Pair>>& pairs = (input == 0) ? pairs0 : pairs1;
-    vector<unordered_map<uint64_t, bool>> isMatched = (input == 0) ? isMatched0 : isMatched1;
-
-    dim2::RepresentativeCycle reprCycle;
-
-    size_t numPairs = pairs[dim].size();
-    if (index >= numPairs) {
-        throw runtime_error("Cycle index " + std::to_string((int)index) + " out of range: There are only " + std::to_string((int)numPairs) +
-            " unmatched cycles in dimension " + std::to_string((int)dim));
-    }
-
-    size_t count = 0;
-    for (Pair& pair : pairs[dim]) {
-        if (!isMatched[dim][pair.birth.index]) {
-            if (count == index) {
-                switch(dim) {
-                    case 0: {
-                        Dimension0 dim0(cgc0, cgc1, cgcComp, config, pairs0[0], pairs1[0], pairsComp[0], 
-                                        matches[0], isMatched0[0], isMatched1[0]);
-                        reprCycle = dim0.getRepresentativeCycle(pair, cgc);
-                        break;
-                    }
-
-                    case 1: {
-                        Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1], pairsComp[1], 
-                                        matches[1], isMatched0[1], isMatched1[1]);
-                        reprCycle = dim1.getRepresentativeCycle(pair, cgc);
-                        break;
-                    }
-                }
-                break;
-            }
-            ++count;
-        }
-    }
-    
-    return reprCycle;
+    return {matchedRepresentativeCycles, unmatchedRepresentativeCycles};
 }

@@ -13,7 +13,7 @@ class Dimension0 {
 				vector<Match>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1);
 	void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp);
     void computeInput0Pairs(vector<Cube>& ctr0);
-	dim2::RepresentativeCycle getRepresentativeCycle(const Pair& pair, const CubicalGridComplex& cgc) const;
+    vector<dim2::RepresentativeCycle> computeRepresentativeCycles(const int input, const std::vector<std::reference_wrapper<Pair>> &requestedPairs);
 
 	private:
 	const CubicalGridComplex& cgc0;
