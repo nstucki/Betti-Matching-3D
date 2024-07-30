@@ -348,10 +348,10 @@ PYBIND11_MODULE(betti_matching, m) {
 
         Parameters
         ----------
-        input0 : np.ndarray
+        input0 : numpy.ndarray
             The first input volume (the "prediction" in the machine
             learning context).
-        input1 : np.ndarray
+        input1 : numpy.ndarray
             The second input volume (the "target" in the machine
             learning context).
         include_target_unmatched_pairs : bool, optional
@@ -396,10 +396,10 @@ PYBIND11_MODULE(betti_matching, m) {
 
         Parameters
         ----------
-        inputs0 : list of np.ndarray
+        inputs0 : list of numpy.ndarray
             The batch of first input volumes (the "predictions" in the machine
             learning context).
-        inputs1 : list of np.ndarray
+        inputs1 : list of numpy.ndarray
             The batch of second input volumes (the "targets" in the machine
             learning context).
         include_target_unmatched_pairs : bool, optional
@@ -454,9 +454,9 @@ PYBIND11_MODULE(betti_matching, m) {
 
         Parameters
         ----------
-        input0 : np.ndarray
+        input0 : numpy.ndarray
             The first input volume (the "prediction" in the machine learning context).
-        input1 : np.ndarray
+        input1 : numpy.ndarray
             The second input volume (the "target" in the machine learning context).
 
         Example
@@ -893,8 +893,8 @@ PYBIND11_MODULE(betti_matching, m) {
         });
 
     m.doc() = R"(
-        Betti-matching-3D
-        =================
+        Betti-matching-3D (betti_matching)
+        ==================================
 
         Provides
         1. A fast algorithm for computing the Betti matching on 1D, 2D, 3D and
@@ -905,9 +905,13 @@ PYBIND11_MODULE(betti_matching, m) {
         3. Algorithms for computing representative cycles for matched and unmatched
            persistence pairs in the Betti matching.
 
+        This package uses the V-construction (vertex construction), uses persistence
+        modules that come from sublevel sets, and uses a x-y-z-type tiebreaking order
+        (or x-y-type/x-type in 2D/1D) in the barcode computation algorithms.
+
+
         How to compute the Betti matching
         ---------------------------------
-
         The Betti matching between two NumPy arrays `a`, `b` can be computed using
         the `compute_matching` function:
 
