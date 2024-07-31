@@ -1,25 +1,27 @@
-#include "data_structures.h"
 #include "../data_structures.h"
+#include "data_structures.h"
 #include <unordered_map>
-
-
 
 namespace dim1 {
 class BettiMatching {
-    public:
-    BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1, vector<value_t>&& comparison, vector<index_t>&& shape,
-                    Config&& config);
-    BettiMatching(BettiMatching&& other);
+  public:
+    BettiMatching(vector<value_t> &&input0, vector<value_t> &&input1,
+                  vector<value_t> &&comparison, vector<index_t> &&shape,
+                  Config &&config);
+    BettiMatching(BettiMatching &&other);
     void computeMatching();
     void computeVoxels();
     vector<vector<VoxelPair>> computePairsInput0();
     void printResult();
-    tuple<vector<dim1::RepresentativeCycle>, vector<dim1::RepresentativeCycle>> computeRepresentativeCycles(const int input, const optional<vector<size_t>> &matchedPairsIndices, const optional<vector<size_t>> &unmatchedPairsIndices);
+    tuple<vector<dim1::RepresentativeCycle>, vector<dim1::RepresentativeCycle>>
+    computeRepresentativeCycles(
+        const int input, const optional<vector<size_t>> &matchedPairsIndices,
+        const optional<vector<size_t>> &unmatchedPairsIndices);
     const vector<VoxelMatch> &matched = _matched;
     const vector<VoxelPair> &unmatched0 = _unmatched0;
     const vector<VoxelPair> &unmatched1 = _unmatched1;
 
-    private:
+  private:
     CubicalGridComplex cgc0;
     CubicalGridComplex cgc1;
     CubicalGridComplex cgcComp;
@@ -35,4 +37,4 @@ class BettiMatching {
     vector<VoxelPair> _unmatched1;
     Config config;
 };
-}
+} // namespace dim1
