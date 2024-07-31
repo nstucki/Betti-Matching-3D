@@ -851,7 +851,7 @@ PYBIND11_MODULE(betti_matching, m) {
         .def_readonly("num_unmatched_target_by_dim", &BettiMatchingResult::numUnmatchedTargetByDim)
         .def("__repr__", [](BettiMatchingResult &self) {
             auto reprMemberArray = [](string name, py::array_t<int64_t>& array) {
-                return name + "=" + repr_vector(std::vector<index_t>(array.shape(), array.shape() + array.ndim()), make_tuple("[", "]"));
+                return name + " " + repr_vector(std::vector<index_t>(array.shape(), array.shape() + array.ndim()), make_tuple("(", ")"), "×");
             };
             return "BettiMatchingResult(" + (
                 reprMemberArray("prediction_matches_birth_coordinates", self.predictionMatchesBirthCoordinates) + ", " +
@@ -864,7 +864,7 @@ PYBIND11_MODULE(betti_matching, m) {
                 (self.targetUnmatchedDeathCoordinates.has_value() ? (reprMemberArray("target_unmatched_death_coordinates", *self.targetUnmatchedDeathCoordinates) + ", ") : "") +
                 reprMemberArray("num_matches_by_dim", self.numMatchesByDim) + ", " +
                 reprMemberArray("num_unmatched_prediction_by_dim", self.numUnmatchedPredictionByDim) +
-                (self.numUnmatchedTargetByDim.has_value() ? (", " + reprMemberArray("num_unmatched_target_by_dim", *self.numUnmatchedTargetByDim) + ", ") : "")
+                (self.numUnmatchedTargetByDim.has_value() ? (", " + reprMemberArray("num_unmatched_target_by_dim", *self.numUnmatchedTargetByDim)) : "")
             ) + ")";
         });
 
@@ -896,7 +896,7 @@ PYBIND11_MODULE(betti_matching, m) {
         .def_readonly("num_pairs_by_dim", &BarcodeResult::numPairsByDim)
         .def("__repr__", [](BarcodeResult &self) {
             auto reprMemberArray = [](string name, py::array_t<int64_t>& array) {
-                return name + "=" + repr_vector(std::vector<index_t>(array.shape(), array.shape() + array.ndim()), make_tuple("[", "]"));
+                return name + " " + repr_vector(std::vector<index_t>(array.shape(), array.shape() + array.ndim()), make_tuple("(", ")"), "×");
             };
             return "BarcodeResult(" + (
                 reprMemberArray("birth_coordinates", self.birthCoordinates) + ", " +
