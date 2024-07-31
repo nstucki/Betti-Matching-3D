@@ -530,9 +530,24 @@ PYBIND11_MODULE(betti_matching, m) {
         )
 
         .def("compute_representative_cycles",
-            [](BettiMatching &self, size_t input, size_t dim, variant<size_t, vector<size_t>, string> &matchedPairsIndices, variant<size_t, vector<size_t>, string> &unmatchedPairsIndices, bool includeDeathVoxel, bool deduplicateVoxels) {
-                if (input != 0 && input != 1) {
-                    throw invalid_argument("Invalid value for input: " + std::to_string(input));
+            [](BettiMatching &self, variant<size_t, string> input, size_t dim, variant<size_t, vector<size_t>, string> &matchedPairsIndices, variant<size_t, vector<size_t>, string> &unmatchedPairsIndices, bool includeDeathVoxel, bool deduplicateVoxels) {
+                int inputNumber;
+                if (input.index() == 0) {
+                    inputNumber = std::get<size_t>(input);
+                    if (inputNumber != 0 && inputNumber != 1) {
+                        throw invalid_argument("Invalid value for input: " + std::to_string(inputNumber));
+                    }
+                } else {
+                    string inputKeyword = std::get<string>(input);
+                    if (inputKeyword == "prediction") {
+                        inputNumber = 0;
+                    } else if (inputKeyword == "target") {
+                        inputNumber = 1;
+                    } else if (inputKeyword == "comparison") {
+                        inputNumber = 2;
+                    } else {
+                        throw invalid_argument(R"(Invalid value for input ")" + inputKeyword + R"(": Valid keywords are "prediction", "target", and "comparison".)");
+                    }
                 }
 
                 // Convert the input arguments to lists of indices (or the empty optional for "all")
@@ -547,7 +562,7 @@ PYBIND11_MODULE(betti_matching, m) {
                     if (keyword == "all") {} // Nothing to do: matchedPairsIndicesVector is already the empty optional
                     else if (keyword == "none") {
                         matchedNoneRequested = true;
-                        matchedPairsIndicesVector = {{}};
+                        matchedPairsIndicesVector = {vector<size_t>()};
                     } else {
                         throw invalid_argument(R"(Invalid value for matched ")" + keyword + R"(": Valid keywords are "all" and "none".)");
                     }
@@ -561,7 +576,7 @@ PYBIND11_MODULE(betti_matching, m) {
                     if (keyword == "all") {} // Nothing to do: unmatchedPairsIndicesVector is already the empty optional
                     else if (keyword == "none") {
                         unmatchedNoneRequested = true;
-                        unmatchedPairsIndicesVector = {{}};
+                        unmatchedPairsIndicesVector = {vector<size_t>()};
                     } else {
                         throw invalid_argument(R"(Invalid value for unmatched ")" + keyword + R"(": Valid keywords are "all" and "none".)");
                     }
@@ -570,8 +585,12 @@ PYBIND11_MODULE(betti_matching, m) {
                     throw invalid_argument("No matched or unmatched cycles were requested.");
                 }
 
+                if (inputNumber == 2 && !unmatchedNoneRequested) {
+                    throw invalid_argument("Computing representative cycles for unmatched pairs in the comparison image is not supported.");
+                }
+
                 // Compute representative cycles
-                auto result = self.computeRepresentativeCycles(input, dim, matchedPairsIndicesVector, unmatchedPairsIndicesVector);
+                auto result = self.computeRepresentativeCycles(inputNumber, dim, matchedPairsIndicesVector, unmatchedPairsIndicesVector);
                 
                 // Convert the computed cycles to NumPy arrays
                 vector<py::array_t<int64_t>> matchedCyclesArrays;
@@ -655,8 +674,11 @@ PYBIND11_MODULE(betti_matching, m) {
 
             Parameters
             ----------
-            input : int
-                The index of the input volume for which to compute the cycles (0 or 1).
+            input : one of {0, 1}, or one of {"prediction", "target", "comparison"}
+                The index of the input volume for which to compute the cycles.
+                - First input volume: 0 or "prediction".
+                - Second input volume: 1 or "target".
+                - Comparison image: "comparison" (supports only matched cycles).
             dim : int
                 The homology dimension in which to compute the representative cycles
                 (for example, for 3D volumes, valid values are 0, 1, and 2).
@@ -672,6 +694,7 @@ PYBIND11_MODULE(betti_matching, m) {
                 dimension).  A single index can be passed if only one cycle is requested.
                 If "all", all unmatched cycles in this dimension are computed.
                 If "none", no unmatched cycles are computed (default).
+                Indices must be strictly ascending.
             include_death_voxels : bool, optional
                 Whether to include the death voxel of the persistence pair at the last
                 index of the respective representative cycle output array.
@@ -923,9 +946,11 @@ PYBIND11_MODULE(betti_matching, m) {
            persistence pairs in the Betti matching.
 
         This package uses the V-construction (vertex construction), uses persistence
-        modules that come from sublevel sets, and uses a x-y-z-type tiebreaking order
-        (or x-y-type/x-type in 2D/1D) in the barcode computation algorithms.
-
+        modules that come from sublevel sets (i.e. the filtration starts at low values),
+        and uses a x-y-z-type tiebreaking order (or x-y-type/x-type in 2D/1D)
+        in the barcode computation algorithms.
+        The essential interval [min(volume), +oo) that corresponds to the oldest
+        connected component is not included in the results.
 
         How to compute the Betti matching
         ---------------------------------

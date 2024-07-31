@@ -226,6 +226,12 @@ BettiMatching::computeRepresentativeCycles(const int input, const int dim, const
         throw std::runtime_error("Betti Matching not computed yet");
     }
 
+#ifndef COMPUTE_COMPARISON
+    if (input == 2) {
+        throw runtime_error("Computing representative cycles for the comparison image requires the COMPUTE_COMPARISON compilation option to be set");
+    }
+#endif
+
     switch (dimension) {
         case 1: {
             dim1::BettiMatching& bettiMatching = std::get<dim1::BettiMatching>(dimensionSpecificBettiMatching.value());

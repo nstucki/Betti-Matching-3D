@@ -16,10 +16,12 @@ class Dimension1 {
 	public:
 	Dimension1(const CubicalGridComplex& cgc0, const CubicalGridComplex& cgc1, const CubicalGridComplex& cgcComp, 
 				const Config& config, vector<Pair>& pairs0, vector<Pair>& pairs1, vector<Pair>& pairsComp,
-				vector<Match>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1
+				vector<Match>& matches, unordered_map<uint64_t, bool>& isMatched0, unordered_map<uint64_t, bool>& isMatched1,
+                unordered_map<uint64_t, size_t>& isMatchedWithIndexComp
 #ifdef USE_CACHE
                 , CubeMap<2, vector<Cube>>& _cacheInputPairs0,
-                CubeMap<2, vector<Cube>>& _cacheInputPairs1
+                CubeMap<2, vector<Cube>>& _cacheInputPairs1,
+                CubeMap<2, vector<Cube>>& _cacheCompPairs
 #endif
     );
 	void computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp, vector<Cube>& ctrImage);
@@ -78,6 +80,7 @@ class Dimension1 {
 	vector<Match>& matches;
 	unordered_map<uint64_t, bool>& isMatched0;
 	unordered_map<uint64_t, bool>& isMatched1;
+	unordered_map<uint64_t, size_t>& isMatchedWithIndexComp;
 #ifdef USE_ISPAIRED
 	unordered_map<uint64_t, bool> isPairedComp;
 #endif
@@ -99,6 +102,7 @@ class Dimension1 {
     // Keep the caches for input 0 and input 1 barcodes for later use in computing representative cycles.
     CubeMap<2, vector<Cube>>& cacheInputPairs0;
     CubeMap<2, vector<Cube>>& cacheInputPairs1;
+    CubeMap<2, vector<Cube>>& cacheCompPairs;
 #endif
 };
 }

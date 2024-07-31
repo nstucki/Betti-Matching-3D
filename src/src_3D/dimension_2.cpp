@@ -23,10 +23,10 @@ using namespace std::chrono;
 Dimension2::Dimension2(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, 
 						const CubicalGridComplex& _cgcComp, const Config& _config, 
 						vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, vector<Match>& _matches, 
-						unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1) :
+						unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1, unordered_map<uint64_t, size_t>& _isMatchedWithIndexComp) :
 						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), 
 						pairs0(_pairs0), pairs1(_pairs1), pairsComp(_pairsComp),
-						matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1), 
+						matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1), isMatchedWithIndexComp(_isMatchedWithIndexComp), 
 						uf0(UnionFindDual(cgc0)), uf1(UnionFindDual(cgc1)), ufComp(UnionFindDual(cgcComp)) {}
 
 
@@ -268,7 +268,6 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges, vector<Cube>&
 	index_t parentIdx1;
 	index_t birthIdx;
 	value_t birth;
-	vector<index_t> birthCoordinates(3);
 #ifdef USE_APPARENT_PAIRS_COMP
 	BoundaryEnumerator enumeratorComp = BoundaryEnumerator(cgcComp);
 	CoboundaryEnumerator coEnumeratorComp = CoboundaryEnumerator(cgcComp);
@@ -286,8 +285,8 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges, vector<Cube>&
 			birth = ufComp.getBirth(birthIdx);
 			if (edge->birth != birth) {
 #ifdef COMPUTE_COMPARISON
-				birthCoordinates = ufComp.getCoordinates(birthIdx);
-				pairsComp.push_back(Pair(*edge, Cube(birth, birthCoordinates[0], birthCoordinates[1], birthCoordinates[2], 0)));
+				auto birthCoordinates = ufComp.getCoordinates(birthIdx);
+				pairsComp.push_back(Pair(*edge, Cube(birth, std::get<0>(birthCoordinates), std::get<1>(birthCoordinates), std::get<2>(birthCoordinates), 0)));
 #endif
 				auto find0 = matchMap0.find(birthIdx);
 				auto find1 = matchMap1.find(birthIdx);
@@ -295,6 +294,9 @@ void Dimension2::computeCompPairsAndMatch(vector<Cube>& dualEdges, vector<Cube>&
 					matches.push_back(Match(find0->second, find1->second));
 					isMatched0.emplace(find0->second.birth.index, true);
 					isMatched1.emplace(find1->second.birth.index, true);
+#ifdef COMPUTE_COMPARISON
+                    isMatchedWithIndexComp.emplace(edge->index, matches.size() - 1);
+#endif
 				}
 			}
 			edge->index = NONE_INDEX;
@@ -380,11 +382,15 @@ Dimension2::computeRepresentativeCycles(const int input, const std::vector<std::
         return {};
     }
 
-	const CubicalGridComplex &cgc = (input == 0) ? cgc0 : cgc1;
+	const CubicalGridComplex &cgc = (input == 0) ? cgc0 : (input == 1) ?  cgc1 : cgcComp;
 	UnionFindDual uf(cgc);
 
 	vector<Cube> dualEdges;
-	enumerateDualEdges(dualEdges, cgc);
+    if (input == 0 || input == 1) {
+    	enumerateDualEdges(dualEdges, cgc);
+    } else {
+        enumerateDualEdgesComp(dualEdges);
+    }
 
 	unordered_map<uint64_t, RepresentativeCycle> cyclesByBirth;
 

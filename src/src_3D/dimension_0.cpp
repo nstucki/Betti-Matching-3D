@@ -17,10 +17,11 @@ using namespace std::chrono;
 Dimension0::Dimension0(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, 
 						const CubicalGridComplex& _cgcComp, const Config& _config, 
 						vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, vector<Match>& _matches, 
-						unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1) : 
+						unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1, 
+                        unordered_map<uint64_t, size_t>& _isMatchedWithIndexComp) : 
 						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), 
 						pairs0(_pairs0), pairs1(_pairs1), pairsComp(_pairsComp),
-						matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1),
+						matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1), isMatchedWithIndexComp(_isMatchedWithIndexComp),
 						uf0(UnionFind(cgc0)), uf1(UnionFind(cgc1)), ufComp(UnionFind(cgcComp)) {}
 
 void Dimension0::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, vector<Cube>& ctrComp) {
@@ -134,7 +135,7 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 			if (birth != edge.birth) {
 				birthCoordinates = ufComp.getCoordinates(birthIdxComp);
 #ifdef COMPUTE_COMPARISON
-				pairsComp.push_back(Pair(Cube(birth, birthCoordinates[0], birthCoordinates[1], birthCoordinates[2], 0), edge));
+				pairsComp.push_back(Pair(Cube(birth, std::get<0>(birthCoordinates), std::get<1>(birthCoordinates), std::get<2>(birthCoordinates), 0), edge));
 #endif
 				auto find0 = matchMap0.find(birthIdx0);
 				auto find1 = matchMap1.find(birthIdx1);
@@ -142,6 +143,9 @@ void Dimension0::computeImagePairsAndMatch(vector<Cube>& edges) {
 					matches.push_back(Match(find0->second, find1->second));
 					isMatched0.emplace(find0->second.birth.index, true);
 					isMatched1.emplace(find1->second.birth.index, true);
+#ifdef COMPUTE_COMPARISON
+                    isMatchedWithIndexComp.emplace(pairsComp.back().birth.index, matches.size() - 1);
+#endif
 				}
 			} 
 		}
@@ -209,9 +213,8 @@ Dimension0::computeRepresentativeCycles(const int input, const std::vector<std::
         return {};
     }
 
-    const CubicalGridComplex &cgc = (input == 0) ? cgc0 : cgc1;
+    const CubicalGridComplex &cgc = (input == 0) ? cgc0 : (input == 1) ? cgc1 : cgcComp;
     UnionFind uf(cgc);
-    vector<Pair> &pairs = (input == 0) ? pairs0 : pairs1;
 
     // Map from cube indices to union find indices (to match cycles with persistence pairs)
     CubeMap<1, index_t> unionFindIdxByDeath(cgc.shape);

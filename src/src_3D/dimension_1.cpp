@@ -16,14 +16,16 @@ using namespace std::chrono;
 Dimension1::Dimension1(const CubicalGridComplex& _cgc0, const CubicalGridComplex& _cgc1, 
 						const CubicalGridComplex& _cgcComp, const Config& _config, 
 						vector<Pair>& _pairs0, vector<Pair>& _pairs1, vector<Pair>& _pairsComp, vector<Match>& _matches, 
-						unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1
+						unordered_map<uint64_t, bool>& _isMatched0, unordered_map<uint64_t, bool>& _isMatched1,
+                        unordered_map<uint64_t, size_t>& _isMatchedWithIndexComp
 #ifdef USE_CACHE
                         , CubeMap<2, vector<Cube>>& _cacheInputPairs0,
-                        CubeMap<2, vector<Cube>>& _cacheInputPairs1
+                        CubeMap<2, vector<Cube>>& _cacheInputPairs1,
+                        CubeMap<2, vector<Cube>>& _cacheCompPairs
 #endif
                         ) :
 						cgc0(_cgc0), cgc1(_cgc1), cgcComp(_cgcComp), config(_config), pairs0(_pairs0), pairs1(_pairs1),
-						pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1),
+						pairsComp(_pairsComp), matches(_matches), isMatched0(_isMatched0), isMatched1(_isMatched1), isMatchedWithIndexComp(_isMatchedWithIndexComp),
 						matchMap0(_cgc0.shape), matchMap1(_cgc0.shape), matchMapIm0(_cgc0.shape), matchMapIm1(_cgc0.shape),
 #ifdef USE_REDUCTION_MATRIX
 						reductionMatrix(_cgc0.shape),
@@ -35,7 +37,8 @@ Dimension1::Dimension1(const CubicalGridComplex& _cgc0, const CubicalGridComplex
 						pivotColumnIndexImage1(_cgc1.shape),
 #ifdef USE_CACHE
                         cacheInputPairs0(_cacheInputPairs0),
-                        cacheInputPairs1(_cacheInputPairs1)
+                        cacheInputPairs1(_cacheInputPairs1),
+                        cacheCompPairs(_cacheCompPairs)
 #endif
 						{}
 
@@ -149,7 +152,7 @@ void Dimension1::computePairs(vector<Cube>& ctr, uint8_t k) {
 
 void Dimension1::computePairsComp(vector<Cube>& ctr) {
 #ifdef USE_CACHE
-	CubeMap<2, vector<Cube>> cache(cgc0.shape);
+	auto& cache = cacheCompPairs;
 #endif
 	computePairsUnified<ComputePairsMode::COMPARISON_PAIRS>(ctr, 0,
 #ifdef USE_CACHE
@@ -187,6 +190,9 @@ void Dimension1::computeMatching() {
 				matches.push_back(Match(*find0, *find1));
 				isMatched0.emplace(find0->birth.index, true);
 				isMatched1.emplace(find1->birth.index, true);
+#ifdef COMPUTE_COMPARISON
+                isMatchedWithIndexComp.emplace(pair.birth.index, matches.size() - 1);
+#endif
 			}
 		}
 	}
@@ -728,8 +734,8 @@ Dimension1::computeRepresentativeCycles(const int input, const std::vector<std::
 #ifndef USE_CACHE
 	throw runtime_error("computeRepresentativeCycles() can only be used when compiled with USE_CACHE defined"); 
 #endif
-	auto& cache = (input == 0) ? cacheInputPairs0 : cacheInputPairs1;
-	const CubicalGridComplex &cgc = (input == 0) ? cgc0 : cgc1;
+	auto& cache = (input == 0) ? cacheInputPairs0 : (input == 1) ? cacheInputPairs1 : cacheCompPairs;
+	const CubicalGridComplex &cgc = (input == 0) ? cgc0 : (input == 1) ? cgc1 : cgcComp;
 
 	vector<RepresentativeCycle> representativeCycles;
 

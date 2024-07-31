@@ -23,6 +23,7 @@ BettiMatching::BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1,
     matches = vector<vector<Match>>(2);
     isMatched0 = vector<unordered_map<uint64_t, bool>>(2);
     isMatched1 = vector<unordered_map<uint64_t, bool>>(2);
+    isMatchedWithIndexComp = vector<unordered_map<uint64_t, size_t>>(2);
     _matched = vector<vector<VoxelMatch>>(2);
     _unmatched0 = vector<vector<VoxelPair>>(2);
     _unmatched1 = vector<vector<VoxelPair>>(2);
@@ -32,7 +33,7 @@ BettiMatching::BettiMatching(vector<value_t>&& input0, vector<value_t>&& input1,
 BettiMatching::BettiMatching(BettiMatching&& other) : 
     cgc0(std::move(other.cgc0)), cgc1(std::move(other.cgc1)), cgcComp(std::move(other.cgcComp)),
     config(other.config), pairs0(other.pairs0), pairs1(other.pairs1), pairsComp(other.pairsComp),
-    matches(other.matches), isMatched0(other.isMatched0), isMatched1(other.isMatched1),
+    matches(other.matches), isMatched0(other.isMatched0), isMatched1(other.isMatched1), isMatchedWithIndexComp(other.isMatchedWithIndexComp),
     _matched(other.matched), _unmatched0(other.unmatched0), _unmatched1(other.unmatched1) {}
 
 
@@ -46,7 +47,7 @@ void BettiMatching::computeMatching() {
         cout << "dimension 1:";
         auto start = high_resolution_clock::now();
 #endif
-        Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);       
+        Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1], isMatchedWithIndexComp[1]);       
         dim1.computePairsAndMatch(ctr0, ctr1, ctrComp);
 #ifdef RUNTIME
         auto stop = high_resolution_clock::now();
@@ -60,7 +61,7 @@ void BettiMatching::computeMatching() {
         cout << "dimension 0:";
         auto start = high_resolution_clock::now();
 #endif
-        Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);       
+        Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0], isMatchedWithIndexComp[0]);
         dim0.computePairsAndMatch(ctr0, ctr1, ctrComp);
 #ifdef RUNTIME
         auto stop = high_resolution_clock::now();
@@ -106,10 +107,10 @@ void BettiMatching::computeVoxels() {
 vector<vector<VoxelPair>> BettiMatching::computePairsInput0() {
     vector<Cube> ctr0;
 
-    Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);
+    Dimension1 dim1(cgc0, cgc1, cgcComp,  config, pairs0[1], pairs1[1], pairsComp[1], matches[1], isMatched0[1], isMatched1[1], isMatchedWithIndexComp[1]);
     dim1.computeInput0Pairs(ctr0);
 
-    Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);
+    Dimension0 dim0(cgc0, cgc1, cgcComp,  config, pairs0[0], pairs1[0], pairsComp[0], matches[0], isMatched0[0], isMatched1[0], isMatchedWithIndexComp[0]);
     dim0.computeInput0Pairs(ctr0);
 
     vector<vector<VoxelPair>> voxelPairs(2);
@@ -244,20 +245,27 @@ tuple<vector<dim2::RepresentativeCycle>, vector<dim2::RepresentativeCycle>> Bett
     }
     
     // Assemble the list of requested pairs: First the matched pairs (all if empty optional was passed, then the unmatched pairs (all if empty optional was passed)
-    auto requestedPairs = assembleRequestedPairs(matchedPairsIndices, unmatchedPairsIndices, pairs0[dim], isMatched0[dim], matches[dim], input);
+    vector<std::reference_wrapper<Pair>> requestedPairs;
+    if (input == 0 || input == 1) {
+         requestedPairs = assembleRequestedPairs(matchedPairsIndices, unmatchedPairsIndices, (input == 0 ? pairs0 : pairs1)[dim], (input == 0 ? isMatched0 : isMatched1)[dim], matches[dim], input);
+    } else if (input == 2) {
+        requestedPairs = assembleRequestedComparisonPairs<Pair>(matchedPairsIndices, pairsComp[dim], isMatchedWithIndexComp[dim]);
+    } else {
+        throw runtime_error("Invalid value for input");
+    }
 
     // Hand over the representative cycle computation to the respective dimension
     vector<RepresentativeCycle> representativeCycles;
     switch (dim) {
         case 0: {
             Dimension0 dim0(cgc0, cgc1, cgcComp, config, pairs0[0], pairs1[0],
-                            pairsComp[0], matches[0], isMatched0[0], isMatched1[0]);
+                            pairsComp[0], matches[0], isMatched0[0], isMatched1[0], isMatchedWithIndexComp[0]);
             representativeCycles = dim0.computeRepresentativeCycles(input, requestedPairs);
             break;
         }
         case 1: {
             Dimension1 dim1(cgc0, cgc1, cgcComp, config, pairs0[1], pairs1[1],
-                            pairsComp[1], matches[1], isMatched0[1], isMatched1[1]);
+                            pairsComp[1], matches[1], isMatched0[1], isMatched1[1], isMatchedWithIndexComp[1]);
             representativeCycles = dim1.computeRepresentativeCycles(input, requestedPairs);
             break;
         }

@@ -5,7 +5,7 @@
 #include <cstdint>
 
 //#define RUNTIME
-//#define COMPUTE_COMPARISON
+#define COMPUTE_COMPARISON
 //#define USE_ISPAIRED
 //#define USE_REDUCTION_MATRIX
 //#define USE_APPARENT_PAIRS_COMP

@@ -29,6 +29,7 @@ class BettiMatching {
     vector<vector<Match>> matches;
     vector<unordered_map<uint64_t, bool>> isMatched0;
     vector<unordered_map<uint64_t, bool>> isMatched1;
+    vector<unordered_map<uint64_t, size_t>> isMatchedWithIndexComp;
     vector<vector<VoxelMatch>> _matched;
     vector<vector<VoxelPair>> _unmatched0;
     vector<vector<VoxelPair>> _unmatched1;
