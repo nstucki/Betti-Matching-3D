@@ -96,7 +96,6 @@ int main(int argc, char** argv) {
     vector<value_t> input1;
     vector<value_t> comparison;
     vector<index_t> shape;
-    size_t dim;
 
     {   
         vector<index_t> shape0;

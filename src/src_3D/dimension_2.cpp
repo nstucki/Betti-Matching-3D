@@ -212,7 +212,6 @@ void Dimension2::computeInputAndImagePairs(vector<Cube>& dualEdges, const uint8_
 	auto start = high_resolution_clock::now();
 #endif
 
-	const CubicalGridComplex& cgc = (k == 0) ? cgc0 : cgc1;
 	UnionFindDual& uf = (k == 0) ? uf0 : uf1; 
 	vector<Pair>& pairs = (k == 0) ? pairs0 : pairs1;
 	unordered_map<index_t, Pair>& matchMap = (k==0) ? matchMap0 : matchMap1;

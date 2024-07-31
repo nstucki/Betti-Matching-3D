@@ -85,7 +85,6 @@ void readImage(const string& filename, const fileFormat& format, vector<double>&
                 cerr << "The array at " << filename << " is not C-contiguous. Convert using numpy.ascontiguousarray() before saving." << endl;
                 exit(-2);
             }
-            uint8_t dim = shape.size();
             for (uint32_t i : _shape) { shape.push_back(i); }
             return;
         }

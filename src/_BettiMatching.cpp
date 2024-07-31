@@ -53,7 +53,7 @@ struct RepresentativeCycleResult {
 string repr_vector(const vector<index_t> shape, std::tuple<string, string> parentheses = make_tuple("(", ")"), string separator = ", ") {
     stringstream out_stream;
     out_stream << std::get<0>(parentheses);
-    for_each(shape.begin(), std::prev(shape.end()), [&out_stream, &shape, &separator](auto size)
+    for_each(shape.begin(), std::prev(shape.end()), [&out_stream, &separator](auto size)
                 { out_stream << std::to_string(size) << separator; });
     out_stream << shape[shape.size() - 1] << std::get<1>(parentheses);
     return out_stream.str();
@@ -109,7 +109,6 @@ vector<BettiMatchingResult> computeMatchingFromInputs(
         inputs0.push_back(untypedInputs0[i].cast<TypedInputVolume>());
         inputs1.push_back(untypedInputs1[i].cast<TypedInputVolume>());
     }
-    size_t batchSize = inputs0.size();
     size_t numDimensions = inputs0[0].ndim();
 
     // Create one asynchronous task for Betti matching computation per input in the batch
@@ -139,8 +138,6 @@ vector<BarcodeResult> computeBarcodeFromInputs(vector<InputVolume> &untypedInput
     for (auto &untypedInput : untypedInputs) {
         inputs.push_back(untypedInput.cast<TypedInputVolume>());
     }
-    size_t batchSize = inputs.size();
-    size_t numDimensions = inputs[0].ndim();
 
     std::vector<vector<vector<VoxelPair>>> pairResults;
     // Create one asynchronous task for barcode computation per input in the batch

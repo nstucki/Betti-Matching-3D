@@ -79,7 +79,11 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #endif
 	};
 
-	auto processImageInput0Comparison = [this, &ctrComp, &ctrImage]() {
+	auto processImageInput0Comparison = [this,
+#if not (defined(USE_APPARENT_PAIRS_COMP) or defined(USE_CLEARING_DIM0))
+    &ctrComp,
+#endif
+    &ctrImage]() {
 #ifdef RUNTIME
     	cout << endl << "image 0: ";
 #endif
@@ -91,7 +95,11 @@ void Dimension1::computePairsAndMatch(vector<Cube>& ctr0, vector<Cube>& ctr1, ve
 #endif
 	};
 
-	auto processImageInput1Comparison = [this, &ctrComp, &ctrImage]() {
+	auto processImageInput1Comparison = [this,
+#if not (defined(USE_APPARENT_PAIRS_COMP) or defined(USE_CLEARING_DIM0))
+    &ctrComp,
+#endif
+    &ctrImage]() {
 #ifdef RUNTIME
 		cout << endl << "image 1: ";
 #endif
@@ -481,17 +489,21 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k
 		(computePairsMode == COMPARISON_PAIRS) ? pivotColumnIndexComp :
 		((k == 0) ? pivotColumnIndexImage0 : pivotColumnIndexImage1);
 
+#if defined(USE_APPARENT_PAIRS) or defined(USE_APPARENT_PAIRS_COMP)
     const bool useApparentPairs = 
 #ifdef USE_APPARENT_PAIRS
         true;
 #else
         false;
 #endif
+#endif
+#if defined(USE_APPARENT_PAIRS) or defined(USE_APPARENT_PAIRS_COMP) or defined(USE_CLEARING_IMAGE)
     const bool useApparentPairsComp = 
 #ifdef USE_APPARENT_PAIRS_COMP
         true;
 #else
         false;
+#endif
 #endif
 
 	size_t ctrSize = ctr.size();
@@ -521,7 +533,6 @@ void Dimension1::computePairsUnified(vector<Cube>& ctr, uint8_t k
 	vector<Cube> faces;
 	BoundaryEnumerator enumeratorAP(cgc);
 	CoboundaryEnumerator coEnumeratorAP(cgc);
-	bool shouldClear;
     if (computePairsMode == COMPARISON_PAIRS) {
 #if defined (USE_CLEARING_IMAGE) and not defined(USE_APPARENT_PAIRS_COMP)
 	    shouldClear = false;
