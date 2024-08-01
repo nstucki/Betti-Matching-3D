@@ -32,10 +32,11 @@ struct BettiMatchingResult {
     py::array_t<int64_t> input1MatchesDeathCoordinates;
     py::array_t<int64_t> input2MatchesBirthCoordinates;
     py::array_t<int64_t> input2MatchesDeathCoordinates;
-    py::array_t<int64_t> input1UnmatchedBirthCoordinates;
-    py::array_t<int64_t> input1UnmatchedDeathCoordinates;
     py::array_t<int64_t> numMatchesByDim;
-    py::array_t<int64_t> numUnmatchedInput1ByDim;
+    // Optional return values if include_input1_unmatched_pairs flag is set
+    std::optional<py::array_t<int64_t>> input1UnmatchedBirthCoordinates;
+    std::optional<py::array_t<int64_t>> input1UnmatchedDeathCoordinates;
+    std::optional<py::array_t<int64_t>> numUnmatchedInput1ByDim;
     // Optional return values if include_input2_unmatched_pairs flag is set (not
     // needed for Betti matching training loss)
     std::optional<py::array_t<int64_t>> input2UnmatchedBirthCoordinates;
@@ -105,17 +106,15 @@ computeBarcodeFromNumpyArrays(TypedInputVolume &input1) {
     return bettiMatching.computePairsInput0();
 };
 
-BettiMatchingResult
-convertPairResultToArrayResult(BettiMatchingPairsResult &result,
-                               size_t numDimensions,
-                               bool includeInput2UnmatchedPairs);
+BettiMatchingResult convertPairResultToArrayResult(
+    BettiMatchingPairsResult &result, size_t numDimensions,
+    bool includeInput1UnmatchedPairs, bool includeInput2UnmatchedPairs);
 BarcodeResult
 convertPairResultToBarcodeResult(vector<vector<VoxelPair>> &pairsByDimension);
 
-vector<BettiMatchingResult>
-computeMatchingFromInputs(vector<InputVolume> &untypedInputs1,
-                          vector<InputVolume> &untypedInputs2,
-                          bool includeInput2UnmatchedPairs) {
+vector<BettiMatchingResult> computeMatchingFromInputs(
+    vector<InputVolume> &untypedInputs1, vector<InputVolume> &untypedInputs2,
+    bool includeInput1UnmatchedPairs, bool includeInput2UnmatchedPairs) {
     // Validate and convert inputs
     vector<TypedInputVolume> inputs1;
     vector<TypedInputVolume> inputs2;
@@ -162,7 +161,8 @@ computeMatchingFromInputs(vector<InputVolume> &untypedInputs1,
     // Write the results into numpy arrays
     for (auto &result : pairResults) {
         auto arrayResult = convertPairResultToArrayResult(
-            result, numDimensions, includeInput2UnmatchedPairs);
+            result, numDimensions, includeInput1UnmatchedPairs,
+            includeInput2UnmatchedPairs);
         arrayResults.emplace_back(arrayResult);
     }
     return arrayResults;
@@ -197,10 +197,9 @@ computeBarcodeFromInputs(vector<InputVolume> &untypedInputs) {
     return arrayResults;
 }
 
-BettiMatchingResult
-convertPairResultToArrayResult(BettiMatchingPairsResult &result,
-                               size_t numDimensions,
-                               bool includeInput2UnmatchedPairs) {
+BettiMatchingResult convertPairResultToArrayResult(
+    BettiMatchingPairsResult &result, size_t numDimensions,
+    bool includeInput1UnmatchedPairs, bool includeInput2UnmatchedPairs) {
     auto &matchesByDimension = std::get<0>(result);
     auto &input1UnmatchedByDimension = std::get<1>(result);
     auto &input2UnmatchedByDimension = std::get<2>(result);
@@ -228,12 +227,16 @@ convertPairResultToArrayResult(BettiMatchingPairsResult &result,
         {numMatches, numDimensions},
         {numDimensions * sizeof(int64_t), sizeof(int64_t)});
     // Shape: (num unmatched (input1) in total, num dimensions)
-    py::array_t<int64_t> input1UnmatchedBirthCoordinates(
-        {numInput1Unmatched, numDimensions},
-        {numDimensions * sizeof(int64_t), sizeof(int64_t)});
-    py::array_t<int64_t> input1UnmatchedDeathCoordinates(
-        {numInput1Unmatched, numDimensions},
-        {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+    py::array_t<int64_t> input1UnmatchedBirthCoordinates;
+    py::array_t<int64_t> input1UnmatchedDeathCoordinates;
+    if (includeInput1UnmatchedPairs) {
+        input1UnmatchedBirthCoordinates = py::array_t<int64_t>(
+            {numInput1Unmatched, numDimensions},
+            {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+        input1UnmatchedDeathCoordinates = py::array_t<int64_t>(
+            {numInput1Unmatched, numDimensions},
+            {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+    }
     // Shape: (num unmatched (input2) in total, num dimensions)
     py::array_t<int64_t> input2UnmatchedBirthCoordinates;
     py::array_t<int64_t> input2UnmatchedDeathCoordinates;
@@ -247,8 +250,12 @@ convertPairResultToArrayResult(BettiMatchingPairsResult &result,
     }
     // Shape: (num dimensions,)
     py::array_t<int64_t> numMatchesByDim({numDimensions}, {sizeof(int64_t)});
-    py::array_t<int64_t> numUnmatchedInput1ByDim({numDimensions},
-                                                     {sizeof(int64_t)});
+    py::array_t<int64_t> numUnmatchedInput1ByDim;
+
+    if (includeInput2UnmatchedPairs) {
+        numUnmatchedInput1ByDim =
+            py::array_t<int64_t>({numDimensions}, {sizeof(int64_t)});
+    }
     py::array_t<int64_t> numUnmatchedInput2ByDim;
     if (includeInput2UnmatchedPairs) {
         numUnmatchedInput2ByDim =
@@ -263,23 +270,15 @@ convertPairResultToArrayResult(BettiMatchingPairsResult &result,
         input2MatchesBirthCoordinates.mutable_unchecked();
     auto input2MatchesDeathCoordinatesView =
         input2MatchesDeathCoordinates.mutable_unchecked();
-    auto input1UnmatchedBirthCoordinatesView =
-        input1UnmatchedBirthCoordinates.mutable_unchecked();
-    auto input1UnmatchedDeathCoordinatesView =
-        input1UnmatchedDeathCoordinates.mutable_unchecked();
     auto numMatchesByDimView = numMatchesByDim.mutable_unchecked();
-    auto numUnmatchedInput1ByDimView =
-        numUnmatchedInput1ByDim.mutable_unchecked();
 
     int i = 0;
     int currentDimension = 0;
     for (auto &matchesInDimension : matchesByDimension) {
         for (auto &match : matchesInDimension) {
             for (int d = 0; d < numDimensions; d++) {
-                input1MatchesBirthCoordinatesView(i, d) =
-                    match.pair0.birth[d];
-                input1MatchesDeathCoordinatesView(i, d) =
-                    match.pair0.death[d];
+                input1MatchesBirthCoordinatesView(i, d) = match.pair0.birth[d];
+                input1MatchesDeathCoordinatesView(i, d) = match.pair0.death[d];
                 input2MatchesBirthCoordinatesView(i, d) = match.pair1.birth[d];
                 input2MatchesDeathCoordinatesView(i, d) = match.pair1.death[d];
             }
@@ -287,20 +286,28 @@ convertPairResultToArrayResult(BettiMatchingPairsResult &result,
         }
         numMatchesByDimView(currentDimension++) = matchesInDimension.size();
     }
-    i = 0;
-    currentDimension = 0;
-    for (auto &unmatchedInDimension : input1UnmatchedByDimension) {
-        for (auto &unmatched : unmatchedInDimension) {
-            for (int d = 0; d < numDimensions; d++) {
-                input1UnmatchedBirthCoordinatesView(i, d) =
-                    unmatched.birth[d];
-                input1UnmatchedDeathCoordinatesView(i, d) =
-                    unmatched.death[d];
+    if (includeInput1UnmatchedPairs) {
+        i = 0;
+        currentDimension = 0;
+        auto input1UnmatchedBirthCoordinatesView =
+            input1UnmatchedBirthCoordinates.mutable_unchecked();
+        auto input1UnmatchedDeathCoordinatesView =
+            input1UnmatchedDeathCoordinates.mutable_unchecked();
+        auto numUnmatchedInput1ByDimView =
+            numUnmatchedInput1ByDim.mutable_unchecked();
+        for (auto &unmatchedInDimension : input1UnmatchedByDimension) {
+            for (auto &unmatched : unmatchedInDimension) {
+                for (int d = 0; d < numDimensions; d++) {
+                    input1UnmatchedBirthCoordinatesView(i, d) =
+                        unmatched.birth[d];
+                    input1UnmatchedDeathCoordinatesView(i, d) =
+                        unmatched.death[d];
+                }
+                i++;
             }
-            i++;
+            numUnmatchedInput1ByDimView(currentDimension++) =
+                unmatchedInDimension.size();
         }
-        numUnmatchedInput1ByDimView(currentDimension++) =
-            unmatchedInDimension.size();
     }
     if (includeInput2UnmatchedPairs) {
         i = 0;
@@ -326,21 +333,25 @@ convertPairResultToArrayResult(BettiMatchingPairsResult &result,
         }
     }
 
-    auto arrayResult = BettiMatchingResult{
-        input1MatchesBirthCoordinates =
-            std::move(input1MatchesBirthCoordinates),
-        input1MatchesDeathCoordinates =
-            std::move(input1MatchesDeathCoordinates),
-        input2MatchesBirthCoordinates =
-            std::move(input2MatchesBirthCoordinates),
-        input2MatchesDeathCoordinates =
-            std::move(input2MatchesDeathCoordinates),
-        input1UnmatchedBirthCoordinates =
-            std::move(input1UnmatchedBirthCoordinates),
-        input1UnmatchedDeathCoordinates =
-            std::move(input1UnmatchedDeathCoordinates),
-        numMatchesByDim = std::move(numMatchesByDim),
-        numUnmatchedInput1ByDim = std::move(numUnmatchedInput1ByDim)};
+    auto arrayResult =
+        BettiMatchingResult{input1MatchesBirthCoordinates =
+                                std::move(input1MatchesBirthCoordinates),
+                            input1MatchesDeathCoordinates =
+                                std::move(input1MatchesDeathCoordinates),
+                            input2MatchesBirthCoordinates =
+                                std::move(input2MatchesBirthCoordinates),
+                            input2MatchesDeathCoordinates =
+                                std::move(input2MatchesDeathCoordinates),
+
+                            numMatchesByDim = std::move(numMatchesByDim)};
+    if (includeInput1UnmatchedPairs) {
+        arrayResult.input1UnmatchedBirthCoordinates =
+            std::move(input1UnmatchedBirthCoordinates);
+        arrayResult.input1UnmatchedDeathCoordinates =
+            std::move(input1UnmatchedDeathCoordinates);
+        arrayResult.numUnmatchedInput1ByDim =
+            std::move(numUnmatchedInput1ByDim);
+    }
     if (includeInput2UnmatchedPairs) {
         arrayResult.input2UnmatchedBirthCoordinates =
             std::move(input2UnmatchedBirthCoordinates);
@@ -422,17 +433,18 @@ PYBIND11_MODULE(betti_matching, m) {
     m.def(
         "compute_matching",
         [](InputVolume &untypedInput1, InputVolume &untypedInput2,
-           bool includeInput2UnmatchedPairs) {
+           bool includeInput1UnmatchedPairs, bool includeInput2UnmatchedPairs) {
             vector<InputVolume> untypedInputs1 = {untypedInput1};
             vector<InputVolume> untypedInputs2 = {untypedInput2};
             return computeMatchingFromInputs(untypedInputs1, untypedInputs2,
+                                             includeInput1UnmatchedPairs,
                                              includeInput2UnmatchedPairs)[0];
         },
-        py::arg("input1").noconvert(),
-        py::arg("input2").noconvert(),
+        py::arg("input1").noconvert(), py::arg("input2").noconvert(),
+        py::arg("include_input1_unmatched_pairs") = true,
         py::arg("include_input2_unmatched_pairs") = true,
         R"(
-        compute_matching(input1, input2, include_input2_unmatched_pairs=True)
+        compute_matching(input1, input2, include_input1_unmatched_pairs=True, include_input2_unmatched_pairs=True)
 
         Compute the Betti matching between two input volumes.
 
@@ -444,9 +456,12 @@ PYBIND11_MODULE(betti_matching, m) {
         input2 : numpy.ndarray
             The second input volume (the "target" in the machine
             learning context).
+        include_input1_unmatched_pairs : bool, optional
+            Whether to include the unmatched pairs in the input1 volume
+            in the result. Default is True.
         include_input2_unmatched_pairs : bool, optional
             Whether to include the unmatched pairs in the input2 volume
-            in the result. Default is True. Can be deactivated when the target
+            in the result. Default is True. Deactivate when the target
             unmatched pairs are not needed, such as in training with the Betti
             matching loss, where they do not contribute to the gradient.
 
@@ -473,9 +488,10 @@ PYBIND11_MODULE(betti_matching, m) {
 
     m.def("compute_matching", &computeMatchingFromInputs,
           py::arg("inputs1").noconvert(), py::arg("inputs2").noconvert(),
+          py::arg("include_input1_unmatched_pairs") = true,
           py::arg("include_input2_unmatched_pairs") = true,
           R"(
-        compute_matching(inputs1, inputs2, include_input2_unmatched_pairs=True)
+        compute_matching(inputs1, inputs2, include_input1_unmatched_pairs=True, include_input2_unmatched_pairs=True)
 
         Compute the Betti matching between two batches of input volumes in
         parallel. The Betti matching computation are parallelized using
@@ -489,6 +505,9 @@ PYBIND11_MODULE(betti_matching, m) {
         inputs2 : list of numpy.ndarray
             The batch of second input volumes (the "targets" in the machine
             learning context).
+        include_input1_unmatched_pairs : bool, optional
+            Whether to include the unmatched pairs in the input1 volumes
+            in the result. Default is True.
         include_input2_unmatched_pairs : bool, optional
             Whether to include the unmatched pairs in the input2 volumes
             in the result. Default is True. Can be deactivated when the target
@@ -589,17 +608,31 @@ PYBIND11_MODULE(betti_matching, m) {
 
         .def(
             "get_matching",
-            [](BettiMatching &self, bool includeInput2UnmatchedPairs) {
+            [](BettiMatching &self, bool includeInput1UnmatchedPairs,
+               bool includeInput2UnmatchedPairs) {
                 BettiMatchingPairsResult result = self.getMatching();
                 return convertPairResultToArrayResult(
-                    result, self.shape.size(), includeInput2UnmatchedPairs);
+                    result, self.shape.size(), includeInput1UnmatchedPairs,
+                    includeInput2UnmatchedPairs);
             },
+            py::arg("include_input1_unmatched_pairs") = true,
             py::arg("include_input2_unmatched_pairs") = true,
             R"(
             get_matching()
 
             Retrieve the computed matching. `compute_matching()` must be called
             before calling this method.
+
+            Parameters
+            ----------
+            include_input1_unmatched_pairs : bool, optional
+                Whether to include the unmatched pairs in the input1 volume
+                in the result. Default is True.
+            include_input2_unmatched_pairs : bool, optional
+                Whether to include the unmatched pairs in the input2 volume
+                in the result. Default is True. Can be deactivated when the target
+                unmatched pairs are not needed, such as in training with the Betti
+                matching loss, where they do not contribute to the gradient.
 
             Returns
             -------
@@ -1038,12 +1071,18 @@ PYBIND11_MODULE(betti_matching, m) {
                     reprMemberArray("input2_matches_death_coordinates",
                                     self.input2MatchesDeathCoordinates) +
                     ", " +
-                    reprMemberArray("input1_unmatched_birth_coordinates",
-                                    self.input1UnmatchedBirthCoordinates) +
-                    ", " +
-                    reprMemberArray("input1_unmatched_death_coordinates",
-                                    self.input1UnmatchedDeathCoordinates) +
-                    ", " +
+                    (self.input1UnmatchedBirthCoordinates.has_value()
+                         ? (reprMemberArray(
+                                "input1_unmatched_birth_coordinates",
+                                *self.input1UnmatchedBirthCoordinates) +
+                            ", ")
+                         : "") +
+                    (self.input1UnmatchedDeathCoordinates.has_value()
+                         ? (reprMemberArray(
+                                "input1_unmatched_death_coordinates",
+                                *self.input1UnmatchedDeathCoordinates) +
+                            ", ")
+                         : "") +
                     (self.input2UnmatchedBirthCoordinates.has_value()
                          ? (reprMemberArray(
                                 "input2_unmatched_birth_coordinates",
@@ -1058,9 +1097,11 @@ PYBIND11_MODULE(betti_matching, m) {
                          : "") +
                     reprMemberArray("num_matches_by_dim",
                                     self.numMatchesByDim) +
-                    ", " +
-                    reprMemberArray("num_unmatched_input1_by_dim",
-                                    self.numUnmatchedInput1ByDim) +
+                    (self.numUnmatchedInput1ByDim.has_value()
+                         ? (", " +
+                            reprMemberArray("num_unmatched_input1_by_dim",
+                                            *self.numUnmatchedInput1ByDim))
+                         : "") +
                     (self.numUnmatchedInput2ByDim.has_value()
                          ? (", " +
                             reprMemberArray("num_unmatched_input2_by_dim",
