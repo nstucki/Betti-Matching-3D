@@ -28,25 +28,39 @@ typedef std::tuple<vector<vector<VoxelMatch>>, vector<vector<VoxelPair>>,
     BettiMatchingPairsResult;
 
 struct BettiMatchingResult {
-    py::array_t<int64_t> input1MatchesBirthCoordinates;
-    py::array_t<int64_t> input1MatchesDeathCoordinates;
-    py::array_t<int64_t> input2MatchesBirthCoordinates;
-    py::array_t<int64_t> input2MatchesDeathCoordinates;
-    py::array_t<int64_t> numMatchesByDim;
+    std::vector<py::array_t<int64_t>> input1MatchedBirthCoordinates;
+    std::vector<py::array_t<int64_t>> input1MatchedDeathCoordinates;
+    std::vector<py::array_t<int64_t>> input2MatchedBirthCoordinates;
+    std::vector<py::array_t<int64_t>> input2MatchedDeathCoordinates;
+    py::array_t<int64_t> numMatched;
     // Optional return values if include_input1_unmatched_pairs flag is set
-    std::optional<py::array_t<int64_t>> input1UnmatchedBirthCoordinates;
-    std::optional<py::array_t<int64_t>> input1UnmatchedDeathCoordinates;
-    std::optional<py::array_t<int64_t>> numUnmatchedInput1ByDim;
+    std::optional<std::vector<py::array_t<int64_t>>>
+        input1UnmatchedBirthCoordinates;
+    std::optional<std::vector<py::array_t<int64_t>>>
+        input1UnmatchedDeathCoordinates;
+    std::optional<py::array_t<int64_t>> numUnmatchedInput1;
     // Optional return values if include_input2_unmatched_pairs flag is set (not
     // needed for Betti matching training loss)
-    std::optional<py::array_t<int64_t>> input2UnmatchedBirthCoordinates;
-    std::optional<py::array_t<int64_t>> input2UnmatchedDeathCoordinates;
-    std::optional<py::array_t<int64_t>> numUnmatchedInput2ByDim;
+    std::optional<std::vector<py::array_t<int64_t>>>
+        input2UnmatchedBirthCoordinates;
+    std::optional<std::vector<py::array_t<int64_t>>>
+        input2UnmatchedDeathCoordinates;
+    std::optional<py::array_t<int64_t>> numUnmatchedInput2;
+
+    // Default move constructor, deleted copy constructor
+    BettiMatchingResult(BettiMatchingResult &&) noexcept = default;
+    BettiMatchingResult(const BettiMatchingResult &) = delete;
+    BettiMatchingResult &operator=(const BettiMatchingResult &) = delete;
 };
 struct BarcodeResult {
-    py::array_t<int64_t> birthCoordinates;
-    py::array_t<int64_t> deathCoordinates;
-    py::array_t<int64_t> numPairsByDim;
+    std::vector<py::array_t<int64_t>> birthCoordinates;
+    std::vector<py::array_t<int64_t>> deathCoordinates;
+    py::array_t<int64_t> numPairs;
+
+    // Default move constructor, deleted copy constructor
+    BarcodeResult(BarcodeResult &&) noexcept = default;
+    BarcodeResult(const BarcodeResult &) = delete;
+    BarcodeResult &operator=(const BarcodeResult &) = delete;
 };
 
 struct RepresentativeCycleResult {
@@ -54,7 +68,8 @@ struct RepresentativeCycleResult {
     optional<vector<py::array_t<int64_t>>> unmatchedCycles;
 };
 
-string repr_vector(const vector<index_t> shape,
+template <typename T>
+string repr_vector(const vector<T> shape,
                    std::tuple<string, string> parentheses = make_tuple("(",
                                                                        ")"),
                    string separator = ", ") {
@@ -163,7 +178,7 @@ vector<BettiMatchingResult> computeMatchingFromInputs(
         auto arrayResult = convertPairResultToArrayResult(
             result, numDimensions, includeInput1UnmatchedPairs,
             includeInput2UnmatchedPairs);
-        arrayResults.emplace_back(arrayResult);
+        arrayResults.emplace_back(std::move(arrayResult));
     }
     return arrayResults;
 }
@@ -204,55 +219,19 @@ BettiMatchingResult convertPairResultToArrayResult(
     auto &input1UnmatchedByDimension = std::get<1>(result);
     auto &input2UnmatchedByDimension = std::get<2>(result);
 
-    size_t numMatches = 0;
-    size_t numInput1Unmatched = 0;
-    size_t numInput2Unmatched = 0;
-    for (size_t d = 0; d < numDimensions; d++) {
-        numMatches += matchesByDimension[d].size();
-        numInput1Unmatched += input1UnmatchedByDimension[d].size();
-        numInput2Unmatched += input2UnmatchedByDimension[d].size();
-    }
-
-    // Shape: (num matched in total, num dimensions)
-    py::array_t<int64_t> input1MatchesBirthCoordinates(
-        {numMatches, numDimensions},
-        {numDimensions * sizeof(int64_t), sizeof(int64_t)});
-    py::array_t<int64_t> input1MatchesDeathCoordinates(
-        {numMatches, numDimensions},
-        {numDimensions * sizeof(int64_t), sizeof(int64_t)});
-    py::array_t<int64_t> input2MatchesBirthCoordinates(
-        {numMatches, numDimensions},
-        {numDimensions * sizeof(int64_t), sizeof(int64_t)});
-    py::array_t<int64_t> input2MatchesDeathCoordinates(
-        {numMatches, numDimensions},
-        {numDimensions * sizeof(int64_t), sizeof(int64_t)});
-    // Shape: (num unmatched (input1) in total, num dimensions)
-    py::array_t<int64_t> input1UnmatchedBirthCoordinates;
-    py::array_t<int64_t> input1UnmatchedDeathCoordinates;
-    if (includeInput1UnmatchedPairs) {
-        input1UnmatchedBirthCoordinates = py::array_t<int64_t>(
-            {numInput1Unmatched, numDimensions},
-            {numDimensions * sizeof(int64_t), sizeof(int64_t)});
-        input1UnmatchedDeathCoordinates = py::array_t<int64_t>(
-            {numInput1Unmatched, numDimensions},
-            {numDimensions * sizeof(int64_t), sizeof(int64_t)});
-    }
-    // Shape: (num unmatched (input2) in total, num dimensions)
-    py::array_t<int64_t> input2UnmatchedBirthCoordinates;
-    py::array_t<int64_t> input2UnmatchedDeathCoordinates;
-    if (includeInput2UnmatchedPairs) {
-        input2UnmatchedBirthCoordinates = py::array_t<int64_t>(
-            {numInput2Unmatched, numDimensions},
-            {numDimensions * sizeof(int64_t), sizeof(int64_t)});
-        input2UnmatchedDeathCoordinates = py::array_t<int64_t>(
-            {numInput2Unmatched, numDimensions},
-            {numDimensions * sizeof(int64_t), sizeof(int64_t)});
-    }
+    vector<py::array_t<int64_t>> input1MatchedBirthCoordinates(numDimensions),
+        input1MatchedDeathCoordinates(numDimensions),
+        input2MatchedBirthCoordinates(numDimensions),
+        input2MatchedDeathCoordinates(numDimensions),
+        input1UnmatchedBirthCoordinates(numDimensions),
+        input1UnmatchedDeathCoordinates(numDimensions),
+        input2UnmatchedBirthCoordinates(numDimensions),
+        input2UnmatchedDeathCoordinates(numDimensions);
     // Shape: (num dimensions,)
-    py::array_t<int64_t> numMatchesByDim({numDimensions}, {sizeof(int64_t)});
+    py::array_t<int64_t> numMatchedByDim({numDimensions}, {sizeof(int64_t)});
+    auto numMatchedByDimView = numMatchedByDim.mutable_unchecked();
     py::array_t<int64_t> numUnmatchedInput1ByDim;
-
-    if (includeInput2UnmatchedPairs) {
+    if (includeInput1UnmatchedPairs) {
         numUnmatchedInput1ByDim =
             py::array_t<int64_t>({numDimensions}, {sizeof(int64_t)});
     }
@@ -261,43 +240,70 @@ BettiMatchingResult convertPairResultToArrayResult(
         numUnmatchedInput2ByDim =
             py::array_t<int64_t>({numDimensions}, {sizeof(int64_t)});
     }
+    for (size_t dimension = 0; dimension < numDimensions; dimension++) {
+        // Shape: (num matched in dimension, num dimensions)
+        input1MatchedBirthCoordinates[dimension] = py::array_t<int64_t>(
+            {matchesByDimension[dimension].size(), numDimensions},
+            {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+        input1MatchedDeathCoordinates[dimension] = py::array_t<int64_t>(
+            {matchesByDimension[dimension].size(), numDimensions},
+            {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+        input2MatchedBirthCoordinates[dimension] = py::array_t<int64_t>(
+            {matchesByDimension[dimension].size(), numDimensions},
+            {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+        input2MatchedDeathCoordinates[dimension] = py::array_t<int64_t>(
+            {matchesByDimension[dimension].size(), numDimensions},
+            {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+        if (includeInput1UnmatchedPairs) {
+            // Shape: (num unmatched (input1) in dimension, num dimensions)
+            input1UnmatchedBirthCoordinates[dimension] = py::array_t<int64_t>(
+                {input1UnmatchedByDimension[dimension].size(), numDimensions},
+                {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+            input1UnmatchedDeathCoordinates[dimension] = py::array_t<int64_t>(
+                {input1UnmatchedByDimension[dimension].size(), numDimensions},
+                {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+        }
+        if (includeInput2UnmatchedPairs) {
+            // Shape: (num unmatched (inputd) in dimension, num dimensions)
+            input2UnmatchedBirthCoordinates[dimension] = py::array_t<int64_t>(
+                {input2UnmatchedByDimension[dimension].size(), numDimensions},
+                {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+            input2UnmatchedDeathCoordinates[dimension] = py::array_t<int64_t>(
+                {input2UnmatchedByDimension[dimension].size(), numDimensions},
+                {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+        }
 
-    auto input1MatchesBirthCoordinatesView =
-        input1MatchesBirthCoordinates.mutable_unchecked();
-    auto input1MatchesDeathCoordinatesView =
-        input1MatchesDeathCoordinates.mutable_unchecked();
-    auto input2MatchesBirthCoordinatesView =
-        input2MatchesBirthCoordinates.mutable_unchecked();
-    auto input2MatchesDeathCoordinatesView =
-        input2MatchesDeathCoordinates.mutable_unchecked();
-    auto numMatchesByDimView = numMatchesByDim.mutable_unchecked();
+        auto input1MatchedBirthCoordinatesView =
+            input1MatchedBirthCoordinates[dimension].mutable_unchecked();
+        auto input1MatchedDeathCoordinatesView =
+            input1MatchedDeathCoordinates[dimension].mutable_unchecked();
+        auto input2MatchedBirthCoordinatesView =
+            input2MatchedBirthCoordinates[dimension].mutable_unchecked();
+        auto input2MatchedDeathCoordinatesView =
+            input2MatchedDeathCoordinates[dimension].mutable_unchecked();
 
-    int i = 0;
-    int currentDimension = 0;
-    for (auto &matchesInDimension : matchesByDimension) {
-        for (auto &match : matchesInDimension) {
-            for (int d = 0; d < numDimensions; d++) {
-                input1MatchesBirthCoordinatesView(i, d) = match.pair0.birth[d];
-                input1MatchesDeathCoordinatesView(i, d) = match.pair0.death[d];
-                input2MatchesBirthCoordinatesView(i, d) = match.pair1.birth[d];
-                input2MatchesDeathCoordinatesView(i, d) = match.pair1.death[d];
+        int i = 0;
+        for (auto &match : matchesByDimension[dimension]) {
+            for (size_t d = 0; d < numDimensions; d++) {
+                input1MatchedBirthCoordinatesView(i, d) = match.pair0.birth[d];
+                input1MatchedDeathCoordinatesView(i, d) = match.pair0.death[d];
+                input2MatchedBirthCoordinatesView(i, d) = match.pair1.birth[d];
+                input2MatchedDeathCoordinatesView(i, d) = match.pair1.death[d];
             }
             i++;
         }
-        numMatchesByDimView(currentDimension++) = matchesInDimension.size();
-    }
-    if (includeInput1UnmatchedPairs) {
-        i = 0;
-        currentDimension = 0;
-        auto input1UnmatchedBirthCoordinatesView =
-            input1UnmatchedBirthCoordinates.mutable_unchecked();
-        auto input1UnmatchedDeathCoordinatesView =
-            input1UnmatchedDeathCoordinates.mutable_unchecked();
-        auto numUnmatchedInput1ByDimView =
-            numUnmatchedInput1ByDim.mutable_unchecked();
-        for (auto &unmatchedInDimension : input1UnmatchedByDimension) {
-            for (auto &unmatched : unmatchedInDimension) {
-                for (int d = 0; d < numDimensions; d++) {
+        numMatchedByDimView(dimension) = matchesByDimension[dimension].size();
+
+        if (includeInput1UnmatchedPairs) {
+            i = 0;
+            auto input1UnmatchedBirthCoordinatesView =
+                input1UnmatchedBirthCoordinates[dimension].mutable_unchecked();
+            auto input1UnmatchedDeathCoordinatesView =
+                input1UnmatchedDeathCoordinates[dimension].mutable_unchecked();
+            auto numUnmatchedInput1ByDimView =
+                numUnmatchedInput1ByDim.mutable_unchecked();
+            for (auto &unmatched : input1UnmatchedByDimension[dimension]) {
+                for (size_t d = 0; d < numDimensions; d++) {
                     input1UnmatchedBirthCoordinatesView(i, d) =
                         unmatched.birth[d];
                     input1UnmatchedDeathCoordinatesView(i, d) =
@@ -305,21 +311,18 @@ BettiMatchingResult convertPairResultToArrayResult(
                 }
                 i++;
             }
-            numUnmatchedInput1ByDimView(currentDimension++) =
-                unmatchedInDimension.size();
+            numUnmatchedInput1ByDimView(dimension) =
+                input1UnmatchedByDimension[dimension].size();
         }
-    }
-    if (includeInput2UnmatchedPairs) {
-        i = 0;
-        currentDimension = 0;
-        auto input2UnmatchedBirthCoordinatesView =
-            input2UnmatchedBirthCoordinates.mutable_unchecked();
-        auto input2UnmatchedDeathCoordinatesView =
-            input2UnmatchedDeathCoordinates.mutable_unchecked();
-        auto numUnmatchedInput2ByDimView =
-            numUnmatchedInput2ByDim.mutable_unchecked();
-        for (auto &unmatchedInDimension : input2UnmatchedByDimension) {
-            for (auto &unmatched : unmatchedInDimension) {
+        if (includeInput2UnmatchedPairs) {
+            i = 0;
+            auto input2UnmatchedBirthCoordinatesView =
+                input2UnmatchedBirthCoordinates[dimension].mutable_unchecked();
+            auto input2UnmatchedDeathCoordinatesView =
+                input2UnmatchedDeathCoordinates[dimension].mutable_unchecked();
+            auto numUnmatchedInput2ByDimView =
+                numUnmatchedInput2ByDim.mutable_unchecked();
+            for (auto &unmatched : input2UnmatchedByDimension[dimension]) {
                 for (int d = 0; d < numDimensions; d++) {
                     input2UnmatchedBirthCoordinatesView(i, d) =
                         unmatched.birth[d];
@@ -328,37 +331,28 @@ BettiMatchingResult convertPairResultToArrayResult(
                 }
                 i++;
             }
-            numUnmatchedInput2ByDimView(currentDimension++) =
-                unmatchedInDimension.size();
+            numUnmatchedInput2ByDimView(dimension) =
+                input2UnmatchedByDimension[dimension].size();
         }
     }
-
-    auto arrayResult =
-        BettiMatchingResult{input1MatchesBirthCoordinates =
-                                std::move(input1MatchesBirthCoordinates),
-                            input1MatchesDeathCoordinates =
-                                std::move(input1MatchesDeathCoordinates),
-                            input2MatchesBirthCoordinates =
-                                std::move(input2MatchesBirthCoordinates),
-                            input2MatchesDeathCoordinates =
-                                std::move(input2MatchesDeathCoordinates),
-
-                            numMatchesByDim = std::move(numMatchesByDim)};
+    auto arrayResult = BettiMatchingResult{
+        std::move(input1MatchedBirthCoordinates),
+        std::move(input1MatchedDeathCoordinates),
+        std::move(input2MatchedBirthCoordinates),
+        std::move(input2MatchedDeathCoordinates), std::move(numMatchedByDim)};
     if (includeInput1UnmatchedPairs) {
         arrayResult.input1UnmatchedBirthCoordinates =
             std::move(input1UnmatchedBirthCoordinates);
         arrayResult.input1UnmatchedDeathCoordinates =
             std::move(input1UnmatchedDeathCoordinates);
-        arrayResult.numUnmatchedInput1ByDim =
-            std::move(numUnmatchedInput1ByDim);
+        arrayResult.numUnmatchedInput1 = std::move(numUnmatchedInput1ByDim);
     }
     if (includeInput2UnmatchedPairs) {
         arrayResult.input2UnmatchedBirthCoordinates =
             std::move(input2UnmatchedBirthCoordinates);
         arrayResult.input2UnmatchedDeathCoordinates =
             std::move(input2UnmatchedDeathCoordinates);
-        arrayResult.numUnmatchedInput2ByDim =
-            std::move(numUnmatchedInput2ByDim);
+        arrayResult.numUnmatchedInput2 = std::move(numUnmatchedInput2ByDim);
     }
     return arrayResult;
 }
@@ -367,37 +361,35 @@ BarcodeResult
 convertPairResultToBarcodeResult(vector<vector<VoxelPair>> &pairsByDimension) {
     auto numDimensions = pairsByDimension.size();
 
-    size_t numPairs = 0;
-    for (size_t d = 0; d < numDimensions; d++) {
-        numPairs += pairsByDimension[d].size();
-    }
-
-    // Shape: (num pairs, num dimensions)
-    py::array_t<int64_t> birthCoordinates(
-        {numPairs, numDimensions},
-        {numDimensions * sizeof(int64_t), sizeof(int64_t)});
-    py::array_t<int64_t> deathCoordinates(
-        {numPairs, numDimensions},
-        {numDimensions * sizeof(int64_t), sizeof(int64_t)});
-
+    vector<py::array_t<int64_t>> birthCoordinates(numDimensions),
+        deathCoordinates(numDimensions);
     // Shape: (num dimensions,)
     py::array_t<int64_t> numPairsByDim({numDimensions}, {sizeof(int64_t)});
-
-    auto birthCoordinatesView = birthCoordinates.mutable_unchecked();
-    auto deathCoordinatesView = deathCoordinates.mutable_unchecked();
     auto numPairsByDimView = numPairsByDim.mutable_unchecked();
 
-    int i = 0;
-    int currentDimension = 0;
-    for (auto &pairsInDimension : pairsByDimension) {
-        for (auto &pair : pairsInDimension) {
+    for (size_t dimension = 0; dimension < numDimensions; dimension++) {
+        // Shape: (num pairs in dimension, num dimensions)
+        birthCoordinates[dimension] = py::array_t<int64_t>(
+            {pairsByDimension[dimension].size(), numDimensions},
+            {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+        deathCoordinates[dimension] = py::array_t<int64_t>(
+            {pairsByDimension[dimension].size(), numDimensions},
+            {numDimensions * sizeof(int64_t), sizeof(int64_t)});
+
+        auto birthCoordinatesView =
+            birthCoordinates[dimension].mutable_unchecked();
+        auto deathCoordinatesView =
+            deathCoordinates[dimension].mutable_unchecked();
+
+        int i = 0;
+        for (auto &pair : pairsByDimension[dimension]) {
             for (int d = 0; d < numDimensions; d++) {
                 birthCoordinatesView(i, d) = pair.birth[d];
                 deathCoordinatesView(i, d) = pair.death[d];
             }
             i++;
         }
-        numPairsByDimView(currentDimension++) = pairsInDimension.size();
+        numPairsByDimView(dimension) = pairsByDimension[dimension].size();
     }
 
     auto arrayResult = BarcodeResult{birthCoordinates = birthCoordinates,
@@ -420,8 +412,8 @@ py::array_t<int64_t> coordinateListToArray(
         std::size_t j = 0;
         std::apply(
             [&](const Types &...args) mutable {
-                // Using a fold expression to compute the sum of elements and
-                // their indices
+                // Using a fold expression to compute the sum of elements
+                // and their indices
                 ((coordinateArrayView(i, j++) = args), ...);
             },
             coordinates);
@@ -436,9 +428,9 @@ PYBIND11_MODULE(betti_matching, m) {
            bool includeInput1UnmatchedPairs, bool includeInput2UnmatchedPairs) {
             vector<InputVolume> untypedInputs1 = {untypedInput1};
             vector<InputVolume> untypedInputs2 = {untypedInput2};
-            return computeMatchingFromInputs(untypedInputs1, untypedInputs2,
-                                             includeInput1UnmatchedPairs,
-                                             includeInput2UnmatchedPairs)[0];
+            return std::move(computeMatchingFromInputs(
+                untypedInputs1, untypedInputs2, includeInput1UnmatchedPairs,
+                includeInput2UnmatchedPairs)[0]);
         },
         py::arg("input1").noconvert(), py::arg("input2").noconvert(),
         py::arg("include_input1_unmatched_pairs") = true,
@@ -478,9 +470,9 @@ PYBIND11_MODULE(betti_matching, m) {
         a, b = np.random.rand(10, 10, 10), np.random.rand(10, 10, 10)
         result = betti_matching.compute_matching(a, b)
         a_dim0_matches_birth_coordinates = (
-            result.input1_matches_birth_coordinates[:result.num_matches_by_dim[0]])
+            result.input1_matched_birth_coordinates[:result.num_matched[0]])
         a_dim0_matches_death_coordinates = (
-            result.input1_matches_death_coordinates[:result.num_matches_by_dim[0]])
+            result.input1_matched_death_coordinates[:result.num_matched[0]])
         a_dim0_matched_bars_lengths = (a[*a_dim0_matches_death_coordinates.T]
             - a[*a_dim0_matches_birth_coordinates.T])
         ```
@@ -528,8 +520,8 @@ PYBIND11_MODULE(betti_matching, m) {
         a1, b1 = np.random.rand(10, 10, 10), np.random.rand(10, 10, 10)
         a2, b2 = np.random.rand(8, 8, 8), np.random.rand(8, 8, 8)
         results = betti_matching.compute_matching([a1, a2], [b1, b2])
-        num_matches_a1_b1 = results[0].num_matches_by_dim.sum()
-        num_matches_a2_b2 = results[1].num_matches_by_dim.sum()
+        num_matched_a1_b1 = results[0].num_matched.sum()
+        num_matched_a2_b2 = results[1].num_matched.sum()
         ```
         )");
 
@@ -537,7 +529,7 @@ PYBIND11_MODULE(betti_matching, m) {
         "compute_barcode",
         [](InputVolume &untypedInput) {
             vector<InputVolume> untypedInputs = {untypedInput};
-            return computeBarcodeFromInputs(untypedInputs)[0];
+            return std::move(computeBarcodeFromInputs(untypedInputs)[0]);
         },
         py::arg("input").noconvert());
 
@@ -678,8 +670,8 @@ PYBIND11_MODULE(betti_matching, m) {
                     }
                 }
 
-                // Convert the input arguments to lists of indices (or the empty
-                // optional for "all")
+                // Convert the input arguments to lists of indices (or the
+                // empty optional for "all")
                 bool matchedNoneRequested = false,
                      unmatchedNoneRequested = false;
                 optional<vector<size_t>> matchedPairsIndicesVector,
@@ -693,8 +685,8 @@ PYBIND11_MODULE(betti_matching, m) {
                 } else {
                     auto keyword = std::get<string>(matchedPairsIndices);
                     if (keyword == "all") {
-                    } // Nothing to do: matchedPairsIndicesVector is already the
-                      // empty optional
+                    } // Nothing to do: matchedPairsIndicesVector is already
+                      // the empty optional
                     else if (keyword == "none") {
                         matchedNoneRequested = true;
                         matchedPairsIndicesVector = {vector<size_t>()};
@@ -713,8 +705,8 @@ PYBIND11_MODULE(betti_matching, m) {
                 } else {
                     auto keyword = std::get<string>(unmatchedPairsIndices);
                     if (keyword == "all") {
-                    } // Nothing to do: unmatchedPairsIndicesVector is already
-                      // the empty optional
+                    } // Nothing to do: unmatchedPairsIndicesVector is
+                      // already the empty optional
                     else if (keyword == "none") {
                         unmatchedNoneRequested = true;
                         unmatchedPairsIndicesVector = {vector<size_t>()};
@@ -731,7 +723,8 @@ PYBIND11_MODULE(betti_matching, m) {
 
                 if (inputNumber == 2 && !unmatchedNoneRequested) {
                     throw invalid_argument(
-                        "Computing representative cycles for unmatched pairs "
+                        "Computing representative cycles for unmatched "
+                        "pairs "
                         "in the comparison image is not supported.");
                 }
 
@@ -789,8 +782,8 @@ PYBIND11_MODULE(betti_matching, m) {
                             result);
                     for (auto &matchedCycle : std::get<0>(resultDim3)) {
                         if (dim == 1 && deduplicateVoxels) {
-                            // Sort everything (but the death voxel in the last
-                            // position!), then remove duplicates
+                            // Sort everything (but the death voxel in the
+                            // last position!), then remove duplicates
                             std::sort(matchedCycle.begin(),
                                       matchedCycle.end() - 1);
                             matchedCycle.erase(
@@ -805,8 +798,8 @@ PYBIND11_MODULE(betti_matching, m) {
                     }
                     for (auto &unmatchedCycle : std::get<1>(resultDim3)) {
                         if (dim == 1 && deduplicateVoxels) {
-                            // Sort everything (but the death voxel in the last
-                            // position!), then remove duplicates
+                            // Sort everything (but the death voxel in the
+                            // last position!), then remove duplicates
                             std::sort(unmatchedCycle.begin(),
                                       unmatchedCycle.end() - 1);
                             unmatchedCycle.erase(
@@ -996,16 +989,16 @@ PYBIND11_MODULE(betti_matching, m) {
         Each coordinate array contains the birth or death coordinates of persistence
         pairs in all dimensions: first of the 0-dim. pairs, then of the 1-dim. pairs,
         and so on. The starting index of the persistence pairs birth/death coordinates
-        in dimension i can be recovered using `np.cumsum()` on `num_matches_by_dim`,
-        `num_unmatched_input1_by_dim`, and `num_unmatched_input2_by_dim`,
+        in dimension i can be recovered using `np.cumsum()` on `num_matched`,
+        `num_unmatched_input1`, and `num_unmatched_input2`,
         respectively.
 
         Attributes
         ----------
-        input1_matches_birth_coordinates : numpy.ndarray
-        input1_matches_death_coordinates : numpy.ndarray
-        input2_matches_birth_coordinates : numpy.ndarray
-        input2_matches_death_coordinates : numpy.ndarray
+        input1_matched_birth_coordinates : numpy.ndarray
+        input1_matched_death_coordinates : numpy.ndarray
+        input2_matched_birth_coordinates : numpy.ndarray
+        input2_matched_death_coordinates : numpy.ndarray
             Arrays of shape (n_matched, d). The birth and death coordinates of matched
             persistence pairs in the first and second input, respectively.
         input1_unmatched_birth_coordinates : numpy.ndarray
@@ -1020,21 +1013,21 @@ PYBIND11_MODULE(betti_matching, m) {
             Betti matching computation (can be turned off since the target unmatched
             pairs do not contribute to the gradient when training with the Betti
             matching loss).
-        num_matches_by_dim : numpy.ndarray
+        num_matched : numpy.ndarray
             Array of shape (d,). The number of matched persistence pairs by dimension.
-        num_unmatched_input1_by_dim : numpy.ndarray
-        num_unmatched_input2_by_dim : numpy.ndarray
+        num_unmatched_input1 : numpy.ndarray
+        num_unmatched_input2 : numpy.ndarray
             Arrays of shape (d,). The number of unmatched persistence pairs in the
             first and second input, respectively, by dimension.
         )")
-        .def_readonly("input1_matches_birth_coordinates",
-                      &BettiMatchingResult::input1MatchesBirthCoordinates)
-        .def_readonly("input1_matches_death_coordinates",
-                      &BettiMatchingResult::input1MatchesDeathCoordinates)
-        .def_readonly("input2_matches_birth_coordinates",
-                      &BettiMatchingResult::input2MatchesBirthCoordinates)
-        .def_readonly("input2_matches_death_coordinates",
-                      &BettiMatchingResult::input2MatchesDeathCoordinates)
+        .def_readonly("input1_matched_birth_coordinates",
+                      &BettiMatchingResult::input1MatchedBirthCoordinates)
+        .def_readonly("input1_matched_death_coordinates",
+                      &BettiMatchingResult::input1MatchedDeathCoordinates)
+        .def_readonly("input2_matched_birth_coordinates",
+                      &BettiMatchingResult::input2MatchedBirthCoordinates)
+        .def_readonly("input2_matched_death_coordinates",
+                      &BettiMatchingResult::input2MatchedDeathCoordinates)
         .def_readonly("input1_unmatched_birth_coordinates",
                       &BettiMatchingResult::input1UnmatchedBirthCoordinates)
         .def_readonly("input1_unmatched_death_coordinates",
@@ -1043,69 +1036,71 @@ PYBIND11_MODULE(betti_matching, m) {
                       &BettiMatchingResult::input2UnmatchedBirthCoordinates)
         .def_readonly("input2_unmatched_death_coordinates",
                       &BettiMatchingResult::input2UnmatchedDeathCoordinates)
-        .def_readonly("num_matches_by_dim",
-                      &BettiMatchingResult::numMatchesByDim)
-        .def_readonly("num_unmatched_input1_by_dim",
-                      &BettiMatchingResult::numUnmatchedInput1ByDim)
-        .def_readonly("num_unmatched_input2_by_dim",
-                      &BettiMatchingResult::numUnmatchedInput2ByDim)
+        .def_readonly("num_matched", &BettiMatchingResult::numMatched)
+        .def_readonly("num_unmatched_input1",
+                      &BettiMatchingResult::numUnmatchedInput1)
+        .def_readonly("num_unmatched_input2",
+                      &BettiMatchingResult::numUnmatchedInput2)
         .def("__repr__", [](BettiMatchingResult &self) {
-            auto reprMemberArray = [](string name,
-                                      py::array_t<int64_t> &array) {
-                return name + " " +
-                       repr_vector(
-                           std::vector<index_t>(array.shape(),
-                                                array.shape() + array.ndim()),
-                           make_tuple("(", ")"), "×");
+            auto reprSmall1DimMemberArray = [](string name,
+                                               py::array_t<int64_t> &array) {
+                vector<int64_t> values(array.size());
+                for (int i = 0; i < array.size(); i++) {
+                    values[i] = array.at(i);
+                }
+                return name + "=" + repr_vector(values, make_tuple("[", "]"));
+            };
+            auto reprMemberVector = [](string name,
+                                       vector<py::array_t<int64_t>> &vector) {
+                return name + "=[...]";
             };
             return "BettiMatchingResult(" +
-                   (reprMemberArray("input1_matches_birth_coordinates",
-                                    self.input1MatchesBirthCoordinates) +
+                   (reprMemberVector("input1_matched_birth_coordinates",
+                                     self.input1MatchedBirthCoordinates) +
                     ", " +
-                    reprMemberArray("input1_matches_death_coordinates",
-                                    self.input1MatchesDeathCoordinates) +
+                    reprMemberVector("input1_matched_death_coordinates",
+                                     self.input1MatchedDeathCoordinates) +
                     ", " +
-                    reprMemberArray("input2_matches_birth_coordinates",
-                                    self.input2MatchesBirthCoordinates) +
+                    reprMemberVector("input2_matched_birth_coordinates",
+                                     self.input2MatchedBirthCoordinates) +
                     ", " +
-                    reprMemberArray("input2_matches_death_coordinates",
-                                    self.input2MatchesDeathCoordinates) +
+                    reprMemberVector("input2_matched_death_coordinates",
+                                     self.input2MatchedDeathCoordinates) +
                     ", " +
                     (self.input1UnmatchedBirthCoordinates.has_value()
-                         ? (reprMemberArray(
+                         ? (reprMemberVector(
                                 "input1_unmatched_birth_coordinates",
                                 *self.input1UnmatchedBirthCoordinates) +
                             ", ")
                          : "") +
                     (self.input1UnmatchedDeathCoordinates.has_value()
-                         ? (reprMemberArray(
+                         ? (reprMemberVector(
                                 "input1_unmatched_death_coordinates",
                                 *self.input1UnmatchedDeathCoordinates) +
                             ", ")
                          : "") +
                     (self.input2UnmatchedBirthCoordinates.has_value()
-                         ? (reprMemberArray(
+                         ? (reprMemberVector(
                                 "input2_unmatched_birth_coordinates",
                                 *self.input2UnmatchedBirthCoordinates) +
                             ", ")
                          : "") +
                     (self.input2UnmatchedDeathCoordinates.has_value()
-                         ? (reprMemberArray(
+                         ? (reprMemberVector(
                                 "input2_unmatched_death_coordinates",
                                 *self.input2UnmatchedDeathCoordinates) +
                             ", ")
                          : "") +
-                    reprMemberArray("num_matches_by_dim",
-                                    self.numMatchesByDim) +
-                    (self.numUnmatchedInput1ByDim.has_value()
+                    reprSmall1DimMemberArray("num_matched", self.numMatched) +
+                    (self.numUnmatchedInput1.has_value()
                          ? (", " +
-                            reprMemberArray("num_unmatched_input1_by_dim",
-                                            *self.numUnmatchedInput1ByDim))
+                            reprSmall1DimMemberArray("num_unmatched_input1",
+                                                     *self.numUnmatchedInput1))
                          : "") +
-                    (self.numUnmatchedInput2ByDim.has_value()
+                    (self.numUnmatchedInput2.has_value()
                          ? (", " +
-                            reprMemberArray("num_unmatched_input2_by_dim",
-                                            *self.numUnmatchedInput2ByDim))
+                            reprSmall1DimMemberArray("num_unmatched_input2",
+                                                     *self.numUnmatchedInput2))
                          : "")) +
                    ")";
         });
@@ -1119,8 +1114,8 @@ PYBIND11_MODULE(betti_matching, m) {
         Each coordinate array contains the birth or death coordinates of persistence
         pairs in all dimensions: first of the 0-dim. pairs, then of the 1-dim. pairs,
         and so on. The starting index of the persistence pairs birth/death coordinates
-        in dimension i can be recovered using `np.cumsum()` on `num_matches_by_dim`,
-        `num_unmatched_input1_by_dim`, and `num_unmatched_input2_by_dim`,
+        in dimension i can be recovered using `np.cumsum()` on `num_matched`,
+        `num_unmatched_input1`, and `num_unmatched_input2`,
         respectively.
 
         Attributes
@@ -1129,29 +1124,33 @@ PYBIND11_MODULE(betti_matching, m) {
         death_coordinates : numpy.ndarray
             Arrays of shape (n_pairs, d). The birth and death coordinates of
             all persistence pairs in the input volume.
-        num_pairs_by_dim : numpy.ndarray
+        num_pairs : numpy.ndarray
             Array of shape (d,). The number of persistence pairs by dimension.
         )")
         .def_readonly("birth_coordinates", &BarcodeResult::birthCoordinates)
         .def_readonly("death_coordinates", &BarcodeResult::deathCoordinates)
-        .def_readonly("num_pairs_by_dim", &BarcodeResult::numPairsByDim)
+        .def_readonly("num_pairs", &BarcodeResult::numPairs)
         .def("__repr__", [](BarcodeResult &self) {
-            auto reprMemberArray = [](string name,
-                                      py::array_t<int64_t> &array) {
-                return name + " " +
-                       repr_vector(
-                           std::vector<index_t>(array.shape(),
-                                                array.shape() + array.ndim()),
-                           make_tuple("(", ")"), "×");
+            auto reprSmall1DimMemberArray = [](string name,
+                                               py::array_t<int64_t> &array) {
+                vector<int64_t> values(array.size());
+                for (int i = 0; i < array.size(); i++) {
+                    values[i] = array.at(i);
+                }
+                return name + "=" + repr_vector(values, make_tuple("[", "]"));
+            };
+            auto reprMemberVector = [](string name,
+                                       vector<py::array_t<int64_t>> &vector) {
+                return name + "=[...]";
             };
             return "BarcodeResult(" +
-                   (reprMemberArray("birth_coordinates",
-                                    self.birthCoordinates) +
+                   (reprMemberVector("birth_coordinates",
+                                     self.birthCoordinates) +
                     ", " +
-                    reprMemberArray("death_coordinates",
-                                    self.deathCoordinates) +
+                    reprMemberVector("death_coordinates",
+                                     self.deathCoordinates) +
                     ", " +
-                    reprMemberArray("num_pairs_by_dim", self.numPairsByDim)) +
+                    reprSmall1DimMemberArray("num_pairs", self.numPairs)) +
                    ")";
         });
 
