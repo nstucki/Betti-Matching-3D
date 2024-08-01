@@ -220,9 +220,11 @@ void BettiMatching::printResult() {
             std::vector<size_t> range(count);
             std::iota(range.begin(), range.end(), 0);
             vector<RepresentativeCycle> matchedCycles0 =
-                std::get<0>(computeRepresentativeCycles(0, d, range, {{}}));
+                std::get<0>(computeRepresentativeCycles(
+                    0, d, range, {std::vector<size_t>()}));
             vector<RepresentativeCycle> matchedCycles1 =
-                std::get<0>(computeRepresentativeCycles(1, d, range, {{}}));
+                std::get<0>(computeRepresentativeCycles(
+                    1, d, range, {std::vector<size_t>()}));
             for (size_t i = 0; i < matches[d].size(); i++) {
                 matches[d][i].print();
                 _matched[d][i].print();
@@ -254,7 +256,8 @@ void BettiMatching::printResult() {
             std::vector<size_t> range(count);
             std::iota(range.begin(), range.end(), 0);
             vector<RepresentativeCycle> unmatchedCycles =
-                std::get<1>(computeRepresentativeCycles(0, d, {{}}, range));
+                std::get<1>(computeRepresentativeCycles(
+                    0, d, {std::vector<size_t>()}, range));
             counter = 0;
             for (size_t i = 0; i < pairs0[d].size(); ++i) {
                 if (!isMatched0[d][pairs0[d][i].birth.index]) {
@@ -289,7 +292,8 @@ void BettiMatching::printResult() {
             std::vector<size_t> range(count);
             std::iota(range.begin(), range.end(), 0);
             vector<RepresentativeCycle> unmatchedCycles =
-                std::get<1>(computeRepresentativeCycles(1, d, {{}}, range));
+                std::get<1>(computeRepresentativeCycles(
+                    1, d, {std::vector<size_t>()}, range));
             counter = 0;
             for (size_t i = 0; i < pairs1[d].size(); ++i) {
                 if (!isMatched1[d][pairs1[d][i].birth.index]) {
