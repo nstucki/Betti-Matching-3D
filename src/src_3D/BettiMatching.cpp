@@ -295,7 +295,7 @@ void BettiMatching::printResult() {
             std::vector<size_t> range(count);
             std::iota(range.begin(), range.end(), 0);
             vector<RepresentativeCycle> unmatchedCycles =
-                std::get<1>(computeRepresentativeCycles(0, d, {{}}, range));
+                std::get<1>(computeRepresentativeCycles(0, d, {std::vector<size_t>()}, range));
             counter = 0;
             for (size_t i = 0; i < pairs0[d].size(); ++i) {
                 if (!isMatched0[d][pairs0[d][i].birth.index]) {
