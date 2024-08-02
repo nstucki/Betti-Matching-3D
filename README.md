@@ -3,6 +3,8 @@
 
 [![DOI](https://img.shields.io/badge/arXiv-https%3A%2F%2Fdoi.org%2F10.48550%2FarXiv.2203.10202-B31B1B)](https://arxiv.org/abs/2407.04683)
 
+![Dice_Betti_vs_Dice](.github/dicebetti-vs-dice-slicer.webp "DiceBetti-trained segmentation vs. Dice-trained segmentation, DiceBetti shows less topological errors")
+
 **What is Betti matching?** The topology of images is best captured by persistent homology, which can be represented in form of persistence barcodes. An interval in the barcode represents a topological feature, e.g. a connected component in dimension 0, a loop in dimension 1 or a cavity in dimension 2.
 
 ![Betti_matching](.github/Betti-matching.png "Betti matching")
