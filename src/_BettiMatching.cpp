@@ -436,7 +436,12 @@ PYBIND11_MODULE(betti_matching, m) {
         py::arg("include_input1_unmatched_pairs") = true,
         py::arg("include_input2_unmatched_pairs") = true,
         R"(
-        compute_matching(input1, input2, include_input1_unmatched_pairs=True, include_input2_unmatched_pairs=True)
+        compute_matching(
+            input1,
+            input2,
+            include_input1_unmatched_pairs=True,
+            include_input2_unmatched_pairs=True
+        )
 
         Compute the Betti matching between two input volumes.
 
@@ -470,9 +475,9 @@ PYBIND11_MODULE(betti_matching, m) {
         a, b = np.random.rand(10, 10, 10), np.random.rand(10, 10, 10)
         result = betti_matching.compute_matching(a, b)
         a_dim0_matches_birth_coordinates = (
-            result.input1_matched_birth_coordinates[:result.num_matched[0]])
+            result.input1_matched_birth_coordinates[0])
         a_dim0_matches_death_coordinates = (
-            result.input1_matched_death_coordinates[:result.num_matched[0]])
+            result.input1_matched_death_coordinates[0])
         a_dim0_matched_bars_lengths = (a[*a_dim0_matches_death_coordinates.T]
             - a[*a_dim0_matches_birth_coordinates.T])
         ```
@@ -483,7 +488,12 @@ PYBIND11_MODULE(betti_matching, m) {
           py::arg("include_input1_unmatched_pairs") = true,
           py::arg("include_input2_unmatched_pairs") = true,
           R"(
-        compute_matching(inputs1, inputs2, include_input1_unmatched_pairs=True, include_input2_unmatched_pairs=True)
+        compute_matching(
+            inputs1,
+            inputs2,
+            include_input1_unmatched_pairs=True,
+            include_input2_unmatched_pairs=True
+        )
 
         Compute the Betti matching between two batches of input volumes in
         parallel. The Betti matching computation are parallelized using
@@ -531,10 +541,71 @@ PYBIND11_MODULE(betti_matching, m) {
             vector<InputVolume> untypedInputs = {untypedInput};
             return std::move(computeBarcodeFromInputs(untypedInputs)[0]);
         },
-        py::arg("input").noconvert());
+        py::arg("input").noconvert(),
+        R"(
+        compute_barcode(input)
+
+        Compute the barcode for a single input.
+
+        Parameters
+        ----------
+        input: numpy.ndarray
+            The input volume.
+
+        Returns
+        -------
+        result: BarcodeResult
+            The result of the barcode computation. Contains the birth and death
+            coordinate for each persistence pair, from which the birth and death
+            intensity values can be recovered.
+            See the documentation of `betti_matching.return_types.BarcodeResult`
+            for details about the contained data.
+
+        Example
+        -------
+        ```
+        a = np.random.rand(10, 10, 10)
+        result = betti_matching.compute_barcode(a)
+        births_deaths_dim1 = np.stack([
+            a[*result.birth_coordinates[1].T],
+            a[*result.death_coordinates[1].T]
+        ], axis=0)
+        ```
+        )");
 
     m.def("compute_barcode", &computeBarcodeFromInputs,
-          py::arg("inputs").noconvert());
+          py::arg("inputs").noconvert(),
+          R"(
+            compute_barcode(inputs)
+
+            Compute the barcode for a batch of inputs. The independent computations
+            are parallelized using std::async.
+
+            Parameters
+            ----------
+            inputs: list of numpy.ndarray
+                The input volumes.
+
+            Returns
+            -------
+            results: list of BarcodeResult
+                The results of the barcode computations. Each result contains the birth
+                and death coordinate for each persistence pair, from which the birth
+                and death intensity values can be recovered.
+                See the documentation of `betti_matching.return_types.BarcodeResult`
+                for details about the contained data.
+
+            Example
+            -------
+            ```
+            a1, a2 = np.random.rand(10, 10, 10), np.random.rand(8, 8, 8)
+            results = betti_matching.compute_barcode([a1, a2])
+            births_deaths_dim1 = np.stack([
+                a[*results[0].birth_coordinates[1].T],
+                a[*results[0].death_coordinates[1].T]
+            ], axis=0)
+            ```
+            )");
 
     py::class_<BettiMatching>(m, "BettiMatching",
                               R"(
@@ -652,8 +723,9 @@ PYBIND11_MODULE(betti_matching, m) {
                 if (input.index() == 0) {
                     inputNumber = std::get<size_t>(input) - 1;
                     if (inputNumber != 0 && inputNumber != 1) {
-                        throw invalid_argument("Invalid value for input: " +
-                                               std::to_string(std::get<size_t>(input)));
+                        throw invalid_argument(
+                            "Invalid value for input: " +
+                            std::to_string(std::get<size_t>(input)));
                     }
                 } else {
                     string inputKeyword = std::get<string>(input);
