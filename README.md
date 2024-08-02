@@ -35,14 +35,15 @@ If your system uses an Apple M2 chip you might have to replace the third line by
 
 ## Citing Betti matching
 If you find our repository useful in your research, please cite the following:
-```@misc{stucki2024efficientbettimatchingenables,
-      title={Efficient Betti Matching Enables Topology-Aware 3D Segmentation via Persistent Homology}, 
-      author={Nico Stucki and Vincent Bürgin and Johannes C. Paetzold and Ulrich Bauer},
-      year={2024},
-      eprint={2407.04683},
-      archivePrefix={arXiv},
-      primaryClass={math.AT},
-      url={https://arxiv.org/abs/2407.04683}, 
+```
+@misc{stucki2024efficientbettimatchingenables,
+    title={Efficient Betti Matching Enables Topology-Aware 3D Segmentation via Persistent Homology}, 
+    author={Nico Stucki and Vincent Bürgin and Johannes C. Paetzold and Ulrich Bauer},
+    year={2024},
+    eprint={2407.04683},
+    archivePrefix={arXiv},
+    primaryClass={math.AT},
+    url={https://arxiv.org/abs/2407.04683}, 
 }
 ```
 
