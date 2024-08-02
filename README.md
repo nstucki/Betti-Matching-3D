@@ -3,17 +3,15 @@
 
 [![DOI](https://img.shields.io/badge/arXiv-https%3A%2F%2Fdoi.org%2F10.48550%2FarXiv.2203.10202-B31B1B)](https://arxiv.org/abs/2407.04683)
 
-**What is Betti Matching?** The topology of images is best captured by persistent homology, which can be represented in form of persistence barcodes. An interval in the barcode represents a topological feature, e.g. a connected component in dimension 0, a loop in dimension 1 or a cavity in dimension 2.
+**What is Betti matching?** The topology of images is best captured by persistent homology, which can be represented in form of persistence barcodes. An interval in the barcode represents a topological feature, e.g. a connected component in dimension 0, a loop in dimension 1 or a cavity in dimension 2.
 
 ![Betti_matching](.github/Betti-matching.png "Betti matching")
 
-Betti Matching is a framework, based on the theory of induced matchings (see https://arxiv.org/abs/1311.3681, https://arxiv.org/abs/2407.04683), that matches intervals representing topological features, which sptially correspond to each other. It defines the Betti Matching loss, which enforces topologically accurate image segmentations during training, and the Betti Matching error, which serves as a metric for the evaluation of segmentation tasks. It can be seen as a refinement of the well-established Betti number error, by counting the features in both images that do not spatially correspond to a feature in the other image.
+Betti matching is a framework, based on the theory of induced matchings (see https://arxiv.org/abs/1311.3681, https://arxiv.org/abs/2407.04683), that matches intervals representing topological features, which sptially correspond to each other. It defines the Betti matching loss, which enforces topologically accurate image segmentations during training, and the Betti matching error, which serves as a metric for the evaluation of segmentation tasks. It can be seen as a refinement of the well-established Betti number error, by counting the features in both images that do not spatially correspond to a feature in the other image.
 
 ![Betti_matching_performance](.github/Betti-matching-error.png "Betti matching performance")
 
-**About the code**. We have provided the C++ code of Betti Matching together with a pybind module that enables its usage directly in Python. The introduction.ipynb notebook introduces the implemented functions and explains their functionality.
-
-![introduction](.github/Betti-matching_vs_Wasserstein-matching.png "introduction cremi")
+**About the code**. We have provided the C++ code of Betti matching together with a pybind module that enables its usage directly in Python. The introduction.ipynb notebook introduces the implemented functions and explains their functionality.
 
 
 ## Installation
