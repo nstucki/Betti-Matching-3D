@@ -650,7 +650,7 @@ PYBIND11_MODULE(betti_matching, m) {
                bool includeDeathVoxel, bool deduplicateVoxels) {
                 int inputNumber;
                 if (input.index() == 0) {
-                    inputNumber = std::get<size_t>(input);
+                    inputNumber = std::get<size_t>(input)-1;
                     if (inputNumber != 0 && inputNumber != 1) {
                         throw invalid_argument("Invalid value for input: " +
                                                std::to_string(inputNumber));
