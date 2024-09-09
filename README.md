@@ -1,7 +1,7 @@
 **Betti Matching**: Topological loss and metric for 3D image segmentation
 ========
 
-[![DOI](https://img.shields.io/badge/arXiv-https%3A%2F%2Fdoi.org%2F10.48550%2FarXiv.2203.10202-B31B1B)](https://arxiv.org/abs/2407.04683)
+[![DOI](https://img.shields.io/badge/arXiv-https%3A%2F%2Fdoi.org%2F10.48550%2FarXiv.2203.10202-B31B1B)](https://arxiv.org/abs/2407.04683) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ![Dice_Betti_vs_Dice](.github/dicebetti-vs-dice-slicer.webp "DiceBetti-trained segmentation vs. Dice-trained segmentation, DiceBetti shows less topological errors")
 
